@@ -103,7 +103,7 @@ function divide(x: number, by: number): Result<number, string> {
    if (by === 0) {
       return Err("Division Failed");
    } else {
-      return Some(x / by);
+      return Ok(x / by);
    }
 }
 
