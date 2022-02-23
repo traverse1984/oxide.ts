@@ -163,9 +163,25 @@ const val: number = res.unwrap().unwrap();
 There are times when this makes sense, consider something like:
 
 ```ts
+import { Result, Option, Some, None, Ok, Err, match } from "oxide.ts";
+
 function search(query: string): Result<Option<SearchResult>, string> {
    const [err, result] = database.search(query);
+   if (err) {
+      return Err(err);
+   } else {
+      return result.count > 0 ? Ok(Some(result)) : Ok(None);
+   }
 }
+
+const result = search("testing");
+const output: string = match(result, {
+   Ok: match({
+      Some: (res) => `Found ${res.count} entries.`,
+      None: () => "No results for that search.",
+   }),
+   Err: (err) => `Error: ${err}`,
+});
 ```
 
 [&laquo; To contents](#usage)
