@@ -102,7 +102,7 @@ describe("Option<T>", () => {
       it("and", () => {
          expect(Some(1).and(None).is_none()).to.be.true;
          expect(AsOpt(None).and(Some(2)).is_none()).to.be.true;
-         expect(Some(1).and(Some(2)).unwrap()).to.equal(2);
+         expect(Some(1).and(Some("two")).unwrap()).to.equal("two");
       });
 
       it("and_then", () => {

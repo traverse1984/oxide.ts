@@ -106,7 +106,7 @@ describe("Result<T, E>", () => {
       it("and", () => {
          expect(Ok(1).and(Err(2)).is_err()).to.be.true;
          expect(Err(1).and(Ok(2)).is_err()).to.be.true;
-         expect(Ok(1).and(Ok(2)).unwrap()).to.equal(2);
+         expect(Ok(1).and(Ok("two")).unwrap()).to.equal("two");
       });
 
       it("and_then", () => {

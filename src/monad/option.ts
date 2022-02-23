@@ -247,8 +247,8 @@ class OptionType<T> {
     * assert.equal(xand.is_none(), true);
     * ```
     */
-   and(optb: Option<T>): Option<T> {
-      return this.__IsSome__ ? optb : this;
+   and<U>(optb: Option<U>): Option<U> {
+      return this.__IsSome__ ? optb : None;
    }
 
    /**

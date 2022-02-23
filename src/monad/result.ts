@@ -280,8 +280,8 @@ class ResultType<T, E> {
     * const xand = x.and(Err(1));
     * assert.equal(xand.unwrap_err(), 1);
     */
-   and(resb: Result<T, E>): Result<T, E> {
-      return this.__IsOk__ ? resb : this;
+   and<U>(resb: Result<U, E>): Result<U, E> {
+      return this.__IsOk__ ? resb : (this as Err<E, any>);
    }
 
    /**

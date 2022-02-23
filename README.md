@@ -379,6 +379,8 @@ than mapped matching or combined matching.
 ### Primitive Example
 
 ```ts
+import { match } from "oxide.ts";
+
 const matchNum = (num: number) =>
    match(num, [
       [5, "five"],
@@ -396,6 +398,8 @@ assert.equal(matchNum(50), "other");
 ### Object Example
 
 ```ts
+import { match } from "oxide.ts";
+
 const matchObj = (obj: { a: number; b: { c: number } }) =>
    match(obj, [
       [{ a: 5 }, "a is 5"],
@@ -413,6 +417,8 @@ assert.equal(matchObj({ a: 8, b: { c: 8 } }), "other");
 ### Array Example
 
 ```ts
+import { match, _ } from "oxide.ts";
+
 const matchArr = (arr: number[]) =>
    match(arr, [
       [[1], "1"],
