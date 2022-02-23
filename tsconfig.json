@@ -1,0 +1,14 @@
+{
+   "include": ["src"],
+   "exclude": [],
+   "compilerOptions": {
+      "target": "es2019",
+      "module": "commonjs",
+      "outDir": "dist",
+      "strict": true,
+      "types": ["mocha"],
+      "strictNullChecks": true,
+      "declaration": true,
+      "forceConsistentCasingInFileNames": true
+   }
+}
