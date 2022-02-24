@@ -1,16 +1,18 @@
 import { Option, Some, None } from "./option";
 
+const IsOk = Symbol("IsOk");
+
 export type Result<T, E> = Ok<T, E> | Err<E, T>;
-export type Ok<T, E> = ResultType<T, E> & { __IsOk__: true };
-export type Err<E, T> = ResultType<T, E> & { __IsOk__: false };
+export type Ok<T, E> = ResultType<T, E> & { [IsOk]: true };
+export type Err<E, T> = ResultType<T, E> & { [IsOk]: false };
 
 class ResultType<T, E> {
    private val: T | E;
-   readonly __IsOk__: boolean;
+   readonly [IsOk]: boolean;
 
    constructor(val: T | E, ok: boolean) {
       this.val = val;
-      this.__IsOk__ = ok;
+      this[IsOk] = ok;
       Object.freeze(this);
    }
 
@@ -27,7 +29,7 @@ class ResultType<T, E> {
     * assert.equal(o.is(e), false);
     */
    is(cmp: unknown): cmp is Result<unknown, unknown> {
-      return cmp instanceof ResultType && this.__IsOk__ === cmp.__IsOk__;
+      return cmp instanceof ResultType && this[IsOk] === cmp[IsOk];
    }
 
    /**
@@ -46,7 +48,7 @@ class ResultType<T, E> {
     * assert.equal(o.eq(e), false);
     */
    eq(cmp: Result<T, E>): boolean {
-      return this.__IsOk__ === cmp.__IsOk__ && this.val === cmp.val;
+      return this[IsOk] === cmp[IsOk] && this.val === cmp.val;
    }
 
    /**
@@ -65,7 +67,7 @@ class ResultType<T, E> {
     * assert.equal(o.neq(e), true);
     */
    neq(cmp: Result<T, E>): boolean {
-      return this.__IsOk__ !== cmp.__IsOk__ || this.val !== cmp.val;
+      return this[IsOk] !== cmp[IsOk] || this.val !== cmp.val;
    }
 
    /**
@@ -80,7 +82,7 @@ class ResultType<T, E> {
     * assert.equal(x.is_ok(), false);
     */
    is_ok(): this is Ok<T, E> {
-      return this.__IsOk__;
+      return this[IsOk];
    }
 
    /**
@@ -95,7 +97,7 @@ class ResultType<T, E> {
     * assert.equal(x.is_err(), true);
     */
    is_err(): this is Err<E, T> {
-      return !this.__IsOk__;
+      return !this[IsOk];
    }
 
    /**
@@ -112,7 +114,7 @@ class ResultType<T, E> {
    const y = x.expect("Was Err"); // throws
    */
    expect(msg: string): T {
-      if (this.__IsOk__) {
+      if (this[IsOk]) {
          return this.val as T;
       } else {
          throw new Error(msg);
@@ -132,7 +134,7 @@ class ResultType<T, E> {
    assert.equal(x.expect_err("Was Ok"), 1);
    */
    expect_err(msg: string): E {
-      if (this.__IsOk__) {
+      if (this[IsOk]) {
          throw new Error(msg);
       } else {
          return this.val as E;
@@ -188,7 +190,7 @@ class ResultType<T, E> {
     * assert.equal(x.unwrap_or(1), 1);
     */
    unwrap_or(def: T): T {
-      return this.__IsOk__ ? (this.val as T) : def;
+      return this[IsOk] ? (this.val as T) : def;
    }
 
    /**
@@ -202,7 +204,7 @@ class ResultType<T, E> {
     * assert.equal(x.unwrap_or_else(() => 1 + 1), 2);
     */
    unwrap_or_else(f: () => T): T {
-      return this.__IsOk__ ? (this.val as T) : f();
+      return this[IsOk] ? (this.val as T) : f();
    }
 
    /**
@@ -238,7 +240,7 @@ class ResultType<T, E> {
     * assert.equal(xor.unwrap(), 1);
     */
    or(resb: Result<T, E>): Result<T, E> {
-      return this.__IsOk__ ? this : resb;
+      return this[IsOk] ? this : resb;
    }
 
    /**
@@ -259,9 +261,7 @@ class ResultType<T, E> {
     * assert.equal(xor.unwrap_err(), "val 10");
     */
    or_else<F>(f: (err: E) => Result<T, F>): Result<T, F> {
-      return this.__IsOk__
-         ? (this as unknown as Result<T, F>)
-         : f(this.val as E);
+      return this[IsOk] ? (this as unknown as Result<T, F>) : f(this.val as E);
    }
 
    /**
@@ -281,7 +281,7 @@ class ResultType<T, E> {
     * assert.equal(xand.unwrap_err(), 1);
     */
    and<U>(resb: Result<U, E>): Result<U, E> {
-      return this.__IsOk__ ? resb : (this as Err<E, any>);
+      return this[IsOk] ? resb : (this as Err<E, any>);
    }
 
    /**
@@ -302,7 +302,7 @@ class ResultType<T, E> {
     * assert.equal(xand.unwrap_err(), 1);
     */
    and_then<U>(f: (val: T) => Result<U, E>): Result<U, E> {
-      return this.__IsOk__ ? f(this.val as T) : (this as Err<E, any>);
+      return this[IsOk] ? f(this.val as T) : (this as Err<E, any>);
    }
 
    /**
@@ -316,8 +316,8 @@ class ResultType<T, E> {
     */
    map<U>(f: (val: T) => U): Result<U, E> {
       return new ResultType(
-         this.__IsOk__ ? f(this.val as T) : (this.val as E),
-         this.__IsOk__
+         this[IsOk] ? f(this.val as T) : (this.val as E),
+         this[IsOk]
       );
    }
 
@@ -332,8 +332,8 @@ class ResultType<T, E> {
     */
    map_err<F>(op: (err: E) => F): Result<T, F> {
       return new ResultType(
-         this.__IsOk__ ? (this.val as T) : op(this.val as E),
-         this.__IsOk__
+         this[IsOk] ? (this.val as T) : op(this.val as E),
+         this[IsOk]
       );
    }
 
@@ -354,7 +354,7 @@ class ResultType<T, E> {
     * assert.equal(xmap.unwrap(), 1);
     */
    map_or<U>(def: U, f: (val: T) => U): U {
-      return this.__IsOk__ ? f(this.val as T) : def;
+      return this[IsOk] ? f(this.val as T) : def;
    }
 
    /**
@@ -370,7 +370,7 @@ class ResultType<T, E> {
     * assert.equal(xmap.unwrap(), 2);
     */
    map_or_else<U>(def: (err: E) => U, f: (val: T) => U): U {
-      return this.__IsOk__ ? f(this.val as T) : def(this.val as E);
+      return this[IsOk] ? f(this.val as T) : def(this.val as E);
    }
 
    /**
@@ -389,7 +389,7 @@ class ResultType<T, E> {
     * const y = x.unwrap(); // throws
     */
    ok(): Option<T> {
-      return this.__IsOk__ ? Some(this.val as T) : None;
+      return this[IsOk] ? Some(this.val as T) : None;
    }
 }
 

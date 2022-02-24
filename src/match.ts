@@ -304,8 +304,11 @@ function matches<T>(cond: BranchCondition<T> | Default, val: T): boolean {
          : (cond as (val: T | Default) => boolean)(val);
    }
 
-   if ((Option.is(cond) || Result.is(cond)) && cond.is(val)) {
-      return matches(cond.unwrap_unchecked(), val.unwrap_unchecked());
+   if (Option.is(cond) || Result.is(cond)) {
+      return (
+         cond.is(val) &&
+         matches(cond.unwrap_unchecked(), val.unwrap_unchecked())
+      );
    }
 
    if (
