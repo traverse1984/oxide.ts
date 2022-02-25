@@ -33,7 +33,7 @@ describe("Guard Pattern", () => {
       it("Propogates thrown errors", () =>
          expect(() => fn(Some(1))).to.throw("test"));
       it("Guard bubbles caught None", () =>
-         expect(fn(Some(2)).is_none()).to.be.true);
+         expect(fn(Some(2)).isNone()).to.be.true);
       it("Guard does not bubble caught error", () =>
          expect(() => fn(Some(3))).to.throw("test_bubble_err"));
       it("Returns Some", () => expect(fn(Some(4)).unwrap()).to.equal(5));
@@ -65,15 +65,15 @@ describe("Guard Pattern", () => {
       });
 
       it("Returns Err when assertion fails", () =>
-         expect(fn(Err("test_outer_err")).unwrap_err()).to.equal(
+         expect(fn(Err("test_outer_err")).unwrapErr()).to.equal(
             "test_outer_err"
          ));
       it("Returns Err", () =>
-         expect(fn(Ok(0)).unwrap_err()).to.equal("test_err"));
+         expect(fn(Ok(0)).unwrapErr()).to.equal("test_err"));
       it("Bubbles thrown errors", () =>
          expect(() => fn(Ok(1))).to.throw("test_throw"));
       it("Guard can bubble caught Err", () =>
-         expect(fn(Ok(2)).unwrap_err()).to.equal("test_bubble"));
+         expect(fn(Ok(2)).unwrapErr()).to.equal("test_bubble"));
       it("Guard does not bubble caught error", () =>
          expect(() => fn(Ok(3))).to.throw("test_bubble_err"));
       it("Returns Ok", () => expect(fn(Ok(4)).unwrap()).to.equal(5));

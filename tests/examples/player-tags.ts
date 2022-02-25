@@ -35,10 +35,10 @@ const pos = Option(($, left: Option<number>, right: Option<number>) => {
 const move = Result(
    ($: Guard<string>, player: string, x: Option<number>, y: Option<number>) => {
       const id = $(player_id(player));
-      const tag = player_tag(id).unwrap_or_else(() => `#default-${id}`);
+      const tag = player_tag(id).unwrapOrElse(() => `#default-${id}`);
 
       return pos(x, y)
-         .ok_or("Missing position")
+         .okOr("Missing position")
          .map(([x, y]) => `move ${id} ${tag} to ${x} ${y}`);
    }
 );
@@ -60,24 +60,24 @@ describe("Example (player-tags)", () => {
       ));
 
    it("Player not found", () =>
-      expect(move("player-none", Some(20), Some(40)).unwrap_err()).to.equal(
+      expect(move("player-none", Some(20), Some(40)).unwrapErr()).to.equal(
          "Not found"
       ));
 
    it("Position input isNone", () => {
-      expect(move("player-one", Some(50), None).unwrap_err()).to.equal(
+      expect(move("player-one", Some(50), None).unwrapErr()).to.equal(
          "Missing position"
       );
-      expect(move("player-one", None, Some(50)).unwrap_err()).to.equal(
+      expect(move("player-one", None, Some(50)).unwrapErr()).to.equal(
          "Missing position"
       );
    });
 
    it("Position input is invalid", () => {
-      expect(move("player-one", Some(0), Some(50)).unwrap_err()).to.equal(
+      expect(move("player-one", Some(0), Some(50)).unwrapErr()).to.equal(
          "Missing position"
       );
-      expect(move("player-one", Some(50), Some(110)).unwrap_err()).to.equal(
+      expect(move("player-one", Some(50), Some(110)).unwrapErr()).to.equal(
          "Missing position"
       );
    });

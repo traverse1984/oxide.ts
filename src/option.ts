@@ -1,4 +1,4 @@
-import { Option as BaseOption, IsOption, None } from "./monad/option";
+import { Option as BaseOption, isOption, None } from "./monad/option";
 export { Some, None } from "./monad/option";
 
 export type Option<T> = BaseOption<T>;
@@ -21,7 +21,7 @@ export interface OptionGuard {
  * function greet(username: string): string {
  *    return fetch_user(username)
  *       .map((user) => `Hello ${user}, my old friend!`)
- *       .unwrap_or("*silence*");
+ *       .unwrapOr("*silence*");
  * }
  *
  * assert.equal(greet("Simon"), "Hello Simon, my old friend!")
@@ -52,7 +52,7 @@ export interface OptionGuard {
  * });
  *
  * function show_pos(x: number, y: number): string {
- *    return get_pos(x, y).map_or(
+ *    return get_pos(x, y).mapOr(
  *       "Invalid Pos",
  *       ({ x, y }) => `Pos (${x},${y})`
  *    );
@@ -80,10 +80,10 @@ export function Option<T, A extends any[]>(
    };
 }
 
-Option.is = IsOption;
+Option.is = isOption;
 
 function guard<U>(opt: Option<U>): U {
-   if (opt.is_some()) {
+   if (opt.isSome()) {
       return opt.unwrap();
    } else {
       throw OptionExit;

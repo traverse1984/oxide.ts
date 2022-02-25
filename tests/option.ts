@@ -46,14 +46,14 @@ describe("Option<T>", () => {
          expect(Some(1).neq(Some(2))).to.be.true;
       });
 
-      it("is_some", () => {
-         expect(Some(1).is_some()).to.be.true;
-         expect(None.is_some()).to.be.false;
+      it("isSome", () => {
+         expect(Some(1).isSome()).to.be.true;
+         expect(None.isSome()).to.be.false;
       });
 
-      it("is_none", () => {
-         expect(Some(1).is_none()).to.be.false;
-         expect(None.is_none()).to.be.true;
+      it("isNone", () => {
+         expect(Some(1).isNone()).to.be.false;
+         expect(None.isNone()).to.be.true;
       });
 
       it("expect", () => {
@@ -66,19 +66,19 @@ describe("Option<T>", () => {
          expect(() => None.unwrap()).to.throw(/unwrap/);
       });
 
-      it("unwrap_or", () => {
-         expect(Some(1).unwrap_or(2)).to.equal(1);
-         expect(AsOpt(None).unwrap_or(2)).to.equal(2);
+      it("unwrapOr", () => {
+         expect(Some(1).unwrapOr(2)).to.equal(1);
+         expect(AsOpt(None).unwrapOr(2)).to.equal(2);
       });
 
-      it("unwrap_or_else", () => {
-         expect(Some(1).unwrap_or_else(() => 2)).to.equal(1);
-         expect(AsOpt(None).unwrap_or_else(() => 2)).to.equal(2);
+      it("unwrapOrElse", () => {
+         expect(Some(1).unwrapOrElse(() => 2)).to.equal(1);
+         expect(AsOpt(None).unwrapOrElse(() => 2)).to.equal(2);
       });
 
-      it("unwrap_unchecked", () => {
-         expect(Some(1).unwrap_unchecked()).to.equal(1);
-         expect(None.unwrap_unchecked()).to.be.undefined;
+      it("unwrapUnchecked", () => {
+         expect(Some(1).unwrapUnchecked()).to.equal(1);
+         expect(None.unwrapUnchecked()).to.be.undefined;
       });
 
       it("or", () => {
@@ -86,39 +86,39 @@ describe("Option<T>", () => {
          expect(AsOpt(None).or(Some(2)).unwrap()).to.equal(2);
       });
 
-      it("or_else", () => {
+      it("orElse", () => {
          expect(
             Some(1)
-               .or_else(() => Some(2))
+               .orElse(() => Some(2))
                .unwrap()
          ).to.equal(1);
          expect(
             AsOpt(None)
-               .or_else(() => Some(2))
+               .orElse(() => Some(2))
                .unwrap()
          ).to.equal(2);
       });
 
       it("and", () => {
-         expect(Some(1).and(None).is_none()).to.be.true;
-         expect(AsOpt(None).and(Some(2)).is_none()).to.be.true;
+         expect(Some(1).and(None).isNone()).to.be.true;
+         expect(AsOpt(None).and(Some(2)).isNone()).to.be.true;
          expect(Some(1).and(Some("two")).unwrap()).to.equal("two");
       });
 
-      it("and_then", () => {
+      it("andThen", () => {
          expect(
             Some(1)
-               .and_then(() => None)
-               .is_none()
+               .andThen(() => None)
+               .isNone()
          ).to.be.true;
          expect(
             AsOpt(None)
-               .and_then(() => Some(2))
-               .is_none()
+               .andThen(() => Some(2))
+               .isNone()
          ).to.be.true;
          expect(
             Some(1)
-               .and_then((n) => Some(`num ${n + 1}`))
+               .andThen((n) => Some(`num ${n + 1}`))
                .unwrap()
          ).to.equal("num 2");
       });
@@ -132,46 +132,46 @@ describe("Option<T>", () => {
          expect(() => None.map((val) => val + 1).unwrap()).to.throw(/unwrap/);
       });
 
-      it("map_or", () => {
-         expect(Some(1).map_or(3, (val) => val + 1)).to.equal(2);
-         expect(None.map_or(3, (val) => val + 1)).to.equal(3);
+      it("mapOr", () => {
+         expect(Some(1).mapOr(3, (val) => val + 1)).to.equal(2);
+         expect(None.mapOr(3, (val) => val + 1)).to.equal(3);
       });
 
-      it("map_or_else", () => {
+      it("mapOrElse", () => {
          expect(
-            Some(1).map_or_else(
+            Some(1).mapOrElse(
                () => 3,
                (val) => val + 1
             )
          ).to.equal(2);
          expect(
-            None.map_or_else(
+            None.mapOrElse(
                () => 3,
                (val) => val + 1
             )
          ).to.equal(3);
       });
 
-      it("ok_or", () => {
-         expect(Some(1).ok_or("err").is_ok()).to.be.true;
-         expect(Some(1).ok_or("err").unwrap()).to.equal(1);
-         expect(None.ok_or("err").is_err()).to.be.true;
-         expect(None.ok_or("err").unwrap_err()).to.equal("err");
+      it("okOr", () => {
+         expect(Some(1).okOr("err").isOk()).to.be.true;
+         expect(Some(1).okOr("err").unwrap()).to.equal(1);
+         expect(None.okOr("err").isErr()).to.be.true;
+         expect(None.okOr("err").unwrapErr()).to.equal("err");
       });
 
-      it("ok_or_else", () => {
+      it("okOrElse", () => {
          expect(
             Some(1)
-               .ok_or_else(() => "err")
-               .is_ok()
+               .okOrElse(() => "err")
+               .isOk()
          ).to.be.true;
          expect(
             Some(1)
-               .ok_or_else(() => "err")
+               .okOrElse(() => "err")
                .unwrap()
          ).to.equal(1);
-         expect(None.ok_or_else(() => "err").is_err()).to.be.true;
-         expect(None.ok_or_else(() => "err").unwrap_err()).to.equal("err");
+         expect(None.okOrElse(() => "err").isErr()).to.be.true;
+         expect(None.okOrElse(() => "err").unwrapErr()).to.equal("err");
       });
    });
 });

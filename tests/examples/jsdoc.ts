@@ -22,7 +22,7 @@ describe("Examples (jsdoc)", () => {
       function greet(username: string): string {
          return fetch_user(username)
             .map((user) => `Hello ${user}, my old friend!`)
-            .unwrap_or("*silence*");
+            .unwrapOr("*silence*");
       }
 
       expect(greet("Simon")).to.equal("Hello Simon, my old friend!");
@@ -43,7 +43,7 @@ describe("Examples (jsdoc)", () => {
       });
 
       function show_pos(x: number, y: number): string {
-         return get_pos(x, y).map_or(
+         return get_pos(x, y).mapOr(
             "Invalid Pos",
             ({ x, y }) => `Pos (${x},${y})`
          );
@@ -61,7 +61,7 @@ describe("Examples (jsdoc)", () => {
       }
 
       function greet(username: string): string {
-         return fetch_user(username).map_or_else(
+         return fetch_user(username).mapOrElse(
             (err) => `Error: ${err}`,
             (user) => `Hello ${user}, my old friend!`
          );
@@ -85,7 +85,7 @@ describe("Examples (jsdoc)", () => {
       });
 
       function show_pos(x: number, y: number): string {
-         return get_pos(x, y).map_or_else(
+         return get_pos(x, y).mapOrElse(
             (err) => `Error: ${err}`,
             ({ x, y }) => `Pos (${x},${y})`
          );

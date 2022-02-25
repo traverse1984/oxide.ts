@@ -77,13 +77,13 @@ class OptionType<T> {
     *
     * ```
     * const x = Some(10);
-    * assert.equal(x.is_some(), true);
+    * assert.equal(x.isSome(), true);
     *
     * const x: Option<number> = None;
-    * assert.equal(x.is_some(), false);
+    * assert.equal(x.isSome(), false);
     * ```
     */
-   is_some(): this is Some<T> {
+   isSome(): this is Some<T> {
       return this[IsSome];
    }
 
@@ -93,20 +93,20 @@ class OptionType<T> {
     *
     * ```
     * const x = Some(10);
-    * assert.equal(x.is_none(), false);
+    * assert.equal(x.isNone(), false);
     *
     * const x: Option<number> = None;
-    * assert.equal(x.is_none(), true);
+    * assert.equal(x.isNone(), true);
     * ```
     */
-   is_none(): this is None<never> {
+   isNone(): this is None<never> {
       return !this[IsSome];
    }
 
    /**
    Returns the contained `Some` value and throws `Error(msg)` if `None`.
 
-   To avoid throwing, consider `is_some`, `unwrap_or`, `unwrap_or_else` or
+   To avoid throwing, consider `isSome`, `unwrapOr`, `unwrapOrElse` or
    `match` to handle the `None` case.
    
    ```
@@ -128,7 +128,7 @@ class OptionType<T> {
    /**
    Returns the contained `Some` value and throws if `None`.
 
-   To avoid throwing, consider `is_some`, `unwrap_or`, `unwrap_or_else` or
+   To avoid throwing, consider `isSome`, `unwrapOr`, `unwrapOrElse` or
    `match` to handle the `None` case. To throw a more informative error use
    `expect`.
    
@@ -148,17 +148,17 @@ class OptionType<T> {
     * Returns the contained `Some` value or a provided default.
     *
     * The provided default is eagerly evaluated. If you are passing the result
-    * of a function call, consider `unwrap_or_else`, which is lazily evaluated.
+    * of a function call, consider `unwrapOrElse`, which is lazily evaluated.
     *
     * ```
     * const x = Some(10);
-    * assert.equal(x.unwrap_or(1), 10);
+    * assert.equal(x.unwrapOr(1), 10);
     *
     * const x: Option<number> = None;
-    * assert.equal(x.unwrap_or(1), 1);
+    * assert.equal(x.unwrapOr(1), 1);
     * ```
     */
-   unwrap_or(def: T): T {
+   unwrapOr(def: T): T {
       return this[IsSome] ? this.val : def;
    }
 
@@ -167,13 +167,13 @@ class OptionType<T> {
     *
     * ```
     * const x = Some(10);
-    * assert.equal(x.unwrap_or_else(() => 1 + 1), 10);
+    * assert.equal(x.unwrapOrElse(() => 1 + 1), 10);
     *
     * const x: Option<number> = None;
-    * assert.equal(x.unwrap_or_else(() => 1 + 1), 2);
+    * assert.equal(x.unwrapOrElse(() => 1 + 1), 2);
     * ```
     */
-   unwrap_or_else(f: () => T): T {
+   unwrapOrElse(f: () => T): T {
       return this[IsSome] ? this.val : f();
    }
 
@@ -185,13 +185,13 @@ class OptionType<T> {
     *
     * ```
     * const x = Some(10);
-    * assert.equal(x.unwrap_unchecked(), 10);
+    * assert.equal(x.unwrapUnchecked(), 10);
     *
     * const x: Option<number> = None;
-    * assert.equal(x.unwrap_unchecked(), undefined);
+    * assert.equal(x.unwrapUnchecked(), undefined);
     * ```
     */
-   unwrap_unchecked(): T | undefined {
+   unwrapUnchecked(): T | undefined {
       return this.val;
    }
 
@@ -199,7 +199,7 @@ class OptionType<T> {
     * Returns the Option if it is `Some`, otherwise returns `optb`.
     *
     * `optb` is eagerly evaluated. If you are passing the result of a function
-    * call, consider `or_else`, which is lazily evaluated.
+    * call, consider `orElse`, which is lazily evaluated.
     *
     * ```
     * const x = Some(10);
@@ -220,15 +220,15 @@ class OptionType<T> {
     *
     * ```
     * const x = Some(10);
-    * const xor = x.or_else(() => Some(1));
+    * const xor = x.orElse(() => Some(1));
     * assert.equal(xor.unwrap(), 10);
     *
     * const x: Option<number> = None;
-    * const xor = x.or_else(() => Some(1));
+    * const xor = x.orElse(() => Some(1));
     * assert.equal(xor.unwrap(), 1);
     * ```
     */
-   or_else(f: () => Option<T>): Option<T> {
+   orElse(f: () => Option<T>): Option<T> {
       return this[IsSome] ? this : f();
    }
 
@@ -242,11 +242,11 @@ class OptionType<T> {
     *
     * const x: Option<number> = None;
     * const xand = x.and(Some(1));
-    * assert.equal(xand.is_none(), true);
+    * assert.equal(xand.isNone(), true);
     *
     * const x = Some(10);
     * const xand = x.and(None);
-    * assert.equal(xand.is_none(), true);
+    * assert.equal(xand.isNone(), true);
     * ```
     */
    and<U>(optb: Option<U>): Option<U> {
@@ -259,19 +259,19 @@ class OptionType<T> {
     *
     * ```
     * const x = Some(10);
-    * const xand = x.and_then((n) => n + 1);
+    * const xand = x.andThen((n) => n + 1);
     * assert.equal(xand.unwrap(), 11);
     *
     * const x: Option<number> = None;
-    * const xand = x.and_then((n) => n + 1);
-    * assert.equal(xand.is_none(), true);
+    * const xand = x.andThen((n) => n + 1);
+    * assert.equal(xand.isNone(), true);
     *
     * const x = Some(10);
-    * const xand = x.and_then(() => None);
-    * assert.equal(xand.is_none(), true);
+    * const xand = x.andThen(() => None);
+    * assert.equal(xand.isNone(), true);
     * ```
     */
-   and_then<U>(f: (val: T) => Option<U>): Option<U> {
+   andThen<U>(f: (val: T) => Option<U>): Option<U> {
       return this[IsSome] ? f(this.val) : None;
    }
 
@@ -294,19 +294,19 @@ class OptionType<T> {
     * `Some` value and returns the result.
     *
     * The provided default is eagerly evaluated. If you are passing the result
-    * of a function call, consider `map_or_else`, which is lazily evaluated.
+    * of a function call, consider `mapOrElse`, which is lazily evaluated.
     *
     * ```
     * const x = Some(10);
-    * const xmap = x.map_or(1, (n) => n + 1);
+    * const xmap = x.mapOr(1, (n) => n + 1);
     * assert.equal(xmap.unwrap(), 11);
     *
     * const x: Option<number> = None;
-    * const xmap = x.map_or(1, (n) => n + 1);
+    * const xmap = x.mapOr(1, (n) => n + 1);
     * assert.equal(xmap.unwrap(), 1);
     * ```
     */
-   map_or<U>(def: U, f: (val: T) => U): U {
+   mapOr<U>(def: U, f: (val: T) => U): U {
       return this[IsSome] ? f(this.val) : def;
    }
 
@@ -315,15 +315,15 @@ class OptionType<T> {
     * `Some` value and returns the result.
     *
     * const x = Some(10);
-    * const xmap = x.map_or_else(() => 1 + 1, (n) => n + 1);
+    * const xmap = x.mapOrElse(() => 1 + 1, (n) => n + 1);
     * assert.equal(xmap.unwrap(), 11);
     *
     * const x: Option<number> = None;
-    * const xmap = x.map_or_else(() => 1 + 1, (n) => n + 1);
+    * const xmap = x.mapOrElse(() => 1 + 1, (n) => n + 1);
     * assert.equal(xmap.unwrap(), 2);
     * ```
     */
-   map_or_else<U>(def: () => U, f: (val: T) => U): U {
+   mapOrElse<U>(def: () => U, f: (val: T) => U): U {
       return this[IsSome] ? f(this.val) : def();
    }
 
@@ -333,17 +333,17 @@ class OptionType<T> {
     *
     * ```
     * const x = Some(10);
-    * const res = x.ok_or("Is empty");
-    * assert.equal(x.is_ok(), true);
+    * const res = x.okOr("Is empty");
+    * assert.equal(x.isOk(), true);
     * assert.equal(x.unwrap(), 10);
     *
     * const x: Option<number> = None;
-    * const res = x.ok_or("Is empty");
-    * assert.equal(x.is_err(), true);
+    * const res = x.okOr("Is empty");
+    * assert.equal(x.isErr(), true);
     * assert.equal(x.unwrap_err(), "Is empty");
     * ```
     */
-   ok_or<E>(err: E): Result<T, E> {
+   okOr<E>(err: E): Result<T, E> {
       return this[IsSome] ? Ok<T, E>(this.val) : Err<E, T>(err);
    }
 
@@ -353,17 +353,17 @@ class OptionType<T> {
     *
     * ```
     * const x = Some(10);
-    * const res = x.ok_or_else(() => ["Is", "empty"].join(" "));
-    * assert.equal(x.is_ok(), true);
+    * const res = x.okOrElse(() => ["Is", "empty"].join(" "));
+    * assert.equal(x.isOk(), true);
     * assert.equal(x.unwrap(), 10);
     *
     * const x: Option<number> = None;
-    * const res = x.ok_or_else(() => ["Is", "empty"].join(" "));
-    * assert.equal(x.is_err(), true);
+    * const res = x.okOrElse(() => ["Is", "empty"].join(" "));
+    * assert.equal(x.isErr(), true);
     * assert.equal(x.unwrap_err(), "Is empty");
     * ```
     */
-   ok_or_else<E>(f: () => E): Result<T, E> {
+   okOrElse<E>(f: () => E): Result<T, E> {
       return this[IsSome] ? Ok<T, E>(this.val) : Err<E, T>(f());
    }
 }
@@ -378,7 +378,7 @@ class OptionType<T> {
  * assert.equal(Option.is(Ok(1), false));
  * ```
  */
-export function IsOption(val: unknown): val is Option<unknown> {
+export function isOption(val: unknown): val is Option<unknown> {
    return val instanceof OptionType;
 }
 
@@ -388,7 +388,7 @@ export function IsOption(val: unknown): val is Option<unknown> {
  *
  * ```
  * const x = Some(10);
- * assert.equal(x.is_some(), true);
+ * assert.equal(x.isSome(), true);
  * assert.equal(x.unwrap(), 10);
  * ```
  */
@@ -402,41 +402,52 @@ export function Some<T>(val: T): Some<T> {
  *
  * ```
  * const x = None;
- * assert.equal(x.is_none(), true);
+ * assert.equal(x.isNone(), true);
  * const y = x.unwrap(); // throws
  * ```
  */
 export const None = new OptionType(undefined, false) as None<never>;
 
 interface OptionType<T> {
-   isSome: OptionType<T>["is_some"];
-   isNone: OptionType<T>["is_none"];
-   unwrapOr: OptionType<T>["unwrap_or"];
-   unwrapOrElse: OptionType<T>["unwrap_or_else"];
-   unwrapUnchecked: OptionType<T>["unwrap_unchecked"];
-   orElse: OptionType<T>["or_else"];
-   andThen: OptionType<T>["and_then"];
-   mapOr: OptionType<T>["map_or"];
-   mapOrElse: OptionType<T>["map_or_else"];
-   okOr: OptionType<T>["ok_or"];
-   okOrElse: OptionType<T>["ok_or_else"];
+   /** @deprecated */
+   is_some: OptionType<T>["isSome"];
+   /** @deprecated */
+   is_none: OptionType<T>["isNone"];
+   /** @deprecated */
+   unwrap_or: OptionType<T>["unwrapOr"];
+   /** @deprecated */
+   unwrap_or_else: OptionType<T>["unwrapOrElse"];
+   /** @deprecated */
+   unwrap_unchecked: OptionType<T>["unwrapUnchecked"];
+   /** @deprecated */
+   or_else: OptionType<T>["orElse"];
+   /** @deprecated */
+   and_then: OptionType<T>["andThen"];
+   /** @deprecated */
+   map_or: OptionType<T>["mapOr"];
+   /** @deprecated */
+   map_or_else: OptionType<T>["mapOrElse"];
+   /** @deprecated */
+   ok_or: OptionType<T>["okOr"];
+   /** @deprecated */
+   ok_or_else: OptionType<T>["okOrElse"];
 }
 
 Object.assign(OptionType.prototype, {
-   isSome: OptionType.prototype.is_some,
-   isNone: OptionType.prototype.is_none,
-   unwrapOr: OptionType.prototype.unwrap_or,
-   unwrapOrElse: OptionType.prototype.unwrap_or_else,
-   unwrapUnchecked: OptionType.prototype.unwrap_unchecked,
-   orElse: OptionType.prototype.or_else,
-   andThen: OptionType.prototype.and_then,
-   mapOr: OptionType.prototype.map_or,
-   mapOrElse: OptionType.prototype.map_or_else,
-   okOr: OptionType.prototype.ok_or,
-   okOrElse: OptionType.prototype.ok_or_else,
+   is_some: OptionType.prototype.isSome,
+   is_none: OptionType.prototype.isNone,
+   unwrap_or: OptionType.prototype.unwrapOr,
+   unwrap_or_else: OptionType.prototype.unwrapOrElse,
+   unwrap_unchecked: OptionType.prototype.unwrapUnchecked,
+   or_else: OptionType.prototype.orElse,
+   and_then: OptionType.prototype.andThen,
+   map_or: OptionType.prototype.mapOr,
+   map_or_else: OptionType.prototype.mapOrElse,
+   ok_or: OptionType.prototype.okOr,
+   ok_or_else: OptionType.prototype.okOrElse,
 });
 
 Object.freeze(OptionType.prototype);
-Object.freeze(IsOption);
+Object.freeze(isOption);
 Object.freeze(Some);
 Object.freeze(None);

@@ -225,16 +225,16 @@ function match<T, E, U>(
 
       if (Option.is(val) && is_object_like(pat)) {
          const { Some, None, _ } = pat as MappedOption<T, U>;
-         return val.is_some()
-            ? call_or_branch(val.unwrap_unchecked() as T, Some, _)
+         return val.isSome()
+            ? call_or_branch(val.unwrapUnchecked() as T, Some, _)
             : call_or_branch(Default, None, _);
       }
 
       if (Result.is(val) && is_object_like(pat)) {
          const { Ok, Err, _ } = pat as MappedResult<T, E, U>;
-         return val.is_ok()
-            ? call_or_branch(val.unwrap_unchecked() as T, Ok, _)
-            : call_or_branch(val.unwrap_unchecked() as E, Err, _);
+         return val.isOk()
+            ? call_or_branch(val.unwrapUnchecked() as T, Ok, _)
+            : call_or_branch(val.unwrapUnchecked() as E, Err, _);
       }
    }
 
@@ -306,8 +306,7 @@ function matches<T>(cond: BranchCondition<T> | Default, val: T): boolean {
 
    if (Option.is(cond) || Result.is(cond)) {
       return (
-         cond.is(val) &&
-         matches(cond.unwrap_unchecked(), val.unwrap_unchecked())
+         cond.is(val) && matches(cond.unwrapUnchecked(), val.unwrapUnchecked())
       );
    }
 
@@ -357,7 +356,7 @@ export function Fn<T extends (...args: any) => any>(fn: T): () => T {
  * @deprecated
  */
 export function SomeIs<T>(fn: (val: T) => boolean): Mapped<Option<T>, boolean> {
-   return (opt: Option<T>) => opt.is_some() && fn(opt.unwrap_unchecked() as T);
+   return (opt: Option<T>) => opt.isSome() && fn(opt.unwrapUnchecked() as T);
 }
 
 /**
@@ -369,7 +368,7 @@ export function SomeIs<T>(fn: (val: T) => boolean): Mapped<Option<T>, boolean> {
 export function OkIs<T, E>(
    fn: (val: T) => boolean
 ): Mapped<Result<T, E>, boolean> {
-   return (res: Result<T, E>) => res.is_ok() && fn(res.unwrap_unchecked() as T);
+   return (res: Result<T, E>) => res.isOk() && fn(res.unwrapUnchecked() as T);
 }
 
 /**
@@ -381,8 +380,7 @@ export function OkIs<T, E>(
 export function ErrIs<E, T>(
    fn: (val: E) => boolean
 ): Mapped<Result<T, E>, boolean> {
-   return (res: Result<T, E>) =>
-      res.is_err() && fn(res.unwrap_unchecked() as E);
+   return (res: Result<T, E>) => res.isErr() && fn(res.unwrapUnchecked() as E);
 }
 
 const BubbleToDefault = Symbol("BubbleToDefault");

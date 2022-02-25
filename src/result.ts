@@ -1,4 +1,4 @@
-import { Result as BaseResult, IsResult } from "./monad/result";
+import { Result as BaseResult, isResult } from "./monad/result";
 export { Ok, Err } from "./monad/result";
 
 export type Result<T, E> = BaseResult<T, E>;
@@ -21,7 +21,7 @@ export interface ResultGuard<E> {
  * }
  *
  * function greet(username: string): string {
- *    return fetch_user(username).map_or_else(
+ *    return fetch_user(username).mapOrElse(
  *       (err) => `Error: ${err}`,
  *       (user) => `Hello ${user}, my old friend!`
  *    );
@@ -58,7 +58,7 @@ export interface ResultGuard<E> {
  * });
  *
  * function show_pos(x: number, y: number): string {
- *    return get_pos(x, y).map_or_else(
+ *    return get_pos(x, y).mapOrElse(
  *       (err) => `Error: ${err}`,
  *       ({ x, y }) => `Pos (${x},${y})`
  *    );
@@ -86,10 +86,10 @@ export function Result<T, E, A extends any[]>(
    };
 }
 
-Result.is = IsResult;
+Result.is = isResult;
 
 function guard<T, E>(res: Result<T, E>): T {
-   if (res.is_ok()) {
+   if (res.isOk()) {
       return res.unwrap();
    } else {
       throw new GuardedResultExit(res);

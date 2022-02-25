@@ -76,12 +76,12 @@ class ResultType<T, E> {
     *
     * @example
     * const x = Ok(10);
-    * assert.equal(x.is_ok(), true);
+    * assert.equal(x.isOk(), true);
     *
     * const x = Err(10);
-    * assert.equal(x.is_ok(), false);
+    * assert.equal(x.isOk(), false);
     */
-   is_ok(): this is Ok<T, E> {
+   isOk(): this is Ok<T, E> {
       return this[IsOk];
    }
 
@@ -91,19 +91,19 @@ class ResultType<T, E> {
     *
     * @example
     * const x = Ok(10);
-    * assert.equal(x.is_err(), false);
+    * assert.equal(x.isErr(), false);
     *
     * const x = Err(10);
-    * assert.equal(x.is_err(), true);
+    * assert.equal(x.isErr(), true);
     */
-   is_err(): this is Err<E, T> {
+   isErr(): this is Err<E, T> {
       return !this[IsOk];
    }
 
    /**
    Returns the contained `Ok` value and throws `Error(msg)` if `Err`.
 
-   To avoid throwing, consider `is_ok`, `unwrap_or`, `unwrap_or_else` or
+   To avoid throwing, consider `isOk`, `unwrapOr`, `unwrapOrElse` or
    `match` to handle the `Err` case.
    
    @example
@@ -124,16 +124,16 @@ class ResultType<T, E> {
    /**
    Returns the contained `Err` value and throws `Error(msg)` if `Ok`.
 
-   To avoid throwing, consider `is_err` or `match` to handle the `Ok` case.
+   To avoid throwing, consider `isErr` or `match` to handle the `Ok` case.
    
    @example
    const x = Ok(1);
-   const y = x.expect_err("Was Ok"); // throws
+   const y = x.expectErr("Was Ok"); // throws
 
    const x = Err(1);
-   assert.equal(x.expect_err("Was Ok"), 1);
+   assert.equal(x.expectErr("Was Ok"), 1);
    */
-   expect_err(msg: string): E {
+   expectErr(msg: string): E {
       if (this[IsOk]) {
          throw new Error(msg);
       } else {
@@ -144,7 +144,7 @@ class ResultType<T, E> {
    /**
    Returns the contained `Ok` value and throws if `Err`.
 
-   To avoid throwing, consider `is_ok`, `unwrap_or`, `unwrap_or_else` or
+   To avoid throwing, consider `isOk`, `unwrapOr`, `unwrapOrElse` or
    `match` to handle the `Err` case. To throw a more informative error use
    `expect`.
    
@@ -162,8 +162,8 @@ class ResultType<T, E> {
    /**
    Returns the contained `Err` value and throws if `Ok`.
 
-   To avoid throwing, consider `is_err` or `match` to handle the `Ok` case.
-   To throw a more informative error use `expect_err`.
+   To avoid throwing, consider `isErr` or `match` to handle the `Ok` case.
+   To throw a more informative error use `expectErr`.
    
    @example
    const x = Ok(1);
@@ -172,24 +172,24 @@ class ResultType<T, E> {
    const x = Err(1);
    assert.equal(x.unwrap(), 1);
    */
-   unwrap_err(): E {
-      return this.expect_err("Failed to unwrap_err Result (found Ok)");
+   unwrapErr(): E {
+      return this.expectErr("Failed to unwrapErr Result (found Ok)");
    }
 
    /**
     * Returns the contained `Ok` value or a provided default.
     *
     * The provided default is eagerly evaluated. If you are passing the result
-    * of a function call, consider `unwrap_or_else`, which is lazily evaluated.
+    * of a function call, consider `unwrapOrElse`, which is lazily evaluated.
     *
     * @example
     * const x = Ok(10);
-    * assert.equal(x.unwrap_or(1), 10);
+    * assert.equal(x.unwrapOr(1), 10);
     *
     * const x = Err(10);
-    * assert.equal(x.unwrap_or(1), 1);
+    * assert.equal(x.unwrapOr(1), 1);
     */
-   unwrap_or(def: T): T {
+   unwrapOr(def: T): T {
       return this[IsOk] ? (this.val as T) : def;
    }
 
@@ -198,12 +198,12 @@ class ResultType<T, E> {
     *
     * @example
     * const x = Ok(10);
-    * assert.equal(x.unwrap_or_else(() => 1 + 1), 10);
+    * assert.equal(x.unwrapOrElse(() => 1 + 1), 10);
     *
     * const x = Err(10);
-    * assert.equal(x.unwrap_or_else(() => 1 + 1), 2);
+    * assert.equal(x.unwrapOrElse(() => 1 + 1), 2);
     */
-   unwrap_or_else(f: () => T): T {
+   unwrapOrElse(f: () => T): T {
       return this[IsOk] ? (this.val as T) : f();
    }
 
@@ -215,12 +215,12 @@ class ResultType<T, E> {
     *
     * @example
     * const x = Ok(10);
-    * assert.equal(x.unwrap_unchecked(), 10);
+    * assert.equal(x.unwrapUnchecked(), 10);
     *
     * const x = Err(20);
-    * assert.equal(x.unwrap_unchecked(), 20);
+    * assert.equal(x.unwrapUnchecked(), 20);
     */
-   unwrap_unchecked(): T | E {
+   unwrapUnchecked(): T | E {
       return this.val;
    }
 
@@ -228,7 +228,7 @@ class ResultType<T, E> {
     * Returns the Option if it is `Ok`, otherwise returns `resb`.
     *
     * `resb` is eagerly evaluated. If you are passing the result of a function
-    * call, consider `or_else`, which is lazily evaluated.
+    * call, consider `orElse`, which is lazily evaluated.
     *
     * @example
     * const x = Ok(10);
@@ -249,18 +249,18 @@ class ResultType<T, E> {
     *
     * @example
     * const x = Ok(10);
-    * const xor = x.or_else(() => Ok(1));
+    * const xor = x.orElse(() => Ok(1));
     * assert.equal(xor.unwrap(), 10);
     *
     * const x = Err(10);
-    * const xor = x.or_else(() => Ok(1));
+    * const xor = x.orElse(() => Ok(1));
     * assert.equal(xor.unwrap(), 1);
     *
     * const x = Err(10);
-    * const xor = x.or_else((e) => Err(`val ${e}`));
-    * assert.equal(xor.unwrap_err(), "val 10");
+    * const xor = x.orElse((e) => Err(`val ${e}`));
+    * assert.equal(xor.unwrapErr(), "val 10");
     */
-   or_else<F>(f: (err: E) => Result<T, F>): Result<T, F> {
+   orElse<F>(f: (err: E) => Result<T, F>): Result<T, F> {
       return this[IsOk] ? (this as unknown as Result<T, F>) : f(this.val as E);
    }
 
@@ -274,11 +274,11 @@ class ResultType<T, E> {
     *
     * const x = Err(10);
     * const xand = x.and(Ok(1));
-    * assert.equal(xand.unwrap_err(), 10);
+    * assert.equal(xand.unwrapErr(), 10);
     *
     * const x = Ok(10);
     * const xand = x.and(Err(1));
-    * assert.equal(xand.unwrap_err(), 1);
+    * assert.equal(xand.unwrapErr(), 1);
     */
    and<U>(resb: Result<U, E>): Result<U, E> {
       return this[IsOk] ? resb : (this as Err<E, any>);
@@ -290,18 +290,18 @@ class ResultType<T, E> {
     *
     * @example
     * const x = Ok(10);
-    * const xand = x.and_then((n) => n + 1);
+    * const xand = x.andThen((n) => n + 1);
     * assert.equal(xand.unwrap(), 11);
     *
     * const x = Err(10);
-    * const xand = x.and_then((n) => n + 1);
-    * assert.equal(xand.unwrap_err(), 10);
+    * const xand = x.andThen((n) => n + 1);
+    * assert.equal(xand.unwrapErr(), 10);
     *
     * const x = Ok(10);
     * const xand = x.and(Err(1));
-    * assert.equal(xand.unwrap_err(), 1);
+    * assert.equal(xand.unwrapErr(), 1);
     */
-   and_then<U>(f: (val: T) => Result<U, E>): Result<U, E> {
+   andThen<U>(f: (val: T) => Result<U, E>): Result<U, E> {
       return this[IsOk] ? f(this.val as T) : (this as Err<E, any>);
    }
 
@@ -327,10 +327,10 @@ class ResultType<T, E> {
     *
     * @example
     * const x = Err(10);
-    * const xmap = x.map_err((n) => `number ${n}`);
-    * assert.equal(xmap.unwrap_err(), "number 10");
+    * const xmap = x.mapErr((n) => `number ${n}`);
+    * assert.equal(xmap.unwrapErr(), "number 10");
     */
-   map_err<F>(op: (err: E) => F): Result<T, F> {
+   mapErr<F>(op: (err: E) => F): Result<T, F> {
       return new ResultType(
          this[IsOk] ? (this.val as T) : op(this.val as E),
          this[IsOk]
@@ -342,18 +342,18 @@ class ResultType<T, E> {
     * `Ok` value and returns the result.
     *
     * The provided default is eagerly evaluated. If you are passing the result
-    * of a function call, consider `map_or_else`, which is lazily evaluated.
+    * of a function call, consider `mapOrElse`, which is lazily evaluated.
     *
     * @example
     * const x = Ok(10);
-    * const xmap = x.map_or(1, (n) => n + 1);
+    * const xmap = x.mapOr(1, (n) => n + 1);
     * assert.equal(xmap.unwrap(), 11);
     *
     * const x = Err(10);
-    * const xmap = x.map_or(1, (n) => n + 1);
+    * const xmap = x.mapOr(1, (n) => n + 1);
     * assert.equal(xmap.unwrap(), 1);
     */
-   map_or<U>(def: U, f: (val: T) => U): U {
+   mapOr<U>(def: U, f: (val: T) => U): U {
       return this[IsOk] ? f(this.val as T) : def;
    }
 
@@ -362,14 +362,14 @@ class ResultType<T, E> {
     * `Ok` value and returns the result.
     *
     * const x = Ok(10);
-    * const xmap = x.map_or_else(() => 1 + 1, (n) => n + 1);
+    * const xmap = x.mapOrElse(() => 1 + 1, (n) => n + 1);
     * assert.equal(xmap.unwrap(), 11);
     *
     * const x = Err(10);
-    * const xmap = x.map_or_else(() => 1 + 1, (n) => n + 1);
+    * const xmap = x.mapOrElse(() => 1 + 1, (n) => n + 1);
     * assert.equal(xmap.unwrap(), 2);
     */
-   map_or_else<U>(def: (err: E) => U, f: (val: T) => U): U {
+   mapOrElse<U>(def: (err: E) => U, f: (val: T) => U): U {
       return this[IsOk] ? f(this.val as T) : def(this.val as E);
    }
 
@@ -380,12 +380,12 @@ class ResultType<T, E> {
     * @example
     * const x = Ok(10);
     * const opt = x.ok();
-    * assert.equal(x.is_some(), true);
+    * assert.equal(x.isSome(), true);
     * assert.equal(x.unwrap(), 10);
     *
     * const x = Err(10);
     * const opt = x.ok();
-    * assert.equal(x.is_none(), true);
+    * assert.equal(x.isNone(), true);
     * const y = x.unwrap(); // throws
     */
    ok(): Option<T> {
@@ -402,7 +402,7 @@ class ResultType<T, E> {
  * assert.equal(Result.is(Err(1), true));
  * assert.equal(Result.is(Some(1), false));
  */
-export function IsResult(val: unknown): val is Result<unknown, unknown> {
+export function isResult(val: unknown): val is Result<unknown, unknown> {
    return val instanceof ResultType;
 }
 
@@ -416,7 +416,7 @@ export function IsResult(val: unknown): val is Result<unknown, unknown> {
  *
  * @example
  * const x = Ok(10);
- * assert.equal(x.is_some(), true);
+ * assert.equal(x.isSome(), true);
  * assert.equal(x.unwrap(), 10);
  */
 export function Ok<T, E = T>(val: T): Ok<T, E> {
@@ -433,44 +433,56 @@ export function Ok<T, E = T>(val: T): Ok<T, E> {
  *
  * @example
  * const x = Err(10);
- * assert.equal(x.is_err(), true);
- * assert.equal(x.unwrap_err(), 10);
+ * assert.equal(x.isErr(), true);
+ * assert.equal(x.unwrapErr(), 10);
  */
 export function Err<E, T = E>(val: E): Err<E, T> {
    return new ResultType<T, E>(val, false) as Err<E, T>;
 }
 
 interface ResultType<T, E> {
-   isOk: ResultType<T, E>["is_ok"];
-   isErr: ResultType<T, E>["is_err"];
-   expectErr: ResultType<T, E>["expect_err"];
-   unwrapErr: ResultType<T, E>["unwrap_err"];
-   unwrapOr: ResultType<T, E>["unwrap_or"];
-   unwrapOrElse: ResultType<T, E>["unwrap_or_else"];
-   unwrapUnchecked: ResultType<T, E>["unwrap_unchecked"];
-   orElse: ResultType<T, E>["or_else"];
-   andThen: ResultType<T, E>["and_then"];
-   mapErr: ResultType<T, E>["map_err"];
-   mapOr: ResultType<T, E>["map_or"];
-   mapOrElse: ResultType<T, E>["map_or_else"];
+   /** @deprecated */
+   is_ok: ResultType<T, E>["isOk"];
+   /** @deprecated */
+   is_err: ResultType<T, E>["isErr"];
+   /** @deprecated */
+   expect_err: ResultType<T, E>["expectErr"];
+   /** @deprecated */
+   unwrap_err: ResultType<T, E>["unwrapErr"];
+   /** @deprecated */
+   unwrap_or: ResultType<T, E>["unwrapOr"];
+   /** @deprecated */
+   unwrap_or_else: ResultType<T, E>["unwrapOrElse"];
+   /** @deprecated */
+   unwrap_unchecked: ResultType<T, E>["unwrapUnchecked"];
+   /** @deprecated */
+   or_else: ResultType<T, E>["orElse"];
+   /** @deprecated */
+   and_then: ResultType<T, E>["andThen"];
+   /** @deprecated */
+   map_err: ResultType<T, E>["mapErr"];
+   /** @deprecated */
+   map_or: ResultType<T, E>["mapOr"];
+   /** @deprecated */
+   map_or_else: ResultType<T, E>["mapOrElse"];
 }
 
 Object.assign(ResultType.prototype, {
-   isOk: ResultType.prototype.is_ok,
-   isErr: ResultType.prototype.is_err,
-   expectErr: ResultType.prototype.expect_err,
-   unwrapErr: ResultType.prototype.unwrap_err,
-   unwrapOr: ResultType.prototype.unwrap_or,
-   unwrapOrElse: ResultType.prototype.unwrap_or_else,
-   unwrapUnchecked: ResultType.prototype.unwrap_unchecked,
-   orElse: ResultType.prototype.or_else,
-   andThen: ResultType.prototype.and_then,
-   mapErr: ResultType.prototype.map_err,
-   mapOr: ResultType.prototype.map_or,
-   mapOrElse: ResultType.prototype.map_or_else,
+   is_ok: ResultType.prototype.isOk,
+   is_err: ResultType.prototype.isErr,
+   expect_err: ResultType.prototype.expectErr,
+   unwrap_err: ResultType.prototype.unwrapErr,
+   unwrap_or: ResultType.prototype.unwrapOr,
+   unwrap_or_else: ResultType.prototype.unwrapOrElse,
+   unwrap_unchecked: ResultType.prototype.unwrapUnchecked,
+   or_else: ResultType.prototype.orElse,
+   and_then: ResultType.prototype.andThen,
+   map_err: ResultType.prototype.mapErr,
+   map_or: ResultType.prototype.mapOr,
+   map_or_else: ResultType.prototype.mapOrElse,
 });
 
 Object.freeze(ResultType.prototype);
-Object.freeze(IsResult);
+Object.freeze(isResult);
 Object.freeze(Ok);
 Object.freeze(Err);

@@ -17,10 +17,10 @@ function fifty_div(num: number): Result<Option<number>, string> {
 }
 
 const compute_facts = Result(($: Guard<string>, input: Option<number>) => {
-   const num = $(input.ok_or("no number"));
+   const num = $(input.okOr("no number"));
    return Ok([
       fizzbuzz(num),
-      $(fifty_div(num)).map_or("not div", (res) => `div ${res}`),
+      $(fifty_div(num)).mapOr("not div", (res) => `div ${res}`),
    ]);
 });
 

@@ -9,13 +9,16 @@ for TypeScript.
 -  Express, chain and map values as if you were writing in Rust.
 -  Make guarded functions that return at the first sign of trouble (`?`).
 -  Use the `match` adaptation to simplify conditionals.
--  API available both `snake_case` and `camelCase`.
+-  ~~API available both `snake_case` and `camelCase`.~~
 
 Zero dependencies, full test coverage and examples for every function at your
 fingertips with JSDoc comments.
 
-<sub>Exported functions are also types, so VSCode shows them a different
-colour. This might not be a feature but I'm really digging it. YMMV.</sub>
+## Patch 0.9.7
+
+After lots of great feedback, I've decided that the `snake_case` API will be
+removed in the 1.0 release. Patch 0.9.7 moves `camelCase` to the front seat
+without breaking anything.
 
 # Installation
 
@@ -75,14 +78,14 @@ const res: number = val.unwrap();
 // Throw our own error message in the case of None:
 const res: number = val.expect("Division Failed");
 // Pull the value out, or use a default if None:
-const res: number = val.unwrap_or(1);
+const res: number = val.unwrapOr(1);
 
 // Map the Option<T> to Option<U> by applying a function:
 const strval: Option<string> = val.map((num) => `Result = ${num}`);
 // Then unwrap the value or use a default if None:
-const res: string = strval.unwrap_or("Error");
+const res: string = strval.unwrapOr("Error");
 // Map, assign a default and unwrap in one line:
-const res: string = val.map_or("Error", (num) => `Result = ${num}`);
+const res: string = val.mapOr("Error", (num) => `Result = ${num}`);
 ```
 
 _The type annotations applied to the const variables are for information -_
@@ -112,18 +115,18 @@ const val = divide(100, 20);
 // These are the same as Option (as are many of the other methods):
 const res: number = val.unwrap();
 const res: number = val.expect("Division Failed");
-const res: number = val.unwrap_or(1);
+const res: number = val.unwrapOr(1);
 // Map Result<T, E> to Result<U, E>, similar to mapping Option<T> to Option<U>
 const strval: Result<string, string> = val.map((num) => `Result = ${num}`);
-const res: string = strval.unwrap_or("Error");
-const res: string = val.map_or("Error", (num) => `Result = ${num}`);
+const res: string = strval.unwrapOr("Error");
+const res: string = val.mapOr("Error", (num) => `Result = ${num}`);
 
 // We can unwrap the error, which throws if the Result is Ok:
-const err: string = val.unwrap_err();
-const err: string = val.expect_err("Expected this to fail");
+const err: string = val.unwrapErr();
+const err: string = val.expectErr("Expected this to fail");
 
 // Or map the error, mapping Result<T, E> to Result<T, F>
-const objerr: Result<number, Error> = val.map_err((message) => {
+const objerr: Result<number, Error> = val.mapErr((message) => {
    return new Error(message);
 });
 ```
@@ -139,7 +142,7 @@ Because they are so similar, it's possible to transform an `Option<T>` into a
 const val: Option<number> = divide(100, 10);
 
 // Here, the argument provides the Err value to be used if val is None:
-const res: Result<number, string> = val.ok_or("Division Error");
+const res: Result<number, string> = val.okOr("Division Error");
 
 // And to turn it back into an Option:
 const opt: Option<number> = res.ok();
@@ -268,7 +271,7 @@ const get_pos = Option((guard, x: number, y: number) => {
 });
 
 function show_pos(x: number, y: number): string {
-   return get_pos(x, y).map_or("Invalid Pos", ({ x, y }) => `Pos (${x},${y})`);
+   return get_pos(x, y).mapOr("Invalid Pos", ({ x, y }) => `Pos (${x},${y})`);
 }
 
 assert.equal(show_pos(10, 20), "Pos (100,200)");
@@ -306,7 +309,7 @@ const get_pos = Result((guard: Guard<string>, x: number, y: number) => {
 });
 
 function show_pos(x: number, y: number): string {
-   return get_pos(x, y).map_or_else(
+   return get_pos(x, y).mapOrElse(
       (err) => `Error: ${err}`,
       ({ x, y }) => `Pos (${x},${y})`
    );

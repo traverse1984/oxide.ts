@@ -13,8 +13,8 @@ describe("Result<T, E>", () => {
    describe("Err<E>", () => {
       it("Creates Err<E> when called with any other value", () =>
          expect(Err(1)).to.be.an("object"));
-      it("Can be nested with Err.from", () =>
-         expect(Err(Err(1)).unwrap_err().unwrap_err()).to.equal(1));
+      it("Can be nested", () =>
+         expect(Err(Err(1)).unwrapErr().unwrapErr()).to.equal(1));
       it("Is matched by Result.is", () => expect(Result.is(Err(1))).to.be.true);
    });
 
@@ -40,14 +40,14 @@ describe("Result<T, E>", () => {
          expect(Ok(1).neq(Ok(2))).to.be.true;
       });
 
-      it("is_ok", () => {
-         expect(Ok(1).is_ok()).to.be.true;
-         expect(Err(1).is_ok()).to.be.false;
+      it("isOk", () => {
+         expect(Ok(1).isOk()).to.be.true;
+         expect(Err(1).isOk()).to.be.false;
       });
 
-      it("is_none", () => {
-         expect(Ok(1).is_err()).to.be.false;
-         expect(Err(1).is_err()).to.be.true;
+      it("isNone", () => {
+         expect(Ok(1).isErr()).to.be.false;
+         expect(Err(1).isErr()).to.be.true;
       });
 
       it("expect", () => {
@@ -55,9 +55,9 @@ describe("Result<T, E>", () => {
          expect(() => Err(1).expect("test")).to.throw("test");
       });
 
-      it("expect_err", () => {
-         expect(Err(1).expect_err("test")).to.equal(1);
-         expect(() => Ok(1).expect_err("test")).to.throw("test");
+      it("expectErr", () => {
+         expect(Err(1).expectErr("test")).to.equal(1);
+         expect(() => Ok(1).expectErr("test")).to.throw("test");
       });
 
       it("unwrap", () => {
@@ -65,24 +65,24 @@ describe("Result<T, E>", () => {
          expect(() => Err(1).unwrap()).to.throw(/unwrap/);
       });
 
-      it("unwrap_err", () => {
-         expect(Err(1).unwrap_err()).to.equal(1);
-         expect(() => Ok(1).unwrap_err()).to.throw(/unwrap/);
+      it("unwrapErr", () => {
+         expect(Err(1).unwrapErr()).to.equal(1);
+         expect(() => Ok(1).unwrapErr()).to.throw(/unwrap/);
       });
 
-      it("unwrap_or", () => {
-         expect(Ok(1).unwrap_or(2)).to.equal(1);
-         expect(Err(1).unwrap_or(2)).to.equal(2);
+      it("unwrapOr", () => {
+         expect(Ok(1).unwrapOr(2)).to.equal(1);
+         expect(Err(1).unwrapOr(2)).to.equal(2);
       });
 
-      it("unwrap_or_else", () => {
-         expect(Ok(1).unwrap_or_else(() => 2)).to.equal(1);
-         expect(Err(1).unwrap_or_else(() => 2)).to.equal(2);
+      it("unwrapOrElse", () => {
+         expect(Ok(1).unwrapOrElse(() => 2)).to.equal(1);
+         expect(Err(1).unwrapOrElse(() => 2)).to.equal(2);
       });
 
-      it("unwrap_unchecked", () => {
-         expect(Ok(1).unwrap_unchecked()).to.equal(1);
-         expect(Err(1).unwrap_unchecked()).to.equal(1);
+      it("unwrapUnchecked", () => {
+         expect(Ok(1).unwrapUnchecked()).to.equal(1);
+         expect(Err(1).unwrapUnchecked()).to.equal(1);
       });
 
       it("or", () => {
@@ -90,39 +90,39 @@ describe("Result<T, E>", () => {
          expect(Err(1).or(Ok(2)).unwrap()).to.equal(2);
       });
 
-      it("or_else", () => {
+      it("orElse", () => {
          expect(
             Ok(1)
-               .or_else(() => Ok(2))
+               .orElse(() => Ok(2))
                .unwrap()
          ).to.equal(1);
          expect(
             Err(2)
-               .or_else((n) => Err(`err ${n}`))
-               .unwrap_err()
+               .orElse((n) => Err(`err ${n}`))
+               .unwrapErr()
          ).to.equal("err 2");
       });
 
       it("and", () => {
-         expect(Ok(1).and(Err(2)).is_err()).to.be.true;
-         expect(Err(1).and(Ok(2)).is_err()).to.be.true;
+         expect(Ok(1).and(Err(2)).isErr()).to.be.true;
+         expect(Err(1).and(Ok(2)).isErr()).to.be.true;
          expect(Ok(1).and(Ok("two")).unwrap()).to.equal("two");
       });
 
-      it("and_then", () => {
+      it("andThen", () => {
          expect(
             Ok(1)
-               .and_then(() => Err(1))
-               .is_err()
+               .andThen(() => Err(1))
+               .isErr()
          ).to.be.true;
          expect(
             Err(1)
-               .and_then(() => Ok(2))
-               .is_err()
+               .andThen(() => Ok(2))
+               .isErr()
          ).to.be.true;
          expect(
             Ok(1)
-               .and_then((n) => Ok(`num ${n + 1}`))
+               .andThen((n) => Ok(`num ${n + 1}`))
                .unwrap()
          ).to.equal("num 2");
       });
@@ -140,33 +140,33 @@ describe("Result<T, E>", () => {
          ).to.throw(/unwrap/);
       });
 
-      it("map_err", () => {
+      it("mapErr", () => {
          expect(
             Err(1)
-               .map_err((val) => val + 1)
-               .unwrap_err()
+               .mapErr((val) => val + 1)
+               .unwrapErr()
          ).to.equal(2);
          expect(() =>
             Ok(1)
-               .map_err((val) => val + 1)
-               .unwrap_err()
+               .mapErr((val) => val + 1)
+               .unwrapErr()
          ).to.throw(/unwrap/);
       });
 
-      it("map_or", () => {
-         expect(Ok(1).map_or(3, (val) => val + 1)).to.equal(2);
-         expect(Err(1).map_or(3, (val) => val + 1)).to.equal(3);
+      it("mapOr", () => {
+         expect(Ok(1).mapOr(3, (val) => val + 1)).to.equal(2);
+         expect(Err(1).mapOr(3, (val) => val + 1)).to.equal(3);
       });
 
-      it("map_or_else", () => {
+      it("mapOrElse", () => {
          expect(
-            Ok(1).map_or_else(
+            Ok(1).mapOrElse(
                () => 3,
                (val) => val + 1
             )
          ).to.equal(2);
          expect(
-            Err(1).map_or_else(
+            Err(1).mapOrElse(
                (err) => err + 2,
                (val) => val + 1
             )
@@ -174,9 +174,9 @@ describe("Result<T, E>", () => {
       });
 
       it("ok", () => {
-         expect(Ok(1).ok().is_some()).to.be.true;
+         expect(Ok(1).ok().isSome()).to.be.true;
          expect(Ok(1).ok().unwrap()).to.equal(1);
-         expect(Err(1).ok().is_none()).to.be.true;
+         expect(Err(1).ok().isNone()).to.be.true;
          expect(() => Err(1).ok().unwrap()).to.throw(/unwrap/);
       });
    });
