@@ -43,7 +43,7 @@ const move = Result(
    }
 );
 
-describe("Example (player-tags)", () => {
+export default function suite() {
    it("Player one", () =>
       expect(move("player-one", Some(50), Some(50)).unwrap()).to.equal(
          "move 1234 #p1 to 45 45"
@@ -81,4 +81,4 @@ describe("Example (player-tags)", () => {
          "Missing position"
       );
    });
-});
+}

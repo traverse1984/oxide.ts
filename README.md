@@ -5,20 +5,19 @@ for TypeScript.
 
 ## Features
 
--  Add more meaning to return types.
--  Express, chain and map values as if you were writing in Rust.
--  Make guarded functions that return at the first sign of trouble (`?`).
--  Use the `match` adaptation to simplify conditionals.
--  ~~API available both `snake_case` and `camelCase`.~~
-
 Zero dependencies, full test coverage and examples for every function at your
 fingertips with JSDoc comments.
 
-## Patch 0.9.7
+-  Add more meaning to return types.
+-  Express, chain and map values as if you were writing in Rust.
+-  Use the `match` adaptation to simplify conditionals.
+-  Quickly test multiple Results or Options with `.all` and `.any`.
+-  Convert throws and rejections into Results and Options with `.safe`.
 
-After lots of great feedback, I've decided that the `snake_case` API will be
-removed in the 1.0 release. Patch 0.9.7 moves `camelCase` to the front seat
-without breaking anything.
+## Patch 0.9.10
+
+-  ~~Make guarded functions that return at the first sign of trouble (`?`).~~
+-  ~~API available both `snake_case` and `camelCase`.~~
 
 # Installation
 
@@ -38,13 +37,14 @@ you should also be able to hover over methods to see some examples.
 -  [Result type](#result)
 -  [Transformation](#transformation)
 -  [Nesting](#nesting)
+-  [All](#all)
+-  [Any](#any)
 -  [Match](#match)
 
 ### Advanced Features
 
 -  [Word to the wise](#word-to-the-wise)
--  [Guarded Option function](#guarded-option-function)
--  [Guarded Result function](#guarded-result-function)
+-  [Safe functions and Promises](#safe)
 -  [Combined Match](#combined-matching)
 -  [Match Chains](#chained-matching)
 
@@ -234,97 +234,115 @@ match structure.
 
 [&laquo; To contents](#usage)
 
-# Advanced Features
+# Safe
 
-This section talks about `match`, `Guard` and `_`. Examples here are lifted
-straight from the JSDoc.
+Capture the outcome of a function or Promise as an `Option<T>` or
+`Result<T, E>`, preventing throwing (function) or rejection (Promise).
+
+## Safe Functions
+
+Calls the passed function with the arguments provided and returns an
+`Option<T>` or `Result<T, Error>`. The outcome is `Some`/`Ok` if the function
+returned, or `None`/`Err` if it threw. In the case of `Result.safe`, any thrown
+value which is not an `Error` is converted.
+
+```ts
+function mightThrow(throws: boolean) {
+   if (throws) {
+      throw new Error("Throw");
+   }
+   return "Hello World";
+}
+
+const x: Result<string, Error> = Result.safe(mightThrow, true);
+assert.equal(x.unwrapErr() instanceof Error, true);
+assert.equal(x.unwrapErr().message, "Throw");
+
+const x = Result.safe(() => mightThrow(false));
+assert.equal(x.unwrap(), "Hello World");
+```
+
+**Note:** Any function which returns a Promise (or PromiseLike) value is
+rejected by the type signature. `Result<Promise<T>, Error>` or
+`Option<Promise<T>>` are not useful types - using it in this way is likely
+to be a mistake.
+
+## Safe Promises
+
+Accepts a `Promise` and returns a new Promise which always resolves to either
+an `Option<T>` or `Result<T, Error>`. The Result is `Some`/`Ok` if the original
+promise resolved, or `None`/`Err` if it rejected. In the case of `Result.safe`,
+any rejection value which is not an `Error` is converted.
+
+```ts
+async function mightThrow(throws: boolean) {
+   if (throws) {
+      throw new Error("Throw");
+   }
+   return "Hello World";
+}
+
+const x = await Result.safe(mightThrow(true));
+assert.equal(x.unwrapErr() instanceof Error, true);
+assert.equal(x.unwrapErr().message, "Throw");
+
+const x = await Result.safe(mightThrow(false));
+assert.equal(x.unwrap(), "Hello World");
+```
+
+[&laquo; To contents](#usage)
+
+# All
+
+Reduce multiple `Option`s or `Result`s to a single one. The first `None` or
+`Err` encountered is returned, otherwise the outcome is a `Some`/`Ok`
+containing an array of all the unwrapped values.
+
+```ts
+function num(val: number): Result<number, string> {
+   return val > 10 ? Ok(val) : Err(`Value ${val} is too low.`);
+}
+
+const xyz = Result.all(num(20), num(30), num(40));
+const [x, y, z] = xyz.unwrap();
+assert.equal(x, 20);
+assert.equal(y, 30);
+assert.equal(z, 40);
+
+const err = Result.all(num(20), num(5), num(40));
+assert.equal(err.isErr(), true);
+assert.equal(err.unwrapErr(), "Value 5 is too low.");
+```
+
+[&laquo; To contents](#usage)
+
+# Any
+
+Reduce multiple `Option`s or `Result`s into a single one. The first `Some`/`Ok`
+found (if any) is returned, otherwise the outcome is `None`, or in the case of `Result` - an `Err` containing an array of all the unwrapped errors.
+
+```ts
+function num(val: number): Result<number, string> {
+   return val > 10 ? Ok(val) : Err(`Value ${val} is too low.`);
+}
+
+const x = Result.any(num(5), num(20), num(2));
+assert.equal(x.unwrap(), 20);
+
+const efg = Result.any(num(2), num(5), num(8));
+const [e, f, g] = efg.unwrapErr();
+assert.equal(e, "Value 2 is too low.");
+assert.equal(f, "Value 5 is too low.");
+assert.equal(g, "Value 8 is too low.");
+```
+
+[&laquo; To contents](#usage)
+
+# Advanced Features
 
 ## Word to the wise
 
-At it's heart this library is an implementation of `Option<T>` and
-`Result<T, E>` - it aims to bring them seamlessly to TypeScript. The
-`match` adaptation and guarded functions shift the TypeScript idiom and may
-not be suitable for your project - especially if you work with others.
-
-<sub>They are cool, though...</sub>
-
-# Guarded Option Function
-
-Calling `Option(fn)` creates a new function with an `OptionGuard` helper.
-The guard lets you quickly and safely unwrap other `Option` values, and
-causes the function to return early with `None` if an unwrap fails. A
-function created in this way always returns an `Option<T>`.
-
-```ts
-import { Option, Some, None } from "oxide.ts";
-
-function to_pos(pos: number): Option<number> {
-   return pos > 0 && pos < 100 ? Some(pos * 10) : None;
-}
-
-// Creates (x: number, y: number) => Option<{ x: number; y: number }>;
-const get_pos = Option((guard, x: number, y: number) => {
-   return Some({
-      x: guard(to_pos(x)),
-      y: guard(to_pos(y)),
-   });
-});
-
-function show_pos(x: number, y: number): string {
-   return get_pos(x, y).mapOr("Invalid Pos", ({ x, y }) => `Pos (${x},${y})`);
-}
-
-assert.equal(show_pos(10, 20), "Pos (100,200)");
-assert.equal(show_pos(1, 99), "Pos (10,990)");
-assert.equal(show_pos(0, 50), "Invalid Pos");
-assert.equal(show_pos(50, 100), "Invalid Pos");
-```
-
-_See tests/examples/guard-bubbling.ts for some possible pitfalls when_
-_combined with `try`/`catch`._
-
-[&laquo; To contents](#usage)
-
-# Guarded Result Function
-
-Calling `Result(fn)` creates a new function with a `ResultGuard<E>` helper.
-The guard lets you quickly and safely unwrap other `Result` values
-(providing that they have the same `E` type), and causes the function to
-return early with `Err<E>` if an unwrap fails. A function create in this way
-always returns a `Result<T, E>`.
-
-```ts
-import { Result, Guard, Ok, Err } from "oxide.ts";
-
-function to_pos(pos: number): Result<number, string> {
-   return pos > 0 && pos < 100 ? Ok(pos * 10) : Err("Invalid Pos");
-}
-
-// (x: number, y: number) => Result<{ x: number; y: number }, string>;
-const get_pos = Result((guard: Guard<string>, x: number, y: number) => {
-   return Ok({
-      x: guard(to_pos(x)),
-      y: guard(to_pos(y)),
-   });
-});
-
-function show_pos(x: number, y: number): string {
-   return get_pos(x, y).mapOrElse(
-      (err) => `Error: ${err}`,
-      ({ x, y }) => `Pos (${x},${y})`
-   );
-}
-
-assert.equal(show_pos(10, 20), "Pos (100,200)");
-assert.equal(show_pos(1, 99), "Pos (10,990)");
-assert.equal(show_pos(0, 50), "Error: Invalid Pos");
-assert.equal(show_pos(50, 100), "Error: Invalid Pos");
-```
-
-_See tests/examples/guard-bubbling.ts for some possible pitfalls when_
-_combined with `try`/`catch`._
-
-[&laquo; To contents](#usage)
+The `match` adaptation shifts the TypeScript idiom and may not be suitable for your project - especially if you work with others.
 
 ### Combined Matching
 

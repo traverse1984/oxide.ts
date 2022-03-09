@@ -31,7 +31,7 @@ function facts(input: Option<number>): string {
    });
 }
 
-describe("Example (number-facts)", () => {
+export default function suite() {
    it("Handles valid cases", () => {
       expect(facts(Some(1))).to.equal("1 div 50");
       expect(facts(Some(3))).to.equal("fizz not div");
@@ -44,4 +44,4 @@ describe("Example (number-facts)", () => {
       expect(facts(None)).to.equal("no number");
       expect(facts(Some(0))).to.equal("div by 0");
    });
-});
+}

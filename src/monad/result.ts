@@ -20,7 +20,6 @@ class ResultType<T, E> {
     * Compares the Result to `cmp`, returns true if both are `Ok` or both
     * are `Err`. Acts as a type guard for `cmp is Result<unknown, unknown>`.
     *
-    * @example
     * const o = Ok(1);
     * const e = Err(1);
     *
@@ -72,7 +71,7 @@ class ResultType<T, E> {
 
    /**
     * Returns true if the Result is `Ok`. Acts as a type guard for
-    * `this is Ok<T, E>`.
+    * `this is Ok<T, any>`.
     *
     * @example
     * const x = Ok(10);
@@ -81,13 +80,13 @@ class ResultType<T, E> {
     * const x = Err(10);
     * assert.equal(x.isOk(), false);
     */
-   isOk(): this is Ok<T, E> {
+   isOk(): this is Ok<T, any> {
       return this[IsOk];
    }
 
    /**
     * Returns true if the Result is `Err`. Acts as a type guard for
-    * `this is Err<E, T>`.
+    * `this is Err<E, any>`.
     *
     * @example
     * const x = Ok(10);
@@ -96,7 +95,7 @@ class ResultType<T, E> {
     * const x = Err(10);
     * assert.equal(x.isErr(), true);
     */
-   isErr(): this is Err<E, T> {
+   isErr(): this is Err<E, any> {
       return !this[IsOk];
    }
 

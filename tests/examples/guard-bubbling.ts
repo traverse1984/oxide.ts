@@ -30,8 +30,10 @@ const test_number = Option((guard, num: Option<number>) => {
    }
 });
 
-describe("Example (guard-bubbling)", () => {
-   expect(test_number(Some(10)).unwrap()).to.equal(10);
-   expect(() => test_number(None).unwrap()).to.throw(/unwrap/);
-   expect(test_number(Some(7)).unwrap()).to.equal(0);
-});
+export default function suite() {
+   it("Bubbles real errors", () => {
+      expect(test_number(Some(10)).unwrap()).to.equal(10);
+      expect(() => test_number(None).unwrap()).to.throw(/unwrap/);
+      expect(test_number(Some(7)).unwrap()).to.equal(0);
+   });
+}
