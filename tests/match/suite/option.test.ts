@@ -1,19 +1,5 @@
 import { expect } from "chai";
-import {
-   Option,
-   Result,
-   Some,
-   None,
-   Ok,
-   Err,
-   match,
-   Fn,
-   SomeIs,
-   OkIs,
-   ErrIs,
-   _,
-   Default,
-} from "../../../src";
+import { Option, Some, None, match, _ } from "../../../src";
 
 export default function option() {
    function mappedMatch(input: Option<number>): string {
@@ -31,11 +17,14 @@ export default function option() {
       ]);
    }
 
+   /**
+    * @todo Needs better test
+    */
    function condMatch(input: Option<number>): string {
       return match(input, [
          [Some(35), "35"],
-         [SomeIs((n) => n > 30), "gt 30"],
-         [SomeIs((n) => n < 20), "lt 20"],
+         [(n) => n.unwrapOr(0) > 30, "gt 30"],
+         [(n) => n.unwrapOr(20) < 20, "lt 20"],
          () => "no match",
       ]);
    }

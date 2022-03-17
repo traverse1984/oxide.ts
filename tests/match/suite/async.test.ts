@@ -1,19 +1,5 @@
 import { expect } from "chai";
-import {
-   Option,
-   Result,
-   Some,
-   None,
-   Ok,
-   Err,
-   match,
-   Fn,
-   SomeIs,
-   OkIs,
-   ErrIs,
-   _,
-   Default,
-} from "../../../src";
+import { Option, Result, Some, None, Ok, Err, match } from "../../../src";
 
 export default function ________() {
    function mappedAsync(input: Option<Result<string, number>>) {

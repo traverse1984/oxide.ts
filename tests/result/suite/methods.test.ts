@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Result, Ok, Err } from "../../../src";
+import { Ok, Err } from "../../../src";
 
 export default function methods() {
    it("is", () => {

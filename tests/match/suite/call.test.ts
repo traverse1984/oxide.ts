@@ -1,19 +1,5 @@
 import { expect } from "chai";
-import {
-   Option,
-   Result,
-   Some,
-   None,
-   Ok,
-   Err,
-   match,
-   Fn,
-   SomeIs,
-   OkIs,
-   ErrIs,
-   _,
-   Default,
-} from "../../../src";
+import { match, _, Default } from "../../../src";
 
 export default function call() {
    it("Throws when input is neither Option or Result and pattern is not an array", () =>

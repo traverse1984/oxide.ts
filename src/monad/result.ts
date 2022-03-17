@@ -439,48 +439,6 @@ export function Err<E, T = E>(val: E): Err<E, T> {
    return new ResultType<T, E>(val, false) as Err<E, T>;
 }
 
-interface ResultType<T, E> {
-   /** @deprecated */
-   is_ok: ResultType<T, E>["isOk"];
-   /** @deprecated */
-   is_err: ResultType<T, E>["isErr"];
-   /** @deprecated */
-   expect_err: ResultType<T, E>["expectErr"];
-   /** @deprecated */
-   unwrap_err: ResultType<T, E>["unwrapErr"];
-   /** @deprecated */
-   unwrap_or: ResultType<T, E>["unwrapOr"];
-   /** @deprecated */
-   unwrap_or_else: ResultType<T, E>["unwrapOrElse"];
-   /** @deprecated */
-   unwrap_unchecked: ResultType<T, E>["unwrapUnchecked"];
-   /** @deprecated */
-   or_else: ResultType<T, E>["orElse"];
-   /** @deprecated */
-   and_then: ResultType<T, E>["andThen"];
-   /** @deprecated */
-   map_err: ResultType<T, E>["mapErr"];
-   /** @deprecated */
-   map_or: ResultType<T, E>["mapOr"];
-   /** @deprecated */
-   map_or_else: ResultType<T, E>["mapOrElse"];
-}
-
-Object.assign(ResultType.prototype, {
-   is_ok: ResultType.prototype.isOk,
-   is_err: ResultType.prototype.isErr,
-   expect_err: ResultType.prototype.expectErr,
-   unwrap_err: ResultType.prototype.unwrapErr,
-   unwrap_or: ResultType.prototype.unwrapOr,
-   unwrap_or_else: ResultType.prototype.unwrapOrElse,
-   unwrap_unchecked: ResultType.prototype.unwrapUnchecked,
-   or_else: ResultType.prototype.orElse,
-   and_then: ResultType.prototype.andThen,
-   map_err: ResultType.prototype.mapErr,
-   map_or: ResultType.prototype.mapOr,
-   map_or_else: ResultType.prototype.mapOrElse,
-});
-
 Object.freeze(ResultType.prototype);
 Object.freeze(isResult);
 Object.freeze(Ok);

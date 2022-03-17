@@ -1,19 +1,5 @@
 import { expect } from "chai";
-import {
-   Option,
-   Result,
-   Some,
-   None,
-   Ok,
-   Err,
-   match,
-   Fn,
-   SomeIs,
-   OkIs,
-   ErrIs,
-   _,
-   Default,
-} from "../../../src";
+import { match, _ } from "../../../src";
 
 export default function array() {
    function matchArr(input: number[]): string {

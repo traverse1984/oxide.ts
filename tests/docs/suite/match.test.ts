@@ -1,15 +1,5 @@
 import { expect } from "chai";
-import {
-   Option,
-   Some,
-   SomeIs,
-   None,
-   Result,
-   Ok,
-   Err,
-   match,
-   _,
-} from "../../../src";
+import { Option, Some, None, Result, Ok, Err, match, _ } from "../../../src";
 
 export default function match_tests() {
    {
@@ -128,20 +118,5 @@ export default function match_tests() {
       expect(can_proceed_2(Some(player2))).to.be.false;
       expect(can_proceed_2(Some(player3))).to.be.false;
       expect(can_proceed_2(None)).to.be.false;
-   });
-
-   function can_proceed_3(player: Option<Player>): boolean {
-      return match(player, [
-         [Some({ status: "banned" }), false],
-         [SomeIs((pl) => pl.age >= 18), true],
-         () => false,
-      ]);
-   }
-
-   it("can_proceed (3)", () => {
-      expect(can_proceed_3(Some(player1))).to.be.true;
-      expect(can_proceed_3(Some(player2))).to.be.false;
-      expect(can_proceed_3(Some(player3))).to.be.false;
-      expect(can_proceed_3(None)).to.be.false;
    });
 }

@@ -3,11 +3,6 @@ export { Ok, Err } from "./monad/result";
 
 export type Result<T, E> = BaseResult<T, E>;
 
-export interface ResultGuard<E> {
-   <U>(res: Result<U, E>): U;
-   bubble(err: unknown): void;
-}
-
 type ResultTypes<R> = {
    [K in keyof R]: R[K] extends Result<infer T, any> ? T : never;
 };
@@ -39,62 +34,15 @@ type ResultErrors<R> = {
  * assert.equal(greet("SuperKing77"), "Error: *silence*");
  * ```
  *
- * ### Guarded Function Helper
- * ## DEPRECATED
- *
- * This functionality will be removed in version 1.0.0.
- *
- * Calling `Result(fn)` creates a new function with a `ResultGuard<E>` helper.
- * The guard lets you quickly and safely unwrap other `Result` values
- * (providing that they have the same `E` type), and causes the function to
- * return early with `Err<E>` if an unwrap fails. A function create in this way
- * always returns a `Result<T, E>`.
- *
- * Note: If you intend to use `try`/`catch` inside this function, see
- * tests/examples/guard-bubbling.ts for some possible pit-falls.
- *
- * ```
- * function to_pos(pos: number): Result<number, string> {
- *    return pos > 0 && pos < 100
- *       ? Ok(pos * 10)
- *       : Err("Invalid Pos");
- * }
- *
- * // (x: number, y: number) => Result<{ x: number; y: number }, string>;
- * const get_pos = Result((guard: Guard<string>, x: number, y: number) => {
- *    return Ok({
- *       x: guard(to_pos(x)),
- *       y: guard(to_pos(y)),
- *    });
- * });
- *
- * function show_pos(x: number, y: number): string {
- *    return get_pos(x, y).mapOrElse(
- *       (err) => `Error: ${err}`,
- *       ({ x, y }) => `Pos (${x},${y})`
- *    );
- * }
- *
- * assert.equal(show_pos(10, 20), "Pos (100,200)");
- * assert.equal(show_pos(1, 99), "Pos (10,990)");
- * assert.equal(show_pos(0, 50), "Error: Invalid Pos");
- * assert.equal(show_pos(50, 100), "Error: Invalid Pos");
- * ```
+ * @todo Document new Result
  */
-export function Result<T, E, A extends any[]>(
-   fn: (guard: ResultGuard<E>, ...args: A) => Result<T, E>
-): (...args: A) => Result<T, E> {
-   return (...args) => {
-      try {
-         return fn(guard, ...args);
-      } catch (err) {
-         if (err instanceof GuardedResultExit) {
-            return err.result;
-         } else {
-            throw err;
-         }
-      }
-   };
+
+export function Result<T>(val: T): Result<NonNullable<T>, null> {
+   if (val === undefined || val === null || val !== val) {
+      return Err(null) as any;
+   } else {
+      return Ok(val) as any;
+   }
 }
 
 Result.is = isResult;
@@ -253,31 +201,7 @@ function any<R extends Result<any, any>[]>(
    return Err(err) as Err<ResultErrors<R>, any>;
 }
 
-function guard<U, E>(res: Result<U, E>): U {
-   if (res.isOk()) {
-      return res.unwrapUnchecked() as U;
-   } else {
-      throw new GuardedResultExit(res);
-   }
-}
-
-guard.bubble = (err: unknown) => {
-   if (err instanceof GuardedResultExit) {
-      throw err;
-   }
-};
-
-class GuardedResultExit<E> {
-   result: E;
-   constructor(result: E) {
-      this.result = result;
-      Object.freeze(this);
-   }
-}
-
-Object.freeze(GuardedResultExit.prototype);
 Object.freeze(Result);
-Object.freeze(guard);
 Object.freeze(safe);
 Object.freeze(all);
 Object.freeze(any);

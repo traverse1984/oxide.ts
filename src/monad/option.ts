@@ -408,45 +408,6 @@ export function Some<T>(val: T): Some<T> {
  */
 export const None = new OptionType(undefined, false) as None<never>;
 
-interface OptionType<T> {
-   /** @deprecated */
-   is_some: OptionType<T>["isSome"];
-   /** @deprecated */
-   is_none: OptionType<T>["isNone"];
-   /** @deprecated */
-   unwrap_or: OptionType<T>["unwrapOr"];
-   /** @deprecated */
-   unwrap_or_else: OptionType<T>["unwrapOrElse"];
-   /** @deprecated */
-   unwrap_unchecked: OptionType<T>["unwrapUnchecked"];
-   /** @deprecated */
-   or_else: OptionType<T>["orElse"];
-   /** @deprecated */
-   and_then: OptionType<T>["andThen"];
-   /** @deprecated */
-   map_or: OptionType<T>["mapOr"];
-   /** @deprecated */
-   map_or_else: OptionType<T>["mapOrElse"];
-   /** @deprecated */
-   ok_or: OptionType<T>["okOr"];
-   /** @deprecated */
-   ok_or_else: OptionType<T>["okOrElse"];
-}
-
-Object.assign(OptionType.prototype, {
-   is_some: OptionType.prototype.isSome,
-   is_none: OptionType.prototype.isNone,
-   unwrap_or: OptionType.prototype.unwrapOr,
-   unwrap_or_else: OptionType.prototype.unwrapOrElse,
-   unwrap_unchecked: OptionType.prototype.unwrapUnchecked,
-   or_else: OptionType.prototype.orElse,
-   and_then: OptionType.prototype.andThen,
-   map_or: OptionType.prototype.mapOr,
-   map_or_else: OptionType.prototype.mapOrElse,
-   ok_or: OptionType.prototype.okOr,
-   ok_or_else: OptionType.prototype.okOrElse,
-});
-
 Object.freeze(OptionType.prototype);
 Object.freeze(isOption);
 Object.freeze(Some);

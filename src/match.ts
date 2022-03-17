@@ -349,40 +349,6 @@ export function Fn<T extends (...args: any) => any>(fn: T): () => T {
    return output;
 }
 
-/**
- * Creates a new function that accepts an `Option<T>` and returns `fn(T)` or
- * `false` if the Option is `None`. This implementation kind of sucks, I'll
- * probably remove it.
- * @deprecated
- */
-export function SomeIs<T>(fn: (val: T) => boolean): Mapped<Option<T>, boolean> {
-   return (opt: Option<T>) => opt.isSome() && fn(opt.unwrapUnchecked() as T);
-}
-
-/**
- * Creates a new function that accepts a `Result<T, E>` and returns `fn(T)`
- * or `false` if the Result is `Err`. Typically used in a `match` block.
- * This implementation kind of sucks, I'll probably remove it.
- * @deprecated
- */
-export function OkIs<T, E>(
-   fn: (val: T) => boolean
-): Mapped<Result<T, E>, boolean> {
-   return (res: Result<T, E>) => res.isOk() && fn(res.unwrapUnchecked() as T);
-}
-
-/**
- * Creates a new function that accepts a `Result<T, E>` and returns `fn(E)`
- * or `false` if the Result is `Ok`. This implementation kind of sucks, I'll
- * probably remove it.
- * @deprecated
- */
-export function ErrIs<E, T>(
-   fn: (val: E) => boolean
-): Mapped<Result<T, E>, boolean> {
-   return (res: Result<T, E>) => res.isErr() && fn(res.unwrapUnchecked() as E);
-}
-
 const BubbleToDefault = Symbol("BubbleToDefault");
 
 /**
@@ -403,6 +369,3 @@ export type Default = any;
 export type _ = any;
 
 export type Fn = typeof Fn;
-export type SomeIs = typeof SomeIs;
-export type OkIs = typeof OkIs;
-export type ErrIs = typeof ErrIs;

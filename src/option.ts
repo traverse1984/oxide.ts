@@ -3,11 +3,6 @@ export { Some, None } from "./monad/option";
 
 export type Option<T> = BaseOption<T>;
 
-export interface OptionGuard {
-   <U>(opt: Option<U>): U;
-   bubble(opt: unknown): void;
-}
-
 type OptionTypes<O> = {
    [K in keyof O]: O[K] extends Option<infer T> ? T : never;
 };
@@ -32,59 +27,14 @@ type OptionTypes<O> = {
  * assert.equal(greet("SuperKing77"), "*silence*");
  * ```
  *
- * ### Guarded Function Helper
- * ## DEPRECATED
- *
- * This functionality will be removed in version 1.0.0.
- *
- * Calling `Option(fn)` creates a new function with an `OptionGuard` helper.
- * The guard lets you quickly and safely unwrap other `Option` values, and
- * causes the function to return early with `None` if an unwrap fails. A
- * function created in this way always returns an `Option<T>`.
- *
- * Note: If you intend to use `try`/`catch` inside this function, see
- * tests/examples/guard-bubbling.ts for some possible pit-falls.
- *
- * ```
- * function to_pos(pos: number): Option<number> {
- *    return pos > 0 && pos < 100 ? Some(pos * 10) : None;
- * }
- *
- * // (x: number, y: number) => Option<{ x: number; y: number }>;
- * const get_pos = Option((guard, x: number, y: number) => {
- *    return Some({
- *       x: guard(to_pos(x)),
- *       y: guard(to_pos(y)),
- *    });
- * });
- *
- * function show_pos(x: number, y: number): string {
- *    return get_pos(x, y).mapOr(
- *       "Invalid Pos",
- *       ({ x, y }) => `Pos (${x},${y})`
- *    );
- * }
- *
- * assert.equal(show_pos(10, 20), "Pos (100,200)");
- * assert.equal(show_pos(1, 99), "Pos (10,990)");
- * assert.equal(show_pos(0, 50), "Invalid Pos");
- * assert.equal(show_pos(50, 100), "Invalid Pos");
- * ```
+ * @todo Document new Option
  */
-export function Option<T, A extends any[]>(
-   fn: (guard: OptionGuard, ...args: A) => Option<T>
-): (...args: A) => Option<T> {
-   return (...args) => {
-      try {
-         return fn(guard, ...args);
-      } catch (err) {
-         if (err === OptionExit) {
-            return None;
-         } else {
-            throw err;
-         }
-      }
-   };
+export function Option<T>(val: T): Option<NonNullable<T>> {
+   if (val === undefined || val === null || val !== val) {
+      return None;
+   } else {
+      return Some(val) as any;
+   }
 }
 
 Option.is = isOption;
@@ -224,27 +174,7 @@ function any<O extends Option<any>[]>(
    return None;
 }
 
-function guard<U>(opt: Option<U>): U {
-   if (opt.isSome()) {
-      return opt.unwrapUnchecked() as U;
-   } else {
-      throw OptionExit;
-   }
-}
-
-guard.bubble = (err: unknown) => {
-   if (err === OptionExit) {
-      throw err;
-   }
-};
-
-class GuardedOptionExit {}
-
-Object.freeze(GuardedOptionExit.prototype);
 Object.freeze(Option);
-Object.freeze(guard);
 Object.freeze(safe);
 Object.freeze(all);
 Object.freeze(any);
-
-const OptionExit = Object.freeze(new GuardedOptionExit());
