@@ -9,6 +9,11 @@ export default function methods() {
       expect(Err(1).is(Err(2))).to.be.true;
    });
 
+   it("into", () => {
+      expect(Ok(1).into()).to.equal(1);
+      expect(Err(1).into()).to.equal(null);
+   });
+
    it("eq", () => {
       expect(Ok(1).eq(Ok(1))).to.be.true;
       expect(Err(1).eq(Err(1))).to.be.true;

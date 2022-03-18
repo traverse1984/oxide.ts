@@ -34,6 +34,21 @@ class OptionType<T> {
    }
 
    /**
+    * Return the contained `T`, or `null` if the Option is `None`.
+    *
+    * ```
+    * const x: Option<number> = Some(1);
+    * assert.equal(x.into(), 1);
+    *
+    * const x: Option<number> = None;
+    * assert.equal(x.into(), null);
+    * ```
+    */
+   into(): T | null {
+      return this[IsSome] ? this.val : null;
+   }
+
+   /**
     * Compares the Option to `cmp` for equality. Returns `true` when both are
     * the same type (`Some`/`None`) and their contained values are identical
     * (`===`).
@@ -69,6 +84,27 @@ class OptionType<T> {
     */
    neq(cmp: Option<T>): boolean {
       return this[IsSome] !== cmp[IsSome] || this.val !== cmp.val;
+   }
+
+   /**
+    * Test the contained `Some` value with provided `f`, returning the
+    * original Option if true, or `None` otherwise.
+    *
+    * ```
+    * const cond = (x) => x === 1;
+    *
+    * const x: Option<number> = Some(1);
+    * assert.equal(x.if(cond).unwrap(), 1);
+    *
+    * const x: Option<number> = Some(2);
+    * assert.equal(x.if(cond).isNone(), true);
+    *
+    * const x: Option<number> = None;
+    * assert.equal(x.if(cond).isNone(), true);
+    * ```
+    */
+   must(f: (val: T) => boolean): Option<T> {
+      return this[IsSome] && f(this.val) ? this : None;
    }
 
    /**

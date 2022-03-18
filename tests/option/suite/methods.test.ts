@@ -13,6 +13,11 @@ export default function methods() {
       expect(None.is(None)).to.be.true;
    });
 
+   it("into", () => {
+      expect(Some(1).into()).to.equal(1);
+      expect(None.into()).to.equal(null);
+   });
+
    it("eq", () => {
       expect(Some(1).eq(Some(1))).to.be.true;
       expect(None.eq(None)).to.be.true;
@@ -27,6 +32,13 @@ export default function methods() {
       expect(Some(1).neq(None)).to.be.true;
       expect(AsOpt(None).neq(Some(1))).to.be.true;
       expect(Some(1).neq(Some(2))).to.be.true;
+   });
+
+   it("must", () => {
+      const cond = (n: number) => n === 1;
+      expect(Some(1).must(cond).unwrap()).to.equal(1);
+      expect(Some(2).must(cond).isNone()).to.be.true;
+      expect(None.must(cond).isNone()).to.be.true;
    });
 
    it("isSome", () => {

@@ -32,6 +32,22 @@ class ResultType<T, E> {
    }
 
    /**
+    * Returns the contained `T` if the Result is `Ok`, otherwise discards the
+    * `Err` and returns `null`.
+    *
+    * ```
+    * const x = Ok(1);
+    * assert.equal(x.into(), 1);
+    *
+    * const x = Err(1);
+    * assert.equal(x.into(), null);
+    * ```
+    */
+   into(): T | null {
+      return this[IsOk] ? (this.val as T) : null;
+   }
+
+   /**
     * Compares the Result to `cmp` for equality. Returns `true` when both are
     * the same type (`Ok`/`Err`) and their contained values are identical
     * (`===`).
