@@ -32,8 +32,8 @@ class ResultType<T, E> {
    }
 
    /**
-    * Returns the contained `T` if the Result is `Ok`, otherwise discards the
-    * `Err` and returns `null`.
+    * Returns the contained `T` if the Result is `Ok`, otherwise returns
+    * `null`.
     *
     * ```
     * const x = Ok(1);

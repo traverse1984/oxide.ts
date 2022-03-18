@@ -38,17 +38,23 @@ type ResultErrors<R> = {
  */
 
 export function Result<T>(val: T): Result<NonNullable<T>, null> {
-   if (val === undefined || val === null || val !== val) {
-      return Err(null) as any;
-   } else {
-      return Ok(val) as any;
-   }
+   return from(val);
 }
 
 Result.is = isResult;
+Result.from = from;
 Result.safe = safe;
 Result.all = all;
 Result.any = any;
+
+/**
+ * @todo Docs for Result.from
+ */
+function from<T>(val: T): Result<NonNullable<T>, null> {
+   return val === undefined || val === null || val !== val
+      ? Err(null)
+      : Ok(val as NonNullable<T>);
+}
 
 /**
  * Capture the outcome of a function or Promise as a `Result<T, Error>`,

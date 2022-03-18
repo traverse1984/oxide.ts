@@ -26,21 +26,25 @@ type OptionTypes<O> = {
  * assert.equal(greet("Simon"), "Hello Simon, my old friend!")
  * assert.equal(greet("SuperKing77"), "*silence*");
  * ```
- *
- * @todo Document new Option
  */
 export function Option<T>(val: T): Option<NonNullable<T>> {
-   if (val === undefined || val === null || val !== val) {
-      return None;
-   } else {
-      return Some(val) as any;
-   }
+   return from(val);
 }
 
 Option.is = isOption;
+Option.from = from;
 Option.safe = safe;
 Option.all = all;
 Option.any = any;
+
+/**
+ * @todo Docs for Option.from
+ */
+function from<T>(val: T): Option<NonNullable<T>> {
+   return val === undefined || val === null || val !== val
+      ? None
+      : Some(val as NonNullable<T>);
+}
 
 /**
  * Capture the outcome of a function or Promise as an `Option<T>`, preventing

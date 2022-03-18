@@ -87,27 +87,6 @@ class OptionType<T> {
    }
 
    /**
-    * Test the contained `Some` value with provided `f`, returning the
-    * original Option if true, or `None` otherwise.
-    *
-    * ```
-    * const cond = (x) => x === 1;
-    *
-    * const x: Option<number> = Some(1);
-    * assert.equal(x.if(cond).unwrap(), 1);
-    *
-    * const x: Option<number> = Some(2);
-    * assert.equal(x.if(cond).isNone(), true);
-    *
-    * const x: Option<number> = None;
-    * assert.equal(x.if(cond).isNone(), true);
-    * ```
-    */
-   must(f: (val: T) => boolean): Option<T> {
-      return this[IsSome] && f(this.val) ? this : None;
-   }
-
-   /**
     * Returns true if the Option is `Some`. Acts as a type guard for
     * `this is Some<T>`.
     *
