@@ -34,13 +34,6 @@ export default function methods() {
       expect(Some(1).neq(Some(2))).to.be.true;
    });
 
-   it("must", () => {
-      const cond = (n: number) => n === 1;
-      expect(Some(1).must(cond).unwrap()).to.equal(1);
-      expect(Some(2).must(cond).isNone()).to.be.true;
-      expect(None.must(cond).isNone()).to.be.true;
-   });
-
    it("isSome", () => {
       expect(Some(1).isSome()).to.be.true;
       expect(None.isSome()).to.be.false;
