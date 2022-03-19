@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Option, Some, None } from "../../../src";
+import { Option } from "../../../src";
 
 export default function safe() {
    const fn = (throws: boolean) => {
