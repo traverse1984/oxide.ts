@@ -1,5 +1,9 @@
 import { expect } from "chai";
-import { Ok, Err } from "../../../src";
+import { Result, Ok, Err } from "../../../src";
+
+function AsRes<T>(val: unknown): Result<T, T> {
+   return val as Result<T, T>;
+}
 
 export default function methods() {
    it("is", () => {
@@ -17,14 +21,14 @@ export default function methods() {
    it("eq", () => {
       expect(Ok(1).eq(Ok(1))).to.be.true;
       expect(Err(1).eq(Err(1))).to.be.true;
-      expect(Ok(1).eq(Err(1))).to.be.false;
+      expect(AsRes(Ok(1)).eq(Err(1))).to.be.false;
       expect(Ok(1).eq(Ok(2))).to.be.false;
    });
 
    it("neq", () => {
       expect(Ok(1).neq(Ok(1))).to.be.false;
       expect(Err(1).neq(Err(1))).to.be.false;
-      expect(Ok(1).neq(Err(1))).to.be.true;
+      expect(AsRes(Ok(1)).neq(Err(1))).to.be.true;
       expect(Ok(1).neq(Ok(2))).to.be.true;
    });
 
@@ -60,12 +64,12 @@ export default function methods() {
 
    it("unwrapOr", () => {
       expect(Ok(1).unwrapOr(2)).to.equal(1);
-      expect(Err(1).unwrapOr(2)).to.equal(2);
+      expect(AsRes(Err(1)).unwrapOr(2)).to.equal(2);
    });
 
    it("unwrapOrElse", () => {
       expect(Ok(1).unwrapOrElse(() => 2)).to.equal(1);
-      expect(Err(1).unwrapOrElse(() => 2)).to.equal(2);
+      expect(AsRes(Err(1)).unwrapOrElse(() => 2)).to.equal(2);
    });
 
    it("unwrapUnchecked", () => {
@@ -75,7 +79,7 @@ export default function methods() {
 
    it("or", () => {
       expect(Ok(1).or(Ok(2)).unwrap()).to.equal(1);
-      expect(Err(1).or(Ok(2)).unwrap()).to.equal(2);
+      expect(AsRes(Err(1)).or(Ok(2)).unwrap()).to.equal(2);
    });
 
    it("orElse", () => {
@@ -92,14 +96,14 @@ export default function methods() {
    });
 
    it("and", () => {
-      expect(Ok(1).and(Err(2)).isErr()).to.be.true;
+      expect(AsRes(Ok(1)).and(Err(2)).isErr()).to.be.true;
       expect(Err(1).and(Ok(2)).isErr()).to.be.true;
       expect(Ok(1).and(Ok("two")).unwrap()).to.equal("two");
    });
 
    it("andThen", () => {
       expect(
-         Ok(1)
+         AsRes(Ok(1))
             .andThen(() => Err(1))
             .isErr()
       ).to.be.true;

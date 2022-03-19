@@ -18,7 +18,7 @@ type PrimitiveCondition<T> = T extends object
 type MonadCondition<T> = T extends Option<infer U>
    ? Option<MonadCondition<U>>
    : T extends Result<infer U, infer E>
-   ? Ok<MonadCondition<U>, any> | Err<MonadCondition<E>, any>
+   ? Ok<MonadCondition<U>> | Err<MonadCondition<E>>
    : Partial<T>;
 
 type OptionBranches<T, U> = Branches<Option<T>, U>;

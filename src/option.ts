@@ -1,7 +1,7 @@
 import { Result, Ok, Err } from "./result";
 
 const Is = Symbol("Is");
-const Val = Symbol("Value");
+const Val = Symbol("Val");
 
 export type Some<T> = OptionType<T> & { [Is]: true };
 export type None = OptionType<never> & { [Is]: false };
@@ -364,7 +364,7 @@ class OptionType<T> {
     * ```
     */
    okOr<E>(err: E): Result<T, E> {
-      return this[Is] ? Ok<T, E>(this[Val]) : Err<E, T>(err);
+      return this[Is] ? Ok(this[Val]) : Err(err);
    }
 
    /**
@@ -384,7 +384,7 @@ class OptionType<T> {
     * ```
     */
    okOrElse<E>(f: () => E): Result<T, E> {
-      return this[Is] ? Ok<T, E>(this[Val]) : Err<E, T>(f());
+      return this[Is] ? Ok(this[Val]) : Err(f());
    }
 }
 
@@ -448,7 +448,6 @@ export const None = new OptionType<never>(undefined as never, false);
  * assert.equal(Option.is(Ok(1), false));
  * ```
  */
-Option.is = is;
 function is(val: unknown): val is Option<unknown> {
    return val instanceof OptionType;
 }
@@ -456,7 +455,6 @@ function is(val: unknown): val is Option<unknown> {
 /**
  * @todo Docs for Option.from
  */
-Option.from = from;
 function from<T>(val: T): Option<NonNullable<T>> {
    return val === undefined || val === null || val !== val
       ? None
@@ -512,7 +510,6 @@ function from<T>(val: T): Option<NonNullable<T>> {
  * assert.equal(x.unwrap(), "Hello World");
  * ```
  */
-Option.safe = safe;
 function safe<T, A extends any[]>(
    fn: (...args: A) => T extends PromiseLike<any> ? never : T,
    ...args: A
@@ -556,7 +553,6 @@ function safe<T, A extends any[]>(
  * assert.equal(x.isNone(), true);
  * ```
  */
-Option.all = all;
 function all<O extends Option<any>[]>(...options: O): Option<OptionTypes<O>> {
    const some = [];
    for (const option of options) {
@@ -586,7 +582,6 @@ function all<O extends Option<any>[]>(...options: O): Option<OptionTypes<O>> {
  * assert.equal(x.isNone(), true);
  * ```
  */
-Option.any = any;
 function any<O extends Option<any>[]>(
    ...options: O
 ): Option<OptionTypes<O>[number]> {
@@ -598,13 +593,14 @@ function any<O extends Option<any>[]>(
    return None;
 }
 
+Option.is = Object.freeze(is);
+Option.from = Object.freeze(from);
+Option.safe = Object.freeze(safe);
+Option.all = Object.freeze(all);
+Option.any = Object.freeze(any);
+
+Object.freeze(Option);
 Object.freeze(Some);
 Object.freeze(None);
-Object.freeze(Option);
 Object.freeze(OptionType);
 Object.freeze(OptionType.prototype);
-Object.freeze(is);
-Object.freeze(from);
-Object.freeze(safe);
-Object.freeze(all);
-Object.freeze(any);
