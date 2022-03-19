@@ -96,7 +96,7 @@ class ResultType<T, E> {
 
    /**
     * Returns true if the Result is `Ok`. Acts as a type guard for
-    * `this is Ok<T, any>`.
+    * `this is Ok<T>`.
     *
     * @example
     * const x = Ok(10);
@@ -111,7 +111,7 @@ class ResultType<T, E> {
 
    /**
     * Returns true if the Result is `Err`. Acts as a type guard for
-    * `this is Err<E, any>`.
+    * `this is Err<E>`.
     *
     * @example
     * const x = Ok(10);
@@ -439,7 +439,7 @@ function is(val: unknown): val is Result<unknown, unknown> {
 }
 
 /**
- * Creates an `Ok<T, E>` value, which can be used where a `Result<T, E>` is
+ * Creates an `Ok<T>` value, which can be used where a `Result<T, E>` is
  * required. See Result for more examples.
  *
  * Note that the counterpart `Err` type `E` is set to the same type as `T`
@@ -456,7 +456,7 @@ export function Ok<T>(val: T): Ok<T> {
 }
 
 /**
- * Creates an `Err<E, T>` value, which can be used where a `Result<T, E>` is
+ * Creates an `Err<E>` value, which can be used where a `Result<T, E>` is
  * required. See Result for more examples.
  *
  * Note that the counterpart `Ok` type `T` is set to the same type as `E`
@@ -474,7 +474,7 @@ export function Err<E>(val: E): Err<E> {
 
 /**
  * A Result represents success, or failure. If we hold a value
- * of type `Result<T, E>`, we know it is either `Ok<T, E>` or `Err<E, T>`.
+ * of type `Result<T, E>`, we know it is either `Ok<T>` or `Err<E>`.
  *
  * ```
  * const users = ["Simon", "Garfunkel"];
