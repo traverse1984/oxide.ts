@@ -6,32 +6,24 @@ function AsOpt(val: Option<any>): Option<number> {
 }
 
 export default function methods() {
-   it("is", () => {
-      expect(Some(1).is(Some(2))).to.be.true;
-      expect(AsOpt(None).is(Some(1))).to.be.false;
-      expect(Some(1).is(None)).to.be.false;
-      expect(None.is(None)).to.be.true;
-   });
-
    it("into", () => {
       expect(Some(1).into()).to.equal(1);
       expect(None.into()).to.equal(null);
    });
 
-   it("eq", () => {
-      expect(Some(1).eq(Some(1))).to.be.true;
-      expect(None.eq(None)).to.be.true;
-      expect(Some(1).eq(None)).to.be.false;
-      expect(AsOpt(None).eq(Some(1))).to.be.false;
-      expect(Some(1).eq(Some(2))).to.be.false;
+   it("equals", () => {
+      expect(Some(1).equals(Some(1))).to.be.true;
+      expect(None.equals(None)).to.be.true;
+      expect(Some(1).equals(None)).to.be.false;
+      expect(AsOpt(None).equals(Some(1))).to.be.false;
+      expect(Some(1).equals(Some(2))).to.be.false;
    });
 
-   it("neq", () => {
-      expect(Some(1).neq(Some(1))).to.be.false;
-      expect(None.neq(None)).to.be.false;
-      expect(Some(1).neq(None)).to.be.true;
-      expect(AsOpt(None).neq(Some(1))).to.be.true;
-      expect(Some(1).neq(Some(2))).to.be.true;
+   it("isLike", () => {
+      expect(Some(1).isLike(Some(2))).to.be.true;
+      expect(AsOpt(None).isLike(Some(1))).to.be.false;
+      expect(Some(1).isLike(None)).to.be.false;
+      expect(None.isLike(None)).to.be.true;
    });
 
    it("isSome", () => {

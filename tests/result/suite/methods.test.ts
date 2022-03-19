@@ -6,30 +6,24 @@ function AsRes<T>(val: unknown): Result<T, T> {
 }
 
 export default function methods() {
-   it("is", () => {
-      expect(Ok(1).is(Ok(2))).to.be.true;
-      expect(Err(1).is(Ok(1))).to.be.false;
-      expect(Ok(1).is(Err(1))).to.be.false;
-      expect(Err(1).is(Err(2))).to.be.true;
-   });
-
    it("into", () => {
       expect(Ok(1).into()).to.equal(1);
       expect(Err(1).into()).to.equal(null);
    });
 
-   it("eq", () => {
-      expect(Ok(1).eq(Ok(1))).to.be.true;
-      expect(Err(1).eq(Err(1))).to.be.true;
-      expect(AsRes(Ok(1)).eq(Err(1))).to.be.false;
-      expect(Ok(1).eq(Ok(2))).to.be.false;
+   it("equals", () => {
+      expect(Ok(1).equals(Ok(1))).to.be.true;
+      expect(Err(1).equals(Err(1))).to.be.true;
+      expect(AsRes(Ok(1)).equals(Err(1))).to.be.false;
+      expect(AsRes(Err(1)).equals(Ok(1))).to.be.false;
+      expect(Ok(1).equals(Ok(2))).to.be.false;
    });
 
-   it("neq", () => {
-      expect(Ok(1).neq(Ok(1))).to.be.false;
-      expect(Err(1).neq(Err(1))).to.be.false;
-      expect(AsRes(Ok(1)).neq(Err(1))).to.be.true;
-      expect(Ok(1).neq(Ok(2))).to.be.true;
+   it("isLike", () => {
+      expect(Ok(1).isLike(Ok(2))).to.be.true;
+      expect(Err(1).isLike(Ok(1))).to.be.false;
+      expect(Ok(1).isLike(Err(1))).to.be.false;
+      expect(Err(1).isLike(Err(2))).to.be.true;
    });
 
    it("isOk", () => {

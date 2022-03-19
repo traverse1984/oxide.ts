@@ -306,7 +306,8 @@ function matches<T>(cond: BranchCondition<T> | Default, val: T): boolean {
 
    if (Option.is(cond) || Result.is(cond)) {
       return (
-         cond.is(val) && matches(cond.unwrapUnchecked(), val.unwrapUnchecked())
+         cond.isLike(val) &&
+         matches(cond.unwrapUnchecked(), val.unwrapUnchecked())
       );
    }
 
