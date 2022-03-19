@@ -17,18 +17,36 @@ class ResultType<T, E> {
    }
 
    /**
+    * See `isLike()`.
+    * @deprecated
+    */
+   is(cmp: unknown): cmp is Result<unknown, unknown> {
+      return this.isLike(cmp);
+   }
+
+   /**
     * Compares the Result to `cmp`, returns true if both are `Ok` or both
     * are `Err`. Acts as a type guard for `cmp is Result<unknown, unknown>`.
     *
+    * ```
     * const o = Ok(1);
     * const e = Err(1);
     *
-    * assert.equal(o.is(Ok(1))), true);
-    * assert.equal(e.is(Err(1)), true);
-    * assert.equal(o.is(e), false);
+    * assert.equal(o.isLike(Ok(1))), true);
+    * assert.equal(e.isLike(Err(1)), true);
+    * assert.equal(o.isLike(e), false);
+    * ```
     */
-   is(cmp: unknown): cmp is Result<unknown, unknown> {
+   isLike(cmp: unknown): cmp is Result<unknown, unknown> {
       return cmp instanceof ResultType && this[IsOk] === cmp[IsOk];
+   }
+
+   /**
+    * See `equals()`.
+    * @deprecated
+    */
+   eq(cmp: Result<T, E>): boolean {
+      return this.equals(cmp);
    }
 
    /**
@@ -36,17 +54,19 @@ class ResultType<T, E> {
     * the same type (`Ok`/`Err`) and their contained values are identical
     * (`===`).
     *
+    * ```
     * const val = { x: 10 };
     * const o: Result<{ x: number; }, { x: number; }> = Ok(val);
     * const e: Result<{ x: number; }, { x: number; }> = Err(val);
     *
-    * assert.equal(o.eq(Ok(val)), true);
-    * assert.equal(e.eq(Err(val)), true):
-    * assert.equal(o.eq(Ok({ x: 10 })), false);
-    * assert.equal(e.eq(Err({ x: 10 })), false);
-    * assert.equal(o.eq(e), false);
+    * assert.equal(o.equals(Ok(val)), true);
+    * assert.equal(e.equals(Err(val)), true):
+    * assert.equal(o.equals(Ok({ x: 10 })), false);
+    * assert.equal(e.equals(Err({ x: 10 })), false);
+    * assert.equal(o.equals(e), false);
+    * ```
     */
-   eq(cmp: Result<T, E>): boolean {
+   equals(cmp: Result<T, E>): boolean {
       return this[IsOk] === cmp[IsOk] && this.val === cmp.val;
    }
 
@@ -55,6 +75,7 @@ class ResultType<T, E> {
     * different types (`Ok`/`Err`) or their contained values are not identical
     * (`!==`).
     *
+    * ```
     * const val = { x: 10 };
     * const o: Result<{ x: number; }, { x: number; }> = Ok(val);
     * const e: Result<{ x: number; }, { x: number; }> = Err(val);
@@ -64,6 +85,9 @@ class ResultType<T, E> {
     * assert.equal(o.neq(Ok({ x: 10 })), true);
     * assert.equal(e.neq(Err({ x: 10 })), true);
     * assert.equal(o.neq(e), true);
+    * ```
+    *
+    * @deprecated
     */
    neq(cmp: Result<T, E>): boolean {
       return this[IsOk] !== cmp[IsOk] || this.val !== cmp.val;

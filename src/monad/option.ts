@@ -17,38 +17,54 @@ class OptionType<T> {
    }
 
    /**
+    * See `like()`.
+    * @deprecated
+    */
+   is(cmp: unknown): cmp is Option<unknown> {
+      return this.isLike(cmp);
+   }
+
+   /**
     * Compares the Option to `cmp`, returns true if both are `Some` or both
-    * are `None`. Acts as a type guard for `cmp is Option<unknown>`.
+    * are `None`. Also acts as a type guard for `Option<unknown>`.
     *
     * ```
     * const s: Option<number> = Some(1);
     * const n: Option<number> = None;
     *
-    * assert.equal(s.is(Some(10)), true);
-    * assert.equal(n.is(None), true);
-    * assert.equal(s.is(n), false);
+    * assert.equal(s.isLike(Some(10)), true);
+    * assert.equal(n.isLike(None), true);
+    * assert.equal(s.isLike(n), false);
     * ```
     */
-   is(cmp: unknown): cmp is Option<unknown> {
+   isLike(cmp: unknown): cmp is Option<unknown> {
       return cmp instanceof OptionType && this[IsSome] === cmp[IsSome];
    }
 
    /**
+    * See `equals()`.
+    * @deprecated
+    */
+   eq(cmp: Option<T>): boolean {
+      return this.equals(cmp);
+   }
+
+   /**
     * Compares the Option to `cmp` for equality. Returns `true` when both are
-    * the same type (`Some`/`None`) and their contained values are identical
-    * (`===`).
+    * `Some` with identical contained values, or both are `None`.
     *
+    * ```
     * const val = { x: 10 };
     * const s: Option<{ x: number; }> = Some(val);
     * const n: Option<{ x: number; }> = None;
     *
-    * assert.equal(s.eq(Some(val)), true);
-    * assert.equal(n.eq(None), true):
-    * assert.equal(s.eq(Some({ x: 10 })), false);
-    * assert.equal(s.eq(n), false);
+    * assert.equal(s.equals(Some(val)), true);
+    * assert.equal(n.equals(None), true):
+    * assert.equal(s.equals(Some({ x: 10 })), false);
+    * assert.equal(s.equals(n), false);
     * ```
     */
-   eq(cmp: Option<T>): boolean {
+   equals(cmp: Option<T>): boolean {
       return this[IsSome] === cmp[IsSome] && this.val === cmp.val;
    }
 
@@ -66,6 +82,8 @@ class OptionType<T> {
     * assert.equal(s.neq(Some({ x: 10})), true);
     * assert.equal(s.new(n), true);
     * ```
+    *
+    * @deprecated
     */
    neq(cmp: Option<T>): boolean {
       return this[IsSome] !== cmp[IsSome] || this.val !== cmp.val;

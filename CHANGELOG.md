@@ -1,3 +1,15 @@
+# Patch 0.9.12
+
+Changes to Option/Result methods:
+
+-  `is` has been deprecated and replaced by `isLike`.
+-  `eq` has been deprecated and replaced by `equals`.
+-  `neq` has been deprecated.
+
+# Patch 0.9.11
+
+Fix publishing mistake.
+
 # Patch 0.9.10
 
 Deprecated guarded functions.
