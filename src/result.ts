@@ -442,14 +442,6 @@ class ResultType<T, E> {
    }
 }
 
-class OkType<T> extends ResultType<T, never> {
-   [Is]: true;
-}
-
-class ErrType<E> extends ResultType<never, E> {
-   [Is]: false;
-}
-
 /**
  * Tests the provided `val` is an Result. Acts as a type guard for
  * `val is Result<unknown, unknown>`.
@@ -479,7 +471,7 @@ function is(val: unknown): val is Result<unknown, unknown> {
  * ```
  */
 export function Ok<T>(val: T): Ok<T> {
-   return new OkType(val, true);
+   return new ResultType<T, never>(val, true);
 }
 
 /**
@@ -497,7 +489,7 @@ export function Ok<T>(val: T): Ok<T> {
  * ```
  */
 export function Err<E>(val: E): Err<E> {
-   return new ErrType(val, false);
+   return new ResultType<never, E>(val, false);
 }
 
 /**

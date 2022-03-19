@@ -453,7 +453,7 @@ function is(val: unknown): val is Option<unknown> {
 }
 
 /**
- * @todo Docs for Option.from
+ * @todo Document Option.from
  */
 function from<T>(val: T): Option<NonNullable<T>> {
    return val === undefined || val === null || val !== val
