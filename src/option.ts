@@ -1,10 +1,8 @@
+import { T, Val } from "./symbols";
 import { Result, Ok, Err } from "./result";
 
-export const Is = Symbol("Is");
-const Val = Symbol("Val");
-
-export type Some<T> = OptionType<T> & { [Is]: true };
-export type None = OptionType<never> & { [Is]: false };
+export type Some<T> = OptionType<T> & { [T]: true };
+export type None = OptionType<never> & { [T]: false };
 export type Option<T> = OptionType<T>;
 
 type OptionTypes<O> = {
@@ -12,12 +10,12 @@ type OptionTypes<O> = {
 };
 
 class OptionType<T> {
-   readonly [Is]: boolean;
+   readonly [T]: boolean;
    readonly [Val]: T;
 
    constructor(val: T, some: boolean) {
+      this[T] = some;
       this[Val] = val;
-      this[Is] = some;
       Object.freeze(this);
    }
 
@@ -33,7 +31,7 @@ class OptionType<T> {
     * ```
     */
    into(): T | null {
-      return this[Is] ? this[Val] : null;
+      return this[T] ? this[Val] : null;
    }
 
    /**
@@ -52,7 +50,7 @@ class OptionType<T> {
     * ```
     */
    equals(cmp: Option<T>): boolean {
-      return this[Is] === cmp[Is] && this[Val] === cmp[Val];
+      return this[T] === cmp[T] && this[Val] === cmp[Val];
    }
 
    /**
@@ -69,7 +67,7 @@ class OptionType<T> {
     * ```
     */
    isLike(cmp: unknown): cmp is Option<unknown> {
-      return cmp instanceof OptionType && this[Is] === cmp[Is];
+      return cmp instanceof OptionType && this[T] === cmp[T];
    }
 
    /**
@@ -85,7 +83,7 @@ class OptionType<T> {
     * ```
     */
    isSome(): this is Some<T> {
-      return this[Is];
+      return this[T];
    }
 
    /**
@@ -101,7 +99,7 @@ class OptionType<T> {
     * ```
     */
    isNone(): this is None {
-      return !this[Is];
+      return !this[T];
    }
 
    /**
@@ -119,7 +117,7 @@ class OptionType<T> {
     * ```
     */
    expect(msg: string): T {
-      if (this[Is]) {
+      if (this[T]) {
          return this[Val];
       } else {
          throw new Error(msg);
@@ -160,7 +158,7 @@ class OptionType<T> {
     * ```
     */
    unwrapOr(def: T): T {
-      return this[Is] ? this[Val] : def;
+      return this[T] ? this[Val] : def;
    }
 
    /**
@@ -175,7 +173,7 @@ class OptionType<T> {
     * ```
     */
    unwrapOrElse(f: () => T): T {
-      return this[Is] ? this[Val] : f();
+      return this[T] ? this[Val] : f();
    }
 
    /**
@@ -213,7 +211,7 @@ class OptionType<T> {
     * ```
     */
    or(optb: Option<T>): Option<T> {
-      return this[Is] ? this : optb;
+      return this[T] ? this : optb;
    }
 
    /**
@@ -230,7 +228,7 @@ class OptionType<T> {
     * ```
     */
    orElse(f: () => Option<T>): Option<T> {
-      return this[Is] ? this : f();
+      return this[T] ? this : f();
    }
 
    /**
@@ -251,7 +249,7 @@ class OptionType<T> {
     * ```
     */
    and<U>(optb: Option<U>): Option<U> {
-      return this[Is] ? optb : None;
+      return this[T] ? optb : None;
    }
 
    /**
@@ -273,7 +271,7 @@ class OptionType<T> {
     * ```
     */
    andThen<U>(f: (val: T) => Option<U>): Option<U> {
-      return this[Is] ? f(this[Val]) : None;
+      return this[T] ? f(this[Val]) : None;
    }
 
    /**
@@ -287,7 +285,7 @@ class OptionType<T> {
     * ```
     */
    map<U>(f: (val: T) => U): Option<U> {
-      return this[Is] ? new OptionType(f(this[Val]), true) : None;
+      return this[T] ? new OptionType(f(this[Val]), true) : None;
    }
 
    /**
@@ -308,7 +306,7 @@ class OptionType<T> {
     * ```
     */
    mapOr<U>(def: U, f: (val: T) => U): U {
-      return this[Is] ? f(this[Val]) : def;
+      return this[T] ? f(this[Val]) : def;
    }
 
    /**
@@ -325,7 +323,7 @@ class OptionType<T> {
     * ```
     */
    mapOrElse<U>(def: () => U, f: (val: T) => U): U {
-      return this[Is] ? f(this[Val]) : def();
+      return this[T] ? f(this[Val]) : def();
    }
 
    /**
@@ -345,7 +343,7 @@ class OptionType<T> {
     * ```
     */
    okOr<E>(err: E): Result<T, E> {
-      return this[Is] ? Ok(this[Val]) : Err(err);
+      return this[T] ? Ok(this[Val]) : Err(err);
    }
 
    /**
@@ -365,7 +363,7 @@ class OptionType<T> {
     * ```
     */
    okOrElse<E>(f: () => E): Result<T, E> {
-      return this[Is] ? Ok(this[Val]) : Err(f());
+      return this[T] ? Ok(this[Val]) : Err(f());
    }
 }
 

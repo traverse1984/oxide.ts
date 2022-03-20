@@ -1,7 +1,5 @@
+import { T, Val } from "./symbols";
 import { Option, Some, None } from "./option";
-
-const Is = Symbol("Is");
-const Val = Symbol("Val");
 
 export type Ok<T> = ResultType<T, never>;
 export type Err<E> = ResultType<never, E>;
@@ -16,12 +14,12 @@ type ResultErrors<R> = {
 };
 
 class ResultType<T, E> {
-   readonly [Is]: boolean;
+   readonly [T]: boolean;
    readonly [Val]: T | E;
 
    constructor(val: T | E, ok: boolean) {
       this[Val] = val;
-      this[Is] = ok;
+      this[T] = ok;
       Object.freeze(this);
    }
 
@@ -38,7 +36,7 @@ class ResultType<T, E> {
     * ```
     */
    into(): T | null {
-      return this[Is] ? (this[Val] as T) : null;
+      return this[T] ? (this[Val] as T) : null;
    }
 
    /**
@@ -58,7 +56,7 @@ class ResultType<T, E> {
     * ```
     */
    equals(cmp: Result<T, E>): boolean {
-      return this[Is] === cmp[Is] && this[Val] === cmp[Val];
+      return this[T] === cmp[T] && this[Val] === cmp[Val];
    }
 
    /**
@@ -75,7 +73,7 @@ class ResultType<T, E> {
     * ```
     */
    isLike(cmp: unknown): cmp is Result<unknown, unknown> {
-      return cmp instanceof ResultType && this[Is] === cmp[Is];
+      return cmp instanceof ResultType && this[T] === cmp[T];
    }
 
    /**
@@ -91,7 +89,7 @@ class ResultType<T, E> {
     * ```
     */
    isOk(): this is Ok<T> {
-      return this[Is];
+      return this[T];
    }
 
    /**
@@ -107,7 +105,7 @@ class ResultType<T, E> {
     * ```
     */
    isErr(): this is Err<E> {
-      return !this[Is];
+      return !this[T];
    }
 
    /**
@@ -125,7 +123,7 @@ class ResultType<T, E> {
     * ```
     */
    expect(msg: string): T {
-      if (this[Is]) {
+      if (this[T]) {
          return this[Val] as T;
       } else {
          throw new Error(msg);
@@ -146,7 +144,7 @@ class ResultType<T, E> {
     * ```
     */
    expectErr(msg: string): E {
-      if (this[Is]) {
+      if (this[T]) {
          throw new Error(msg);
       } else {
          return this[Val] as E;
@@ -205,7 +203,7 @@ class ResultType<T, E> {
     * ```
     */
    unwrapOr(def: T): T {
-      return this[Is] ? (this[Val] as T) : def;
+      return this[T] ? (this[Val] as T) : def;
    }
 
    /**
@@ -220,7 +218,7 @@ class ResultType<T, E> {
     * ```
     */
    unwrapOrElse(f: () => T): T {
-      return this[Is] ? (this[Val] as T) : f();
+      return this[T] ? (this[Val] as T) : f();
    }
 
    /**
@@ -258,7 +256,7 @@ class ResultType<T, E> {
     * ```
     */
    or(resb: Result<T, E>): Result<T, E> {
-      return this[Is] ? (this as any) : resb;
+      return this[T] ? (this as any) : resb;
    }
 
    /**
@@ -280,7 +278,7 @@ class ResultType<T, E> {
     * ```
     */
    orElse<F>(f: (err: E) => Result<T, F>): Result<T, F> {
-      return this[Is] ? (this as unknown as Result<T, F>) : f(this[Val] as E);
+      return this[T] ? (this as unknown as Result<T, F>) : f(this[Val] as E);
    }
 
    /**
@@ -301,7 +299,7 @@ class ResultType<T, E> {
     * ```
     */
    and<U>(resb: Result<U, E>): Result<U, E> {
-      return this[Is] ? resb : (this as any);
+      return this[T] ? resb : (this as any);
    }
 
    /**
@@ -323,7 +321,7 @@ class ResultType<T, E> {
     * ```
     */
    andThen<U>(f: (val: T) => Result<U, E>): Result<U, E> {
-      return this[Is] ? f(this[Val] as T) : (this as any);
+      return this[T] ? f(this[Val] as T) : (this as any);
    }
 
    /**
@@ -338,8 +336,8 @@ class ResultType<T, E> {
     */
    map<U>(f: (val: T) => U): Result<U, E> {
       return new ResultType(
-         this[Is] ? f(this[Val] as T) : (this[Val] as E),
-         this[Is]
+         this[T] ? f(this[Val] as T) : (this[Val] as E),
+         this[T]
       ) as Result<U, E>;
    }
 
@@ -355,8 +353,8 @@ class ResultType<T, E> {
     */
    mapErr<F>(op: (err: E) => F): Result<T, F> {
       return new ResultType(
-         this[Is] ? (this[Val] as T) : op(this[Val] as E),
-         this[Is]
+         this[T] ? (this[Val] as T) : op(this[Val] as E),
+         this[T]
       ) as Result<T, F>;
    }
 
@@ -378,7 +376,7 @@ class ResultType<T, E> {
     * ```
     */
    mapOr<U>(def: U, f: (val: T) => U): U {
-      return this[Is] ? f(this[Val] as T) : def;
+      return this[T] ? f(this[Val] as T) : def;
    }
 
    /**
@@ -396,7 +394,7 @@ class ResultType<T, E> {
     * ```
     */
    mapOrElse<U>(def: (err: E) => U, f: (val: T) => U): U {
-      return this[Is] ? f(this[Val] as T) : def(this[Val] as E);
+      return this[T] ? f(this[Val] as T) : def(this[Val] as E);
    }
 
    /**
@@ -416,7 +414,7 @@ class ResultType<T, E> {
     * ```
     */
    ok(): Option<T> {
-      return this[Is] ? Some(this[Val] as T) : None;
+      return this[T] ? Some(this[Val] as T) : None;
    }
 }
 
