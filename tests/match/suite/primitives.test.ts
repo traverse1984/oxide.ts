@@ -2,9 +2,15 @@ import { expect } from "chai";
 import { match, Fn } from "../../../src";
 
 export default function primitives() {
+   matchPrimitiveTest();
+   returnFunctionFromFnTest();
+}
+
+const returnTrue = () => true;
+const returnFalse = () => false;
+
+function matchPrimitiveTest() {
    const testObj = {};
-   const returnTrue = () => true;
-   const returnFalse = () => false;
 
    function matchPrimitive(input: unknown): string {
       return match(input, [
@@ -16,14 +22,6 @@ export default function primitives() {
          [Fn(returnTrue), "fn true"],
          [Fn(returnFalse), "fn false"],
          () => "default",
-      ]);
-   }
-
-   function returnFunction(input: number): () => boolean {
-      return match(input, [
-         [1, Fn(returnTrue)],
-         () => returnFalse,
-         //
       ]);
    }
 
@@ -41,14 +39,32 @@ export default function primitives() {
       expect(matchPrimitive(returnTrue)).to.equal("fn true");
       expect(matchPrimitive(returnFalse)).to.equal("fn false");
    });
-   it("Should return an exact function", () => {
-      expect(returnFunction(1)).to.equal(returnTrue);
-      expect(returnFunction(2)).to.equal(returnFalse);
-   });
    it("Should return the default value when nothing else matches", () =>
       expect(matchPrimitive("none")).to.equal("default"));
    it("Should call a default function when nothing else matches", () =>
-      expect(match(null, [() => "default"])).to.equal("default"));
+      expect(
+         match(null, [
+            () => "default", //
+         ])
+      ).to.equal("default"));
    it("Should throw if nothing matches and no default is present", () =>
-      expect(() => match(2, [[1, "one"]] as any)).to.throw(/exhausted/));
+      expect(() =>
+         match(2, [
+            [1 as any, "one"], //
+         ])
+      ).to.throw(/exhausted/));
+}
+
+function returnFunctionFromFnTest() {
+   function returnFunction(input: number): () => boolean {
+      return match(input, [
+         [1, Fn(returnTrue)], //
+         () => returnFalse,
+      ]);
+   }
+
+   it("Should return the exact function from Fn", () => {
+      expect(returnFunction(1)).to.equal(returnTrue);
+      expect(returnFunction(2)).to.equal(returnFalse);
+   });
 }

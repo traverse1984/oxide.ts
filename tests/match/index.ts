@@ -5,8 +5,8 @@ import array from "./suite/array.test";
 import option from "./suite/option.test";
 import result from "./suite/result.test";
 import fn from "./suite/function.test";
-import nested from "./suite/nested.test";
-import a_sync from "./suite/async.test";
+import nesting from "./suite/nesting";
+import async_ from "./suite/async.test";
 
 export default function match() {
    describe("Call Signature", call);
@@ -16,6 +16,6 @@ export default function match() {
    describe("Option<T>", option);
    describe("Result<T, E>", result);
    describe("Fn within Option/Result", fn);
-   describe("Nested", nested);
-   describe("Async", a_sync);
+   describe("Nesting", nesting);
+   describe("Async", async_);
 }
