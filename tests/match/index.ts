@@ -5,7 +5,7 @@ import array from "./suite/array.test";
 import option from "./suite/option.test";
 import result from "./suite/result.test";
 import fn from "./suite/function.test";
-import nesting from "./suite/nesting";
+import nesting from "./suite/nesting.test";
 import async_ from "./suite/async.test";
 
 export default function match() {
