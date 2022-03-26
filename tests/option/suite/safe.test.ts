@@ -2,7 +2,12 @@ import { expect } from "chai";
 import { Option } from "../../../src";
 
 export default function safe() {
-   const fn = (throws: boolean) => {
+   functionTest();
+   promiseTest();
+}
+
+function functionTest() {
+   const test = (throws: boolean) => {
       if (throws) {
          throw new Error("test_err");
       } else {
@@ -11,12 +16,14 @@ export default function safe() {
    };
 
    it("Should be Some when the provided function returns", () =>
-      expect(Option.safe(fn, false).unwrap()).to.equal("testing"));
+      expect(Option.safe(test, false).unwrap()).to.equal("testing"));
 
    it("Should be None when the provided function throws", () =>
-      expect(Option.safe(fn, true).isNone()).to.be.true);
+      expect(Option.safe(test, true).isNone()).to.be.true);
+}
 
-   const fnAsync = async (throws: boolean) => {
+function promiseTest() {
+   const test = async (throws: boolean) => {
       if (throws) {
          throw new Error("test_err");
       } else {
@@ -25,8 +32,8 @@ export default function safe() {
    };
 
    it("Should be Ok when the provided Promise resolves", async () =>
-      expect((await Option.safe(fnAsync(false))).unwrap()).to.equal("testing"));
+      expect((await Option.safe(test(false))).unwrap()).to.equal("testing"));
 
    it("Should be Err when the provided Promise rejects", async () =>
-      expect((await Option.safe(fnAsync(true))).isNone()).to.be.true);
+      expect((await Option.safe(test(true))).isNone()).to.be.true);
 }

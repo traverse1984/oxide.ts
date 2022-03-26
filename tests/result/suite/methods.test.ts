@@ -31,9 +31,14 @@ export default function methods() {
       expect(Err(1).isOk()).to.be.false;
    });
 
-   it("isNone", () => {
+   it("isErr", () => {
       expect(Ok(1).isErr()).to.be.false;
       expect(Err(1).isErr()).to.be.true;
+   });
+
+   it("invert", () => {
+      expect(Ok(1).invert().unwrapErr()).to.equal(1);
+      expect(Err(1).invert().unwrap()).to.equal(1);
    });
 
    it("expect", () => {

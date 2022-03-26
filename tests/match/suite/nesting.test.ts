@@ -14,13 +14,13 @@ function mapped() {
 function mappedNestingTest() {
    function test(val: Result<Option<Result<number, number>>, number>): string {
       return match(val, {
-         Ok: match({
-            Some: match({
+         Ok: {
+            Some: {
                Ok: (n) => `ok ${n}`,
                Err: (e) => `err b ${e}`,
-            }),
+            },
             None: () => "none",
-         }),
+         },
          Err: (e) => `err a ${e}`,
       });
    }
@@ -36,17 +36,17 @@ function mappedNestingTest() {
 function closestDefaultTest() {
    function test(val: Result<Option<Result<number, string>>, number>): string {
       return match(val, {
-         Ok: match({
-            Some: match({
+         Ok: {
+            Some: {
                Ok: (n) => `ok ${n}`,
                _: () => "inner default",
-            }),
-         }),
+            },
+         },
          _: () => "default",
       });
    }
 
-   it("Falls back to the closest default (_)", () => {
+   it("Falls back to the closest default", () => {
       expect(test(Ok(Some(Ok(1))))).to.equal("ok 1");
       expect(test(Ok(Some(Err("_"))))).to.equal("inner default");
       expect(test(Ok(None))).to.equal("default");

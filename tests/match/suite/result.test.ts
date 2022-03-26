@@ -130,8 +130,8 @@ function hybridTest() {
    function test(input: Result<number, string>): string {
       return match(input, {
          Ok: [
-            [1, "ok 1"],
-            [(n) => n > 10, "ok gt 10"], //
+            [1, "ok 1"], //
+            [(n) => n > 10, "ok gt 10"],
             () => "ok default",
          ],
          Err: [

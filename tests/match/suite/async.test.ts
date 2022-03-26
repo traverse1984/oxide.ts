@@ -9,10 +9,10 @@ export default function async_() {
 function mapped() {
    function test(val: Option<Result<string, number>>) {
       return match(val, {
-         Some: match({
+         Some: {
             Ok: async (str) => `ok ${str}`,
             Err: async (num) => `err ${num}`,
-         }),
+         },
          _: async () => "none",
       });
    }

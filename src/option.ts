@@ -1,4 +1,4 @@
-import { T, Val } from "./symbols";
+import { T, Val, IterType } from "./symbols";
 import { Result, Ok, Err } from "./result";
 
 export type Some<T> = OptionType<T> & { [T]: true };
@@ -16,7 +16,12 @@ class OptionType<T> {
    constructor(val: T, some: boolean) {
       this[T] = some;
       this[Val] = val;
-      Object.freeze(this);
+   }
+
+   [Symbol.iterator](): IterType<T> {
+      return this[T]
+         ? (this[Val] as any)[Symbol.iterator]()
+         : ([][Symbol.iterator]() as any);
    }
 
    /**
@@ -100,6 +105,27 @@ class OptionType<T> {
     */
    isNone(): this is None {
       return !this[T];
+   }
+
+   /**
+    * Calls `f` with the contained `Some` value, converting `Some` to `None` if
+    * the filter returns false.
+    *
+    * For more advanced filtering, consider `match`.
+    *
+    * ```
+    * const x = Some(1);
+    * assert.equal(x.filter((v) => v < 5).unwrap(), 1);
+    *
+    * const x = Some(10);
+    * assert.equal(x.filter((v) => v < 5).isNone(), true);
+    *
+    * const x: Option<number> = None;
+    * assert.equal(x.filter((v) => v < 5).isNone(), true);
+    * ```
+    */
+   filter(f: (val: T) => boolean): Option<T> {
+      return this[T] && f(this[Val]) ? this : None;
    }
 
    /**
@@ -566,7 +592,7 @@ function any<O extends Option<any>[]>(
 ): Option<OptionTypes<O>[number]> {
    for (const option of options) {
       if (option.isSome()) {
-         return option;
+         return option as Option<OptionTypes<O>[number]>;
       }
    }
    return None;

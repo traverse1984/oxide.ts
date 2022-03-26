@@ -36,6 +36,13 @@ export default function methods() {
       expect(None.isNone()).to.be.true;
    });
 
+   it("filter", () => {
+      const lessThan5 = (x: number) => x < 5;
+      expect(Some(1).filter(lessThan5).unwrap()).to.equal(1);
+      expect(Some(10).filter(lessThan5).isNone()).to.be.true;
+      expect(None.filter(lessThan5).isNone()).to.be.true;
+   });
+
    it("expect", () => {
       expect(Some(1).expect("test")).to.equal(1);
       expect(() => None.expect("test")).to.throw("test");

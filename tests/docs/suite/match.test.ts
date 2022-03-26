@@ -15,9 +15,9 @@ export default function match_tests() {
    {
       const matchNest = (input: Result<Option<number>, string>) =>
          match(input, {
-            Ok: match({
+            Ok: {
                Some: (n) => `num ${n}`,
-            }),
+            },
             _: () => "nothing",
          });
 

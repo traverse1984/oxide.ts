@@ -1,4 +1,4 @@
-import { T, Val } from "./symbols";
+import { T, Val, IterType } from "./symbols";
 import { Option, Some, None } from "./option";
 
 export type Ok<T> = ResultType<T, never>;
@@ -20,7 +20,12 @@ class ResultType<T, E> {
    constructor(val: T | E, ok: boolean) {
       this[Val] = val;
       this[T] = ok;
-      Object.freeze(this);
+   }
+
+   [Symbol.iterator](): IterType<T> {
+      return this[T]
+         ? (this[Val] as any)[Symbol.iterator]()
+         : ([][Symbol.iterator]() as any);
    }
 
    /**
@@ -106,6 +111,21 @@ class ResultType<T, E> {
     */
    isErr(): this is Err<E> {
       return !this[T];
+   }
+
+   /**
+    * Inverts the `Result<T, E>`, returning a `Result<E, T>`.
+    *
+    * ```
+    * const x: Result<number, string> = Ok(10);
+    * assert.equal(x.unwrap(), 10);
+    *
+    * const y: Result<string, number> = x.invert();
+    * assert.equal(y.unwrapErr(), 10);
+    * ```
+    */
+   invert(): Result<E, T> {
+      return new ResultType(this[Val] as E & T, !this[T]);
    }
 
    /**

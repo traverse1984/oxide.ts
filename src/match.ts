@@ -1,59 +1,71 @@
-import { Option } from "./option";
+import { T, Val, MarkFn } from "./symbols";
+import { Option, Some, None } from "./option";
 import { Result, Ok, Err } from "./result";
 
-type Mapped<T, U> = (val: T) => U;
-type AnyMonadic = Option<any> | Result<any, any>;
-type Branches<T, U> = Branch<T, U>[] | [...Branch<T, U>[], Mapped<T, U>];
-type Branch<T, U> = [BranchCondition<T>, BranchResult<T, U>];
-type BranchResult<T, U> = U | ((val: T) => U);
+type MappedBranches<T, U> = T extends Option<infer V>
+   ? OptionMapped<V, U>
+   : T extends Result<infer V, infer E>
+   ? ResultMapped<V, E, U>
+   : never;
+
+type ChainedBranches<T, U> =
+   | Branch<T, U>[]
+   | [...Branch<T, U>[], DefaultBranch<U>];
 
 type BranchCondition<T> =
    | Mapped<T, boolean>
-   | (T extends AnyMonadic ? MonadCondition<T> : PrimitiveCondition<T>);
+   | (T extends { [T]: boolean } ? MonadCondition<T> : Condition<T>);
 
-type PrimitiveCondition<T> = T extends object
+type Branch<T, U> = [BranchCondition<T>, BranchResult<T, U>];
+type Mapped<T, U> = (val: T) => U;
+type Wide<T> = T extends [...infer U] ? U[number][] : Partial<T>;
+type BranchResult<T, U> = U | ((val: T) => U);
+type DefaultBranch<U> = () => U;
+
+interface OptionMapped<T, U> {
+   Some?: MonadMapped<T, U>;
+   None?: DefaultBranch<U>;
+   _?: DefaultBranch<U>;
+   Ok?: never;
+   Err?: never;
+}
+
+interface ResultMapped<T, E, U> {
+   Ok?: MonadMapped<T, U>;
+   Err?: MonadMapped<E, U>;
+   _?: DefaultBranch<U>;
+   Some?: never;
+   None?: never;
+}
+
+type Condition<T> = T extends object
    ? { [K in keyof T]?: BranchCondition<T[K]> }
    : T;
 
 type MonadCondition<T> = T extends Option<infer U>
-   ? Option<MonadCondition<U>>
+   ? Some<MonadCondition<U>> | None
    : T extends Result<infer U, infer E>
    ? Ok<MonadCondition<U>> | Err<MonadCondition<E>>
-   : Partial<T>;
+   : Wide<T>;
 
-type OptionBranches<T, U> = Branches<Option<T>, U>;
+type MonadMapped<T, U> =
+   | Mapped<T, U>
+   | ChainedBranches<T, U>
+   | MappedBranches<T, U>;
 
-interface MappedOption<T, U> {
-   Some?: Mapped<T, U> | Branches<T, U>;
-   None?: Mapped<Default, U>;
-   Ok?: never;
-   Err?: never;
-   _?: (val: T | Default) => U;
-}
-
-type ResultBranches<T, E, U> = Branches<Result<T, E>, U>;
-
-interface MappedResult<T, E, U> {
-   Ok?: Mapped<T, U> | Branches<T, U>;
-   Err?: Mapped<E, U> | Branches<E, U>;
-   Some?: never;
-   None?: never;
-   _?: (val: T | E) => U;
+function isObjectLike(value: unknown): value is Record<string | number, any> {
+   return value !== null && typeof value === "object";
 }
 
 /**
  * Concisely determine what action should be taken for a given input value.
- * Of all the different ways you can use `match`, the following rules are
- * always true:
- *
- * * Every branch must have the same return type.
- * * As soon as a matching branch is found, no others are checked.
  *
  * ### Mapped Matching
- * Can be performed on `Option` and `Result` types.
+ * Mapped matching is possible on `Option` and `Result` types. Passing any
+ * other type will throw an invalid pattern error.
  *
  * ```
- * const num: Option<number> = Some(10);
+ * const num = Option(10);
  * const res = match(num, {
  *    Some: (n) => n + 1,
  *    None: () => 0,
@@ -62,15 +74,16 @@ interface MappedResult<T, E, U> {
  * assert.equal(res, 11);
  * ```
  *
- * It's also possible to nest mapped matching and provide a higher-level
- * default. You don't have to include every named branch:
+ * You can nest mapped matching patterns and provide defaults. If a default is
+ * not found in the current level it will fall back to the previous level. If
+ * there is no suitable match, an exhausted error is thrown.
  *
  * ```
  * const matchNest = (input: Result<Option<number>, string>) =>
  * match(input, {
- *    Ok: match({
+ *    Ok: {
  *       Some: (n) => `num ${n}`,
- *    }),
+ *    },
  *    _: () => "nothing",
  * });
  *
@@ -197,160 +210,134 @@ interface MappedResult<T, E, U> {
  * }
  * ```
  */
-function match<T, U>(pat: MappedOption<T, U>): (opt: Option<T>) => U;
-function match<T, E, U>(pat: MappedResult<T, E, U>): (res: Result<T, E>) => U;
-function match<T, U>(opt: Option<T>, pat: MappedOption<T, U>): U;
-function match<T, E, U>(res: Result<T, E>, pat: MappedResult<T, E, U>): U;
-function match<T, U>(opt: Option<T>, pat: OptionBranches<T, U>): U;
-function match<T, E, U>(opt: Result<T, E>, pat: ResultBranches<T, E, U>): U;
-function match<T, U>(val: T, pat: Branches<T, U>): U;
-function match<T, E, U>(
-   val:
-      | T
-      | MappedOption<T, U>
-      | MappedResult<T, E, U>
-      | Option<T>
-      | Result<T, E>,
-   pat?:
-      | Branches<T, U>
-      | MappedOption<T, U>
-      | MappedResult<T, E, U>
-      | OptionBranches<T, U>
-      | ResultBranches<T, E, U>
-): U | ((opt: Option<T>) => U) | ((res: Result<T, E>) => U) {
-   if (is_object_like(pat)) {
-      if (Array.isArray(pat)) {
-         return match_branches<T, U>(val as any, pat as any);
-      }
 
-      if (Option.is(val) && is_object_like(pat)) {
-         const { Some, None, _ } = pat as MappedOption<T, U>;
-         return val.isSome()
-            ? call_or_branch(val.unwrapUnchecked() as T, Some, _)
-            : call_or_branch(Default, None, _);
-      }
-
-      if (Result.is(val) && is_object_like(pat)) {
-         const { Ok, Err, _ } = pat as MappedResult<T, E, U>;
-         return val.isOk()
-            ? call_or_branch(val.unwrapUnchecked() as T, Ok, _)
-            : call_or_branch(val.unwrapUnchecked() as E, Err, _);
-      }
-   }
-
-   if (pat === undefined && is_object_like(val)) {
-      const mapped = { _: () => BubbleToDefault, ...val };
-      return (val: Option<T> | Result<T, E>) =>
-         match(val, mapped as any) as any;
-   }
-
-   throw new Error("Match failed, unknown call signature");
+export function match<T, U>(
+   val: T,
+   pattern: MappedBranches<T, U> | ChainedBranches<T, U>
+): U {
+   return matchDispatch(val, pattern, Default);
 }
 
-function call_or_branch<T, U>(
-   val: T,
-   branch?: Mapped<T, U> | Branches<T, U>,
-   default_branch?: Mapped<T, U>
-): U {
-   if (typeof branch === "function") {
-      const result = branch(val);
-      return (result as any) === BubbleToDefault
-         ? match_branches(val, undefined, default_branch)
-         : result;
-   } else {
-      return match_branches(val, branch, default_branch);
-   }
+function throwInvalidPattern(): never {
+   throw new Error("Match failed (invalid pattern)");
 }
 
-function match_branches<T, U>(
+function matchMapped<T, U>(
    val: T,
-   branches?: Branches<T, U>,
-   default_branch?: Mapped<T, U>
+   pattern: MappedBranches<T, U>,
+   defaultBranch: DefaultBranch<U>
 ): U {
-   if (branches) {
-      for (const branch of branches) {
-         if (typeof branch === "function") {
-            return branch(val);
+   if (Option.is(val)) {
+      if (val[T]) {
+         if (pattern.Some) {
+            if (typeof pattern.Some === "function") {
+               return pattern.Some(val[Val]);
+            } else {
+               return matchDispatch(
+                  val[Val],
+                  pattern.Some,
+                  typeof pattern._ === "function" ? pattern._ : defaultBranch
+               );
+            }
+         }
+      } else if (typeof pattern.None === "function") {
+         return pattern.None();
+      }
+   } else if (Result.is(val)) {
+      const Branch = val[T] ? pattern.Ok : pattern.Err;
+      if (Branch) {
+         if (typeof Branch === "function") {
+            return Branch(val[Val]);
          } else {
-            const [cond, res] = branch;
-            if (matches(cond, val)) {
-               return typeof res === "function"
-                  ? (res as (val: T | Default) => U)(val)
-                  : res;
+            return matchDispatch(
+               val[Val],
+               Branch,
+               typeof pattern._ === "function" ? pattern._ : defaultBranch
+            );
+         }
+      }
+   } else {
+      throwInvalidPattern();
+   }
+
+   return typeof pattern._ === "function" ? pattern._() : defaultBranch();
+}
+
+function matchChained<T, U>(
+   val: T,
+   pattern: ChainedBranches<T, U>,
+   defaultBranch: DefaultBranch<U>
+): U {
+   for (const branch of pattern) {
+      if (typeof branch === "function") {
+         return branch();
+      } else {
+         const [cond, result] = branch;
+         if (matches(cond, val, true)) {
+            if (typeof result === "function") {
+               return (result as any)[MarkFn]
+                  ? (result as () => U)()
+                  : (result as (val: T) => U)(val);
+            } else {
+               return result;
             }
          }
       }
    }
 
-   if (typeof default_branch === "function") {
-      return default_branch(val);
-   }
-
-   return Default() as never;
+   return defaultBranch();
 }
 
-function is_object_like(value: unknown): value is Record<string | number, any> {
-   return value !== null && typeof value === "object";
-}
-
-function matches<T>(cond: BranchCondition<T> | Default, val: T): boolean {
+function matches<T>(
+   cond: BranchCondition<T>,
+   val: T,
+   evaluate: boolean
+): boolean {
    if (cond === Default || cond === val) {
       return true;
    }
 
    if (typeof cond === "function") {
-      return is_fn_value(cond as () => any)
-         ? (cond as () => any)() === val
-         : (cond as (val: T | Default) => boolean)(val);
+      return (cond as any)[MarkFn]
+         ? (cond as unknown as () => T)() === val
+         : evaluate && (cond as (val: T) => boolean)(val);
    }
 
-   if (Option.is(cond) || Result.is(cond)) {
-      return (
-         cond.isLike(val) &&
-         matches(cond.unwrapUnchecked(), val.unwrapUnchecked())
-      );
-   }
+   if (isObjectLike(cond)) {
+      if (T in cond) {
+         return (
+            (cond as Option<any> | Result<any, any>).isLike(val) &&
+            matches((cond as any)[Val], val[Val], false)
+         );
+      }
 
-   if (
-      is_object_like(cond) &&
-      is_object_like(val) &&
-      Array.isArray(cond) === Array.isArray(val)
-   ) {
-      return match_deep(cond, val);
+      if (isObjectLike(val) && Array.isArray(cond) === Array.isArray(val)) {
+         for (const key of Object.keys(cond)) {
+            if (!matches((cond as any)[key], (val as any)[key], evaluate)) {
+               return false;
+            }
+         }
+
+         return true;
+      }
    }
 
    return false;
 }
 
-function match_deep(
-   cond: Record<string | number, any>,
-   val: Record<string | number, any>
-): boolean {
-   for (const key of Object.keys(cond)) {
-      if (cond[key] !== Default && !matches(cond[key], val[key])) {
-         return false;
-      }
+function matchDispatch<T, U>(
+   val: T,
+   pattern: ChainedBranches<T, U> | MappedBranches<T, U>,
+   defaultBranch: DefaultBranch<U>
+): U {
+   if (Array.isArray(pattern)) {
+      return matchChained(val, pattern, defaultBranch);
+   } else if (isObjectLike(pattern)) {
+      return matchMapped(val, pattern, defaultBranch);
    }
-   return true;
+
+   throwInvalidPattern();
 }
-
-function is_fn_value(fn: (...args: any) => any): boolean {
-   return (fn as any).__IsFnValue__ === true;
-}
-
-export { match };
-
-/**
- * Creates a wrapper for a function-value within a chained match block. See
- * `match` for more information about when this needs to be used.
- */
-export function Fn<T extends (...args: any) => any>(fn: T): () => T {
-   const output = () => fn;
-   output.__IsFnValue__ = true;
-   return output;
-}
-
-const BubbleToDefault = Symbol("BubbleToDefault");
 
 /**
  * The `Default` (or `_`) value. This function is used as a marker to indicate
@@ -358,7 +345,7 @@ const BubbleToDefault = Symbol("BubbleToDefault");
  * exhausted.
  */
 export const Default: any = Object.freeze(() => {
-   throw new Error("Match failed, patterns exhausted and no default present");
+   throw new Error("Match failed (exhausted)");
 });
 
 /**
@@ -366,6 +353,17 @@ export const Default: any = Object.freeze(() => {
  * It is an alias of `Default`.
  */
 export const _ = Default;
+
+/**
+ * Creates a wrapper for a function-value within a chained match block. See
+ * `match` for more information about when this needs to be used.
+ */
+export function Fn<T extends (...args: any) => any>(fn: T): () => T {
+   const val = () => fn;
+   (val as any)[MarkFn] = true;
+   return val;
+}
+
 export type Default = any;
 export type _ = any;
 
