@@ -1,4 +1,4 @@
-import { T, Val, IterType } from "./symbols";
+import { T, Val, EmptyArray, IterType } from "./symbols";
 import { Option, Some, None } from "./option";
 
 export type Ok<T> = ResultType<T, never>;
@@ -25,7 +25,7 @@ class ResultType<T, E> {
    [Symbol.iterator](): IterType<T> {
       return this[T]
          ? (this[Val] as any)[Symbol.iterator]()
-         : ([][Symbol.iterator]() as any);
+         : EmptyArray[Symbol.iterator]();
    }
 
    /**
@@ -66,7 +66,7 @@ class ResultType<T, E> {
 
    /**
     * Compares the Result to `cmp`, returns true if both are `Ok` or both
-    * are `Err`. Acts as a type guard for `cmp is Result<unknown, unknown>`.
+    * are `Err` and acts as a type guard.
     *
     * ```
     * const o = Ok(1);
@@ -82,8 +82,7 @@ class ResultType<T, E> {
    }
 
    /**
-    * Returns true if the Result is `Ok`. Acts as a type guard for
-    * `this is Ok<T>`.
+    * Returns true if the Result is `Ok` and acts as a type guard.
     *
     * ```
     * const x = Ok(10);
@@ -98,8 +97,7 @@ class ResultType<T, E> {
    }
 
    /**
-    * Returns true if the Result is `Err`. Acts as a type guard for
-    * `this is Err<E>`.
+    * Returns true if the Result is `Err` and acts as a type guard.
     *
     * ```
     * const x = Ok(10);
@@ -439,8 +437,7 @@ class ResultType<T, E> {
 }
 
 /**
- * Tests the provided `val` is an Result. Acts as a type guard for
- * `val is Result<unknown, unknown>`.
+ * Tests the provided `val` is an Result and acts as a type guard.
  *
  * ```
  * assert.equal(Result.is(Ok(1), true);
@@ -516,7 +513,15 @@ export function Result<T>(val: T): Result<NonNullable<T>, null> {
 }
 
 /**
- * @todo Docs for Result.from
+ * Creates a new `Result<T, null>` which is `Err<null>` when the provided `val`
+ * is `undefined`, `null` or `NaN`, and `Ok<T>` otherwise.
+ *
+ * ```
+ * assert.equal(Result.from(1).unwrap(), 1);
+ * assert.equal(Result.from(undefined).isErr(), true);
+ * assert.equal(Result.from(null).isErr(), true);
+ * assert.equal(Result.from(parseInt("not")).isErr(), true);
+ * ```
  */
 function from<T>(val: T): Result<NonNullable<T>, null> {
    return val === undefined || val === null || val !== val

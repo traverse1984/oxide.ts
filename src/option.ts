@@ -1,4 +1,4 @@
-import { T, Val, IterType } from "./symbols";
+import { T, Val, EmptyArray, IterType } from "./symbols";
 import { Result, Ok, Err } from "./result";
 
 export type Some<T> = OptionType<T> & { [T]: true };
@@ -21,7 +21,7 @@ class OptionType<T> {
    [Symbol.iterator](): IterType<T> {
       return this[T]
          ? (this[Val] as any)[Symbol.iterator]()
-         : ([][Symbol.iterator]() as any);
+         : EmptyArray[Symbol.iterator]();
    }
 
    /**
@@ -60,7 +60,7 @@ class OptionType<T> {
 
    /**
     * Compares the Option to `cmp`, returns true if both are `Some` or both
-    * are `None`. Also acts as a type guard for `Option<unknown>`.
+    * are `None` and acts as a type guard.
     *
     * ```
     * const s: Option<number> = Some(1);
@@ -76,8 +76,7 @@ class OptionType<T> {
    }
 
    /**
-    * Returns true if the Option is `Some`. Acts as a type guard for
-    * `this is Some<T>`.
+    * Returns true if the Option is `Some` and acts as a type guard.
     *
     * ```
     * const x = Some(10);
@@ -92,8 +91,7 @@ class OptionType<T> {
    }
 
    /**
-    * Returns true if the Option is `None`. Acts as a type guard for
-    * `this is None<never>`.
+    * Returns true if the Option is `None` and acts as a type guard.
     *
     * ```
     * const x = Some(10);
@@ -444,8 +442,7 @@ export function Some<T>(val: T): Some<T> {
 export const None = new OptionType<never>(undefined as never, false);
 
 /**
- * Tests the provided `val` is an Option. Acts as a type guard for
- * `val is Option<unknown>`.
+ * Tests whether the provided `val` is an Option, and acts as a type guard.
  *
  * ```
  * assert.equal(Option.is(Some(1), true);
@@ -458,7 +455,15 @@ function is(val: unknown): val is Option<unknown> {
 }
 
 /**
- * @todo Document Option.from
+ * Creates a new `Option<T>` which is `None` when the provided `val` is
+ * `undefined`, `null` or `NaN`, and `Some<T>` otherwise.
+ *
+ * ```
+ * assert.equal(Option.from(1).unwrap(), 1);
+ * assert.equal(Option.from(undefined).isNone(), true);
+ * assert.equal(Option.from(null).isNone(), true);
+ * assert.equal(Option.from(parseInt("not")).isNone(), true);
+ * ```
  */
 function from<T>(val: T): Option<NonNullable<T>> {
    return val === undefined || val === null || val !== val

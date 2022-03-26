@@ -1,20 +1,25 @@
-import { expect } from "chai";
+import { assert } from "chai";
 import { Option, Some, None } from "../../../src";
 
 export default function option() {
-   it("Main", () => {
-      const users = ["Simon", "Garfunkel"];
-      function fetch_user(username: string): Option<string> {
-         return users.includes(username) ? Some(username) : None;
-      }
+   allExample();
+}
 
-      function greet(username: string): string {
-         return fetch_user(username)
-            .map((user) => `Hello ${user}, my old friend!`)
-            .unwrapOr("*silence*");
-      }
+function allExample() {
+   function num(val: number): Option<number> {
+      return val > 10 ? Some(val) : None;
+   }
 
-      expect(greet("Simon")).to.equal("Hello Simon, my old friend!");
-      expect(greet("SuperKing777")).to.equal("*silence*");
-   });
+   {
+      const xyz = Option.all(num(20), num(30), num(40));
+      const [x, y, z] = xyz.unwrap();
+      assert.equal(x, 20);
+      assert.equal(y, 30);
+      assert.equal(z, 40);
+   }
+
+   {
+      const x = Option.all(num(20), num(5), num(40));
+      assert.equal(x.isNone(), true);
+   }
 }

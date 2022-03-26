@@ -286,6 +286,8 @@ export function match<T, U>(
    return matchDispatch(val, pattern, Default);
 }
 
+export type match = typeof match;
+
 function matchMapped<T, U>(
    val: T,
    pattern: OptionMapped<any, U> & ResultMapped<any, any, U>,
@@ -421,23 +423,23 @@ function throwFnCalled(): never {
 }
 
 /**
- * The `Default` (or `_`) value. This function is used as a marker to indicate
- * "any value", and is also the function called when all patterns are
- * exhausted.
+ * The `Default` (or `_`) value. Used as a marker to indicate "any value".
  */
 export const Default: any = Object.freeze(() => {
    throw new Error("Match failed (exhausted)");
 });
+export type Default = any;
 
 /**
- * The `_` value. This function is used as a marker to indicate "any value".
- * It is an alias of `Default`.
+ * The `_` value. Used as a marker to indicate "any value".
  */
 export const _ = Default;
+export type _ = any;
 
 /**
- * Creates a wrapper for a function-value within a chained match block. See
- * `match` for more information about when this needs to be used.
+ * Creates a wrapper for a function so that it will be treated as a value
+ * within a chained matching block. See `match` for more information about
+ * when this needs to be used.
  */
 export function Fn<T extends (...args: any) => any>(fn: T): () => T {
    const val: any = () => throwFnCalled();
@@ -445,10 +447,4 @@ export function Fn<T extends (...args: any) => any>(fn: T): () => T {
    return val;
 }
 
-export type Default = any;
-export type _ = any;
-
-export type Fn<T> = {
-   (): never;
-   [MarkFn]: T;
-};
+export type Fn<T> = { (): never; [MarkFn]: T };
