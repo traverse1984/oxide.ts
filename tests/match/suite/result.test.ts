@@ -4,7 +4,7 @@ import { Result, Ok, Err, match, _ } from "../../../src";
 export default function result() {
    describe("Mapped", mapped);
    describe("Chained", chained);
-   describe("Hybrid (chained within mapped)", hybrid);
+   describe("Combined (chained within mapped)", combined);
 }
 
 function mapped() {
@@ -121,12 +121,12 @@ function chainedConditionsTest() {
    });
 }
 
-function hybrid() {
-   hybridTest();
-   hybridPartialTest;
+function combined() {
+   combinedTest();
+   combinedPartialTest;
 }
 
-function hybridTest() {
+function combinedTest() {
    function test(input: Result<number, string>): string {
       return match(input, {
          Ok: [
@@ -152,7 +152,7 @@ function hybridTest() {
    });
 }
 
-function hybridPartialTest() {
+function combinedPartialTest() {
    function test(input: Result<number, string>): string {
       return match(input, {
          Ok: [

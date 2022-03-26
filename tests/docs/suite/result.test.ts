@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { Result, Ok, Err } from "../../../src";
 
 export default function result() {
-   it("Result (fetch_user)", () => {
+   it("Main", () => {
       const users = ["Simon", "Garfunkel"];
       function fetch_user(username: string): Result<string, string> {
          return users.includes(username) ? Ok(username) : Err("*silence*");

@@ -23,7 +23,9 @@ export default function object() {
       expect(test({ a: 3, b: 1 })).to.equal("a 3 b 1");
       expect(test({ a: 3, b: 2 })).to.equal("default");
    });
-   it("Skips keys with the _ value", () =>
+   it("Should require the key be present for _", () =>
+      expect(test({ a: 5, c: 1 })).to.equal("default"));
+   it("Should allow any value for _", () =>
       expect(test({ a: 5, b: 5, c: 1 })).to.equal("a 5 b _ c 1"));
    it("Should match nested structures", () =>
       expect(

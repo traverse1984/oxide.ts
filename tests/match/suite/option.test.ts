@@ -4,7 +4,7 @@ import { Option, Some, None, match, _ } from "../../../src";
 export default function option() {
    describe("Mapped", mapped);
    describe("Chained", chained);
-   describe("Hybrid (chained within mapped)", hybrid);
+   describe("Combined (chained within mapped)", combined);
 }
 
 function mapped() {
@@ -100,12 +100,12 @@ function chainedConditionsTest() {
    });
 }
 
-function hybrid() {
-   hybridTest();
-   hybridPartialTest;
+function combined() {
+   combinedTest();
+   combinedPartialTest;
 }
 
-function hybridTest() {
+function combinedTest() {
    function test(input: Option<number>): string {
       return match(input, {
          Some: [
@@ -125,7 +125,7 @@ function hybridTest() {
    });
 }
 
-function hybridPartialTest() {
+function combinedPartialTest() {
    function test(input: Option<number>): string {
       return match(input, {
          Some: [

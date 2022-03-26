@@ -23,6 +23,16 @@ export default function fn() {
       expect(test(Some(second))).to.equal("match-second");
       expect(second.wasCalled()).to.be.false;
    });
+
+   it("Returns the wrapped function if the default branch is Fn", () =>
+      expect(
+         match(first, [
+            Fn(() => "default"), // default branch
+         ])()
+      ).to.equal("default"));
+
+   it("Throws if the wrapped Fn is called", () =>
+      expect(Fn(() => 1)).to.throw(/wrapped function called/));
 }
 
 function createWatchFn(returns: string): { (): string; wasCalled(): boolean } {
