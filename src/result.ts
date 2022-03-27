@@ -551,7 +551,9 @@ function from<T>(
    | (T extends Error ? T : never)
    | (Extract<FalseyValues, T> extends never ? never : null)
 > {
-   return new ResultType(val as any, isTruthy(val));
+   return isTruthy(val)
+      ? new ResultType(val as any, !(val instanceof Error))
+      : new ResultType(null, false);
 }
 
 /**

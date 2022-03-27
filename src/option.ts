@@ -482,7 +482,9 @@ function is(val: unknown): val is Option<unknown> {
  * ```
  */
 function from<T>(val: T): Option<From<T>> {
-   return isTruthy(val) ? (new OptionType(val, true) as any) : None;
+   return isTruthy(val) && !(val instanceof Error)
+      ? (new OptionType(val, true) as any)
+      : None;
 }
 
 /**

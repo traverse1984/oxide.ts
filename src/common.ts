@@ -13,13 +13,7 @@ export const EmptyArray = Object.freeze([] as any[]);
 export type FalseyValues = false | null | undefined | 0 | 0n | "";
 
 export function isTruthy(val: unknown): boolean {
-   if (val instanceof Date) {
-      return val.getTime() === val.getTime();
-   } else if (val) {
-      return !(val instanceof Error);
-   } else {
-      return false;
-   }
+   return val instanceof Date ? val.getTime() === val.getTime() : !!val;
 }
 
 export type IterType<T> = T extends { [Symbol.iterator](): infer I }
