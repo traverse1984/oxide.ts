@@ -1,11 +1,11 @@
-import { T, Val, Falsey, EmptyArray, IterType } from "./symbols";
+import { T, Val, EmptyArray, IterType, FalseyValues } from "./common";
 import { Result, Ok, Err } from "./result";
 
 export type Some<T> = OptionType<T> & { [T]: true };
 export type None = OptionType<never> & { [T]: false };
 export type Option<T> = OptionType<T>;
 
-type From<T> = Exclude<T, Error | Falsey>;
+type From<T> = Exclude<T, Error | FalseyValues>;
 
 type OptionTypes<O> = {
    [K in keyof O]: O[K] extends Option<infer T> ? T : never;

@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { Result } from "../../../src";
 
-export default function from() {
+export default function convert() {
    describe("nonNull", () => {
       it("Should cast undefined, null and NaN to Err<null>", () => {
          expect(Result.nonNull(null).unwrapErr()).to.equal(null);

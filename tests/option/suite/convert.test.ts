@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { Option } from "../../../src";
 
-export default function from() {
+export default function convert() {
    describe("nonNull", () => {
       it("Should cast undefined, null and NaN to None", () => {
          expect(Option.nonNull(null).isNone()).to.be.true;

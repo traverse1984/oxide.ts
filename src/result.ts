@@ -1,14 +1,14 @@
-import { T, Val, Falsey, EmptyArray, IterType } from "./symbols";
+import { T, Val, EmptyArray, IterType, FalseyValues } from "./common";
 import { Option, Some, None } from "./option";
 
 export type Ok<T> = ResultType<T, never>;
 export type Err<E> = ResultType<never, E>;
 export type Result<T, E> = ResultType<T, E>;
 
-type From<T> = Exclude<T, Error | Falsey>;
+type From<T> = Exclude<T, Error | FalseyValues>;
 type ErrFrom<T> = T extends number
-   ? Extract<T, Error | Falsey | number>
-   : Extract<T, Error | Falsey>;
+   ? Extract<T, Error | FalseyValues | number>
+   : Extract<T, Error | FalseyValues>;
 
 type ResultTypes<R> = {
    [K in keyof R]: R[K] extends Result<infer T, any> ? T : never;

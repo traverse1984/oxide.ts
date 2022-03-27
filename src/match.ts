@@ -1,4 +1,4 @@
-import { T, Val, MarkFn } from "./symbols";
+import { T, Val, MarkFn } from "./common";
 import { Option, Some, None } from "./option";
 import { Result, Ok, Err } from "./result";
 
