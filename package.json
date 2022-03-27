@@ -2,7 +2,10 @@
    "name": "oxide.ts",
    "version": "0.9.11",
    "description": "Rust's Option<T> and Result<T, E>, implemented for TypeScript.",
-   "main": "dist",
+   "exports": {
+      ".": "./dist/index.js",
+      "./core": "./dist/core.js"
+   },
    "types": "dist",
    "files": [
       "dist/**/*"
