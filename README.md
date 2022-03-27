@@ -1,23 +1,7 @@
 # oxide.ts
 
 [Rust](https://rust-lang.org)'s `Option<T>` and `Result<T, E>`, implemented
-for TypeScript.
-
-## Features
-
-Zero dependencies, full test coverage and examples for every function at your
-fingertips with JSDoc comments.
-
--  Add more meaning to return types.
--  Express, chain and map values as if you were writing in Rust.
--  Use the `match` adaptation to simplify conditionals.
--  Quickly test multiple Results or Options with `.all` and `.any`.
--  Convert throws and rejections into Results and Options with `.safe`.
-
-## Patch 0.9.10
-
--  ~~Make guarded functions that return at the first sign of trouble (`?`).~~
--  ~~API available both `snake_case` and `camelCase`.~~
+for TypeScript. Zero dependencies, full test coverage and complete in-editor documentation.
 
 # Installation
 
@@ -33,10 +17,10 @@ you should also be able to hover over methods to see some examples.
 
 ### Core Features
 
--  [Option type](#option)
--  [Result type](#result)
--  [Transformation](#transformation)
+-  [Option](#option)
+-  [Result](#result)
 -  [Nesting](#nesting)
+-  [From and Into](#from-and-into)
 -  [All](#all)
 -  [Any](#any)
 -  [Match](#match)
@@ -76,16 +60,16 @@ const val = divide(100, 20);
 // Pull the value out, or throw if None:
 const res: number = val.unwrap();
 // Throw our own error message in the case of None:
-const res: number = val.expect("Division Failed");
+const res: number = val.expect("Don't divide by zero!");
 // Pull the value out, or use a default if None:
 const res: number = val.unwrapOr(1);
 
 // Map the Option<T> to Option<U> by applying a function:
-const strval: Option<string> = val.map((num) => `Result = ${num}`);
+const strval: Option<string> = val.map((num) => `val = ${num}`);
 // Then unwrap the value or use a default if None:
-const res: string = strval.unwrapOr("Error");
+const res: string = strval.unwrapOr("val = <none>");
 // Map, assign a default and unwrap in one line:
-const res: string = val.mapOr("Error", (num) => `Result = ${num}`);
+const res: string = val.mapOr("val = <none>", (num) => `val = ${num}`);
 ```
 
 _The type annotations applied to the const variables are for information -_
@@ -104,7 +88,7 @@ import { Result, Ok, Err } from "oxide.ts";
 
 function divide(x: number, by: number): Result<number, string> {
    if (by === 0) {
-      return Err("Division Failed");
+      return Err("Division by zero");
    } else {
       return Ok(x / by);
    }
@@ -114,56 +98,33 @@ const val = divide(100, 20);
 
 // These are the same as Option (as are many of the other methods):
 const res: number = val.unwrap();
-const res: number = val.expect("Division Failed");
+const res: number = val.expect("Don't divide by zero!");
 const res: number = val.unwrapOr(1);
-// Map Result<T, E> to Result<U, E>, similar to mapping Option<T> to Option<U>
-const strval: Result<string, string> = val.map((num) => `Result = ${num}`);
-const res: string = strval.unwrapOr("Error");
-const res: string = val.mapOr("Error", (num) => `Result = ${num}`);
 
-// We can unwrap the error, which throws if the Result is Ok:
+// Map Result<T, E> to Result<U, E>
+const strval: Result<string, string> = val.map((num) => `val = ${num}`);
+const res: string = strval.unwrapOr("val = <err>");
+const res: string = val.mapOr("val = <err>", (num) => `val = ${num}`);
+
+// We can unwrap/expect the error, which throws if the Result is Ok:
 const err: string = val.unwrapErr();
-const err: string = val.expectErr("Expected this to fail");
+const err: string = val.expectErr("Expected division by zero!");
 
 // Or map the error, mapping Result<T, E> to Result<T, F>
-const objerr: Result<number, Error> = val.mapErr((message) => {
-   return new Error(message);
-});
+const errobj: Result<string, Error> = val.mapErr((msg) => new Error(msg));
 ```
 
-[&laquo; To contents](#usage)
+# From and Into
 
-# Transformation
-
-Because they are so similar, it's possible to transform an `Option<T>` into a
-`Result<T, E>` and vice versa:
-
-```ts
-const val: Option<number> = divide(100, 10);
-
-// Here, the argument provides the Err value to be used if val is None:
-const res: Result<number, string> = val.okOr("Division Error");
-
-// And to turn it back into an Option:
-const opt: Option<number> = res.ok();
-```
-
-_Note that converting from `Result<T, E>` to `Option<T>` causes the `Err`_
-_value (if any) to be discarded._
+The `from` and `into` methods
 
 [&laquo; To contents](#usage)
 
 # Nesting
 
 There is no reason you can't nest `Option` and `Result` structures. The
-following is completely valid:
-
-```ts
-const res: Result<Option<number>, string> = Ok(Some(10));
-const val: number = res.unwrap().unwrap();
-```
-
-There are times when this makes sense, consider something like:
+following example uses nesting to distinguish between _found something_,
+_found nothing_ and _database error_:
 
 ```ts
 import { Result, Option, Some, None, Ok, Err, match } from "oxide.ts";
@@ -173,36 +134,30 @@ function search(query: string): Result<Option<SearchResult>, string> {
    if (err) {
       return Err(err);
    } else {
-      return result.count > 0 ? Ok(Some(result)) : Ok(None);
+      return Ok(result.count > 0 ? Some(result) : None);
    }
 }
 
 const result = search("testing");
 const output: string = match(result, {
-   Ok: match({
-      Some: (res) => `Found ${res.count} entries.`,
+   Ok: {
+      Some: (result) => `Found ${result.count} entries.`,
       None: () => "No results for that search.",
-   }),
-   Err: (err) => `Error: ${err}`,
+   },
+   Err: (err) => `Error: ${err}.`,
 });
 ```
 
 [&laquo; To contents](#usage)
 
-# Match
+### Match
 
-Concisely determine what action should be taken for a given input value.
-For all the different ways you can use `match` (including the advanced uses
-discussed later), the following rules apply:
-
--  Every branch must have the same return type.
--  As soon as a matching branch is found, no others are checked.
-
-The most basic `match` can be performed on `Option` and `Result` types. This
-is called _mapped_ matching.
+Mapped matching is possible on `Option` and `Result` types. There are
+other ways to use `match` described in the [advanced](#advanced-features)
+section.
 
 ```ts
-const num: Option<number> = Some(10);
+const num = Option(10);
 const res = match(num, {
    Some: (n) => n + 1,
    None: () => 0,
@@ -211,26 +166,24 @@ const res = match(num, {
 assert.equal(res, 11);
 ```
 
-It's also possible to nest mapped matching and provide defaults. You don't
-have to include every named branch:
+You can nest mapped matching patterns and provide defaults. If a default is
+not found in the current level it will fall back to the previous level. When
+no suitable match or default is found, an exhausted error is thrown.
 
 ```ts
-const matchNest = (input: Result<Option<number>, string>) =>
-   match(input, {
-      Ok: match({
-         Some: (n) => `num ${n}`,
-      }),
+function nested(val: Result<Option<number>, string>): string {
+   return match(val, {
+      Ok: {
+         Some: (num) => `found ${num}`,
+      },
       _: () => "nothing",
    });
+}
 
-assert.equal(matchNest(Ok(Some(10))), "num 10");
-assert.equal(matchNest(Ok(None)), "nothing");
-assert.equal(matchNest(Err("none")), "nothing");
+assert.equal(nested(Ok(Some(10))), "found 10");
+assert.equal(nested(Ok(None)), "nothing");
+assert.equal(nested(Err("Not a number")), "nothing");
 ```
-
-**Note:** Using `match` without the first-position value is not a way to
-"compile" a match function. Only call match like this within a nested
-match structure.
 
 [&laquo; To contents](#usage)
 

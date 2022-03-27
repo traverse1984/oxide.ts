@@ -8,7 +8,9 @@ function AsOpt(val: Option<any>): Option<number> {
 export default function methods() {
    it("into", () => {
       expect(Some(1).into()).to.equal(1);
-      expect(None.into()).to.equal(null);
+      expect(None.into()).to.equal(undefined);
+      expect(None.into(false)).to.equal(false);
+      expect(None.into(null)).to.equal(null);
    });
 
    it("equals", () => {

@@ -8,7 +8,9 @@ function AsRes<T>(val: unknown): Result<T, T> {
 export default function methods() {
    it("into", () => {
       expect(Ok(1).into()).to.equal(1);
-      expect(Err(1).into()).to.equal(null);
+      expect(Err(1).into()).to.equal(undefined);
+      expect(Err(1).into(false)).to.equal(false);
+      expect(Err(1).into(null)).to.equal(null);
    });
 
    it("equals", () => {

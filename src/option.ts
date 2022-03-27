@@ -1,9 +1,11 @@
-import { T, Val, EmptyArray, IterType } from "./symbols";
+import { T, Val, Falsey, EmptyArray, IterType } from "./symbols";
 import { Result, Ok, Err } from "./result";
 
 export type Some<T> = OptionType<T> & { [T]: true };
 export type None = OptionType<never> & { [T]: false };
 export type Option<T> = OptionType<T>;
+
+type From<T> = Exclude<T, Error | Falsey>;
 
 type OptionTypes<O> = {
    [K in keyof O]: O[K] extends Option<infer T> ? T : never;
@@ -25,18 +27,21 @@ class OptionType<T> {
    }
 
    /**
-    * Return the contained `T`, or `null` if the Option is `None`.
+    * Return the contained `T`, or the provided `none` if the option is `None`.
     *
     * ```
     * const x: Option<number> = Some(1);
     * assert.equal(x.into(), 1);
     *
     * const x: Option<number> = None;
-    * assert.equal(x.into(), null);
+    * assert.equal(x.into(), undefined);
+    *
+    * const x: Option<number> = None;
+    * assert.equal(x.into(null), null);
     * ```
     */
-   into(): T | null {
-      return this[T] ? this[Val] : null;
+   into<U extends false | null | undefined>(none?: U): T | U {
+      return this[T] ? this[Val] : (none as U);
    }
 
    /**
@@ -395,6 +400,8 @@ class OptionType<T> {
  * An Option represents either something, or nothing. If we hold a value
  * of type `Option<T>`, we know it is either `Some<T>` or `None`.
  *
+ * As a function, `Option` is an alias for `Option.from`.
+ *
  * ```
  * const users = ["Fry", "Bender"];
  * function fetch_user(username: string): Option<string> {
@@ -411,7 +418,7 @@ class OptionType<T> {
  * assert.equal(greet("SuperKing"), "Wha?");
  * ```
  */
-export function Option<T>(val: T): Option<NonNullable<T>> {
+export function Option<T>(val: T): Option<From<T>> {
    return from(val);
 }
 
@@ -455,17 +462,34 @@ function is(val: unknown): val is Option<unknown> {
 }
 
 /**
- * Creates a new `Option<T>` which is `None` when the provided `val` is
- * `undefined`, `null` or `NaN`, and `Some<T>` otherwise.
+ * Creates a new `Option<T>` which is `Some` unless the provided `val` is
+ * falsey or an instance of `Error`. This function is aliased by `Option`.
+ *
+ * The `T` type is narrowed to exclude falsey/Error values.
  *
  * ```
  * assert.equal(Option.from(1).unwrap(), 1);
- * assert.equal(Option.from(undefined).isNone(), true);
- * assert.equal(Option.from(null).isNone(), true);
- * assert.equal(Option.from(parseInt("not")).isNone(), true);
+ * assert.equal(from(0).isNone(), true);
+ *
+ * const err = Option.from(new Error("msg"));
+ * assert.equal(err.isNone(), true);
  * ```
  */
-function from<T>(val: T): Option<NonNullable<T>> {
+function from<T>(val: T): Option<From<T>> {
+   return !val || val instanceof Error ? None : (Some(val) as Option<From<T>>);
+}
+
+/**
+ * Creates a new `Option<T>` which is `Some` unless the provided `val` is
+ * `undefined`, `null` or `NaN`.
+ *
+ * ```
+ * assert.equal(Option.nonNull(1).unwrap(), 1);
+ * assert.equal(Option.nonNull(0).unwrap(), 0);
+ * assert.equal(Option.nonNull(null).isNone(), true);
+ * ```
+ */
+function nonNull<T>(val: T): Option<NonNullable<T>> {
    return val === undefined || val === null || val !== val
       ? None
       : Some(val as NonNullable<T>);
@@ -605,6 +629,7 @@ function any<O extends Option<any>[]>(
 
 Option.is = Object.freeze(is);
 Option.from = Object.freeze(from);
+Option.nonNull = Object.freeze(nonNull);
 Option.safe = Object.freeze(safe);
 Option.all = Object.freeze(all);
 Option.any = Object.freeze(any);

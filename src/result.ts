@@ -1,9 +1,14 @@
-import { T, Val, EmptyArray, IterType } from "./symbols";
+import { T, Val, Falsey, EmptyArray, IterType } from "./symbols";
 import { Option, Some, None } from "./option";
 
 export type Ok<T> = ResultType<T, never>;
 export type Err<E> = ResultType<never, E>;
 export type Result<T, E> = ResultType<T, E>;
+
+type From<T> = Exclude<T, Error | Falsey>;
+type ErrFrom<T> = T extends number
+   ? Extract<T, Error | Falsey | number>
+   : Extract<T, Error | Falsey>;
 
 type ResultTypes<R> = {
    [K in keyof R]: R[K] extends Result<infer T, any> ? T : never;
@@ -29,19 +34,21 @@ class ResultType<T, E> {
    }
 
    /**
-    * Returns the contained `T` if the Result is `Ok`, otherwise returns
-    * `null`.
+    * Returns the contained `T`, or the provided `err` if the result is `Err`.
     *
     * ```
     * const x = Ok(1);
     * assert.equal(x.into(), 1);
     *
     * const x = Err(1);
-    * assert.equal(x.into(), null);
+    * assert.equal(x.into(), undefined);
+    *
+    * const x = Err(1);
+    * assert.equal(x.into(null), null);
     * ```
     */
-   into(): T | null {
-      return this[T] ? (this[Val] as T) : null;
+   into<U extends false | null | undefined>(none?: U): T | U {
+      return this[T] ? (this[Val] as T) : (none as U);
    }
 
    /**
@@ -453,6 +460,8 @@ function is(val: unknown): val is Result<unknown, unknown> {
  * A Result represents success, or failure. If we hold a value
  * of type `Result<T, E>`, we know it is either `Ok<T>` or `Err<E>`.
  *
+ * As a function, `Result` is an alias for `Result.from`.
+ *
  * ```
  * const users = ["Fry", "Bender"];
  * function fetch_user(username: string): Result<string, string> {
@@ -470,7 +479,7 @@ function is(val: unknown): val is Result<unknown, unknown> {
  * assert.equal(greet("SuperKing"), "Error: Wha?");
  * ```
  */
-export function Result<T>(val: T): Result<NonNullable<T>, null> {
+export function Result<T>(val: T): Result<From<T>, ErrFrom<T>> {
    return from(val);
 }
 
@@ -511,17 +520,35 @@ export function Err<E>(val: E): Err<E> {
 }
 
 /**
- * Creates a new `Result<T, null>` which is `Err<null>` when the provided `val`
- * is `undefined`, `null` or `NaN`, and `Ok<T>` otherwise.
+ * Creates a new `Result<T, E>` which is `Ok` unless the provided `val` is
+ * falsey or an instance of `Error`. This function is aliased by `Result`.
+ *
+ * The `T` type is narrowed to exclude falsey/Error values, while the `E` type
+ * is a union of all possible falsey/Error values for `val`.
  *
  * ```
  * assert.equal(Result.from(1).unwrap(), 1);
- * assert.equal(Result.from(undefined).isErr(), true);
- * assert.equal(Result.from(null).isErr(), true);
- * assert.equal(Result.from(parseInt("not")).isErr(), true);
+ * assert.equal(Result(0).isNone(), true);
+ *
+ * const err = Result.from(new Error("msg"));
+ * assert.equal(err.unwrapErr().message, "msg");
  * ```
  */
-function from<T>(val: T): Result<NonNullable<T>, null> {
+function from<T>(val: T): Result<From<T>, ErrFrom<T>> {
+   return !val || val instanceof Error ? Err(val as any) : Ok(val as any);
+}
+
+/**
+ * Creates a new `Result<T, null>` which is `Ok` unless the provided `val` is
+ * `undefined`, `null` or `NaN`.
+ *
+ * ```
+ * assert.equal(Result.nonNull(1).unwrap(), 1);
+ * assert.equal(Result.nonNull(0).unwrap(), 0);
+ * assert.equal(Result.nonNull(null).isErr(), true);
+ * ```
+ */
+function nonNull<T>(val: T): Result<NonNullable<T>, null> {
    return val === undefined || val === null || val !== val
       ? Err(null)
       : Ok(val as NonNullable<T>);
@@ -679,6 +706,7 @@ function any<R extends Result<any, any>[]>(
 
 Result.is = Object.freeze(is);
 Result.from = Object.freeze(from);
+Result.nonNull = Object.freeze(nonNull);
 Result.safe = Object.freeze(safe);
 Result.all = Object.freeze(all);
 Result.any = Object.freeze(any);
