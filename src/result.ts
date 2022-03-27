@@ -47,8 +47,10 @@ class ResultType<T, E> {
     * assert.equal(x.into(null), null);
     * ```
     */
-   into<U extends false | null | undefined>(none?: U): T | U {
-      return this[T] ? (this[Val] as T) : (none as U);
+   into(): T | undefined;
+   into<U extends FalseyValues | Error>(none: U): T | U;
+   into(err?: FalseyValues | Error): T | FalseyValues | Error {
+      return this[T] ? (this[Val] as T) : err;
    }
 
    /**

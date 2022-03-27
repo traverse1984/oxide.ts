@@ -40,8 +40,10 @@ class OptionType<T> {
     * assert.equal(x.into(null), null);
     * ```
     */
-   into<U extends false | null | undefined>(none?: U): T | U {
-      return this[T] ? this[Val] : (none as U);
+   into(): T | undefined;
+   into<U extends FalseyValues | Error>(none: U): T | U;
+   into(none?: FalseyValues | Error): T | FalseyValues | Error {
+      return this[T] ? this[Val] : none;
    }
 
    /**
