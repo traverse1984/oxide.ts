@@ -19,8 +19,8 @@ you should also be able to hover over methods to see some examples.
 
 -  [Option](#option)
 -  [Result](#result)
+-  [Converting (from and into)](#converting-from-into-and-nonnull)
 -  [Nesting](#nesting)
--  [From and Into](#from-and-into)
 -  [All](#all)
 -  [Any](#any)
 -  [Match](#match)
@@ -114,9 +114,67 @@ const err: string = val.expectErr("Expected division by zero!");
 const errobj: Result<string, Error> = val.mapErr((msg) => new Error(msg));
 ```
 
-# From and Into
+# Converting (from, into and nonNull)
 
-The `from` and `into` methods
+These methods provide a way to jump in to (and out of) `Option` and `Result`
+types without having to write lots of additional functions.
+
+## from
+
+Convert to an `Option`/`Result` which is `Some<T>`/`Ok<T>` unless the value is
+falsey, an instance of `Error` or an invalid `Date`.
+
+The `T` type is narrowed to exclude falsey or Error values.
+
+```ts
+const people = ["Fry", "Leela", "Bender"];
+// Create an Option<string> from a find:
+const person = Option.from(people.find((name) => name === "Fry"));
+// or shorter:
+const person = Option(people.find((name) => name === "Bender"));
+```
+
+In the case of `Result`, falsey values and invalid dates are replaced by `null`
+and `Errors` are retained to form the `Err<E>`.
+
+```ts
+function randomName(): string | false;
+function tryName(): string | Error;
+function randomNumbers(): number[] | Error;
+// Create a Result<string, null>
+const person = Result.from(randomName());
+// Create a Result<string, Error | null> (string could be falsey)
+const name = Result(tryName());
+// Create a Result<number[], Error>
+const num = Result(randomNumbers());
+```
+
+## into
+
+Convert an existing `Option`/`Result` into a union type containing `T` and a
+provided falsey/error value (defaults to `undefined`).
+
+```ts
+function maybeName(): Option<string>;
+function maybeNumbers(): Result<number[], Error | null>;
+
+const name: string | undefined = maybeName().into();
+const name: string | null = maybeName.into(null);
+
+// Note that a contained Err value is always discarded
+const numbers: number[] | undefined = maybeNumbers().into();
+const numbers: number[] | false = maybeNumbers().into(false);
+```
+
+## nonNull
+
+Convert to an `Option`/`Result` which is `Some<T>`/`Ok<T>` unless the value
+provided is `undefined`, `null` or `NaN`.
+
+```ts
+const users = ["Fry", "Leela", "Bender"];
+const result = Option(users.find((user) => user.startsWith("B")));
+```
 
 [&laquo; To contents](#usage)
 

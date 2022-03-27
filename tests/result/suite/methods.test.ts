@@ -39,8 +39,8 @@ export default function methods() {
    });
 
    it("invert", () => {
-      expect(Ok(1).invert().unwrapErr()).to.equal(1);
-      expect(Err(1).invert().unwrap()).to.equal(1);
+      expect(Ok(1).reverse().unwrapErr()).to.equal(1);
+      expect(Err(1).reverse().unwrap()).to.equal(1);
    });
 
    it("expect", () => {

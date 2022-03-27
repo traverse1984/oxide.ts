@@ -1,4 +1,4 @@
-import { T, Val, EmptyArray, IterType, FalseyValues } from "./common";
+import { T, Val, EmptyArray, IterType, FalseyValues, isTruthy } from "./common";
 import { Option, Some, None } from "./option";
 
 export type Ok<T> = ResultType<T, never>;
@@ -6,9 +6,6 @@ export type Err<E> = ResultType<never, E>;
 export type Result<T, E> = ResultType<T, E>;
 
 type From<T> = Exclude<T, Error | FalseyValues>;
-type ErrFrom<T> = T extends number
-   ? Extract<T, Error | FalseyValues | number>
-   : Extract<T, Error | FalseyValues>;
 
 type ResultTypes<R> = {
    [K in keyof R]: R[K] extends Result<infer T, any> ? T : never;
@@ -34,7 +31,10 @@ class ResultType<T, E> {
    }
 
    /**
-    * Returns the contained `T`, or the provided `err` if the result is `Err`.
+    * Returns the contained `T`, or `err` if the result is `Err`. An `err`
+    * value must be falsey or an instance of `Error`.
+    *
+    * If `err` is not set, `undefined` is used.
     *
     * ```
     * const x = Ok(1);
@@ -48,7 +48,7 @@ class ResultType<T, E> {
     * ```
     */
    into(): T | undefined;
-   into<U extends FalseyValues | Error>(none: U): T | U;
+   into<U extends FalseyValues | Error>(err: U): T | U;
    into(err?: FalseyValues | Error): T | FalseyValues | Error {
       return this[T] ? (this[Val] as T) : err;
    }
@@ -121,17 +121,17 @@ class ResultType<T, E> {
    }
 
    /**
-    * Inverts the `Result<T, E>`, returning a `Result<E, T>`.
+    * Reverses the `Result<T, E>`, returning a `Result<E, T>`.
     *
     * ```
     * const x: Result<number, string> = Ok(10);
     * assert.equal(x.unwrap(), 10);
     *
-    * const y: Result<string, number> = x.invert();
+    * const y: Result<string, number> = x.reverse();
     * assert.equal(y.unwrapErr(), 10);
     * ```
     */
-   invert(): Result<E, T> {
+   reverse(): Result<E, T> {
       return new ResultType(this[Val] as E & T, !this[T]);
    }
 
@@ -481,8 +481,14 @@ function is(val: unknown): val is Result<unknown, unknown> {
  * assert.equal(greet("SuperKing"), "Error: Wha?");
  * ```
  */
-export function Result<T>(val: T): Result<From<T>, ErrFrom<T>> {
-   return from(val);
+export function Result<T>(
+   val: T
+): Result<
+   From<T>,
+   | (T extends Error ? T : never)
+   | (Extract<FalseyValues, T> extends never ? never : null)
+> {
+   return from(val) as any;
 }
 
 /**
@@ -522,22 +528,30 @@ export function Err<E>(val: E): Err<E> {
 }
 
 /**
- * Creates a new `Result<T, E>` which is `Ok` unless the provided `val` is
- * falsey or an instance of `Error`. This function is aliased by `Result`.
+ * Creates a new `Result<T, E>` which is `Ok<T>` unless the provided `val` is
+ * falsey, an instance of `Error` or an invalid `Date`.
  *
- * The `T` type is narrowed to exclude falsey/Error values, while the `E` type
- * is a union of all possible falsey/Error values for `val`.
+ * The `T` is narrowed to exclude any falsey or Error values.
+ *
+ * For `E`, falsey values and invalid dates are replaced by `null` and `Errors`
+ * are retained.
  *
  * ```
  * assert.equal(Result.from(1).unwrap(), 1);
- * assert.equal(Result(0).isNone(), true);
+ * assert.equal(Result(0).isErr(), true);
  *
  * const err = Result.from(new Error("msg"));
  * assert.equal(err.unwrapErr().message, "msg");
  * ```
  */
-function from<T>(val: T): Result<From<T>, ErrFrom<T>> {
-   return !val || val instanceof Error ? Err(val as any) : Ok(val as any);
+function from<T>(
+   val: T
+): Result<
+   From<T>,
+   | (T extends Error ? T : never)
+   | (Extract<FalseyValues, T> extends never ? never : null)
+> {
+   return new ResultType(val as any, isTruthy(val));
 }
 
 /**

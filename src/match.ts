@@ -448,3 +448,6 @@ export function Fn<T extends (...args: any) => any>(fn: T): () => T {
 }
 
 export type Fn<T> = { (): never; [MarkFn]: T };
+
+Object.freeze(Fn);
+Object.freeze(match);

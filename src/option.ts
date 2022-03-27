@@ -1,4 +1,4 @@
-import { T, Val, EmptyArray, IterType, FalseyValues } from "./common";
+import { T, Val, EmptyArray, IterType, FalseyValues, isTruthy } from "./common";
 import { Result, Ok, Err } from "./result";
 
 export type Some<T> = OptionType<T> & { [T]: true };
@@ -27,7 +27,10 @@ class OptionType<T> {
    }
 
    /**
-    * Return the contained `T`, or the provided `none` if the option is `None`.
+    * Return the contained `T`, or `none` if the option is `None`. A `none`
+    * value must be falsey or an instance of `Error`.
+    *
+    * If `none` is not set, `undefined` is used.
     *
     * ```
     * const x: Option<number> = Some(1);
@@ -465,9 +468,10 @@ function is(val: unknown): val is Option<unknown> {
 
 /**
  * Creates a new `Option<T>` which is `Some` unless the provided `val` is
- * falsey or an instance of `Error`. This function is aliased by `Option`.
+ * falsey, an instance of `Error` or an invalid `Date`. This function is
+ * aliased by `Option`.
  *
- * The `T` type is narrowed to exclude falsey/Error values.
+ * The `T` type is narrowed to exclude falsey orError values.
  *
  * ```
  * assert.equal(Option.from(1).unwrap(), 1);
@@ -478,7 +482,7 @@ function is(val: unknown): val is Option<unknown> {
  * ```
  */
 function from<T>(val: T): Option<From<T>> {
-   return !val || val instanceof Error ? None : (Some(val) as Option<From<T>>);
+   return isTruthy(val) ? (new OptionType(val, true) as any) : None;
 }
 
 /**
