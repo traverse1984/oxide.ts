@@ -396,19 +396,19 @@ class OptionType<T> {
  * of type `Option<T>`, we know it is either `Some<T>` or `None`.
  *
  * ```
- * const users = ["Simon", "Garfunkel"];
+ * const users = ["Fry", "Bender"];
  * function fetch_user(username: string): Option<string> {
  *    return users.includes(username) ? Some(username) : None;
  * }
  *
  * function greet(username: string): string {
  *    return fetch_user(username)
- *       .map((user) => `Hello ${user}, my old friend!`)
- *       .unwrapOr("*silence*");
+ *       .map((user) => `Good news everyone, ${user} is here!`)
+ *       .unwrapOr("Wha?");
  * }
  *
- * assert.equal(greet("Simon"), "Hello Simon, my old friend!")
- * assert.equal(greet("SuperKing77"), "*silence*");
+ * assert.equal(greet("Bender"), "Good news everyone, Bender is here!");
+ * assert.equal(greet("SuperKing"), "Wha?");
  * ```
  */
 export function Option<T>(val: T): Option<NonNullable<T>> {

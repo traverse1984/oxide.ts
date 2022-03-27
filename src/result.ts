@@ -450,6 +450,31 @@ function is(val: unknown): val is Result<unknown, unknown> {
 }
 
 /**
+ * A Result represents success, or failure. If we hold a value
+ * of type `Result<T, E>`, we know it is either `Ok<T>` or `Err<E>`.
+ *
+ * ```
+ * const users = ["Fry", "Bender"];
+ * function fetch_user(username: string): Result<string, string> {
+ *    return users.includes(username) ? Ok(username) : Err("Wha?");
+ * }
+ *
+ * function greet(username: string): string {
+ *    return fetch_user(username).mapOrElse(
+ *       (err) => `Error: ${err}`,
+ *       (user) => `Good news everyone, ${user} is here!`
+ *    );
+ * }
+ *
+ * assert.equal(greet("Bender"), "Good news everyone, Bender is here!");
+ * assert.equal(greet("SuperKing"), "Error: Wha?");
+ * ```
+ */
+export function Result<T>(val: T): Result<NonNullable<T>, null> {
+   return from(val);
+}
+
+/**
  * Creates an `Ok<T>` value, which can be used where a `Result<T, E>` is
  * required. See Result for more examples.
  *
@@ -483,33 +508,6 @@ export function Ok<T>(val: T): Ok<T> {
  */
 export function Err<E>(val: E): Err<E> {
    return new ResultType<never, E>(val, false);
-}
-
-/**
- * A Result represents success, or failure. If we hold a value
- * of type `Result<T, E>`, we know it is either `Ok<T>` or `Err<E>`.
- *
- * ```
- * const users = ["Simon", "Garfunkel"];
- * function fetch_user(username: string): Result<string, string> {
- *    return users.includes(username)
- *       ? Ok(username)
- *       : Err("*silence*");
- * }
- *
- * function greet(username: string): string {
- *    return fetch_user(username).mapOrElse(
- *       (err) => `Error: ${err}`,
- *       (user) => `Hello ${user}, my old friend!`
- *    );
- * }
- *
- * assert.equal(greet("Simon"), "Hello Simon, my old friend!")
- * assert.equal(greet("SuperKing77"), "Error: *silence*");
- * ```
- */
-export function Result<T>(val: T): Result<NonNullable<T>, null> {
-   return from(val);
 }
 
 /**
@@ -584,7 +582,6 @@ function from<T>(val: T): Result<NonNullable<T>, null> {
  * assert.equal(x.unwrap(), "Hello World");
  * ```
  */
-
 function safe<T, A extends any[]>(
    fn: (...args: A) => T extends PromiseLike<any> ? never : T,
    ...args: A

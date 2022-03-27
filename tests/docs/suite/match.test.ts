@@ -12,15 +12,15 @@ import {
 } from "../../../src";
 
 export default function match_docs() {
-   mappedMatchBasic();
-   mappedMatchNested();
-   combinedMatch();
-   chainedMatchPrimitive();
-   chainedMatchFilterFunction();
-   chainedMatchObject();
-   chainedMatchArray();
-   chainedMatchMonad();
-   chainedMatchFn();
+   it("Mapped", mappedMatchBasic);
+   it("Nested Mapped", mappedMatchNested);
+   it("Combined", combinedMatch);
+   it("Chained Primitive", chainedMatchPrimitive);
+   it("Chained Filter Function", chainedMatchFilterFunction);
+   it("Chained Object", chainedMatchObject);
+   it("Chained Array", chainedMatchArray);
+   it("Chained Monad", chainedMatchMonad);
+   it("Chained Fn", chainedMatchFn);
 }
 
 function mappedMatchBasic() {
