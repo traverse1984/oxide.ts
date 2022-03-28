@@ -126,9 +126,8 @@ types without having to write lots of additional functions.
 ## from
 
 Convert to an `Option`/`Result` which is `Some<T>`/`Ok<T>` unless the value is
-falsey, an instance of `Error` or an invalid `Date`.
-
-The `T` type is narrowed to exclude falsey or Error values.
+falsey, an instance of `Error` or an invalid `Date`. The `T` type is narrowed to
+exclude falsey or Error values.
 
 ```ts
 const people = ["Fry", "Leela", "Bender"];
@@ -138,8 +137,8 @@ const person = Option.from(people.find((name) => name === "Fry"));
 const person = Option(people.find((name) => name === "Bender"));
 ```
 
-In the case of `Result`, falsey values and invalid dates are replaced by `null`
-and `Errors` are retained to form the `Err<E>`.
+In the case of `Result`; falsey values and invalid dates are replaced by `null`,
+and `Errors` are retained to form the `E` type.
 
 ```ts
 function randomName(): string | false;
