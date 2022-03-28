@@ -95,11 +95,7 @@ If we hold a value of type `Result<T, E>` we know it's either `Ok<T>` or
 import { Result, Ok, Err } from "oxide.ts";
 
 function divide(x: number, by: number): Result<number, string> {
-   if (by === 0) {
-      return Err("Division by zero");
-   } else {
-      return Ok(x / by);
-   }
+   return by === 0 ? Err("Division by zero") : Ok(x / by);
 }
 
 const val = divide(100, 20);
