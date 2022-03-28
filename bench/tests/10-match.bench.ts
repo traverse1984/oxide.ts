@@ -1,8 +1,8 @@
 import { Bench } from "../bench";
 import { match } from "../../src";
 
-Bench("Match (vs if/else)", 50000000, library, native);
-Bench("Match Compiled (vs if/else)", 50000000, compiled(), native);
+Bench("Simple Match (vs if/else)", 50000000, library, native);
+Bench("Simple Match Compiled (vs if/else)", 50000000, compiled(), native);
 
 function library(i: number) {
    return match(i, [

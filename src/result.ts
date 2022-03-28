@@ -31,10 +31,8 @@ class ResultType<T, E> {
    }
 
    /**
-    * Returns the contained `T`, or `err` if the result is `Err`. An `err`
-    * value must be falsey or an instance of `Error`.
-    *
-    * If `err` is not set, `undefined` is used.
+    * Returns the contained `T`, or `err` if the result is `Err`. The `err`
+    * value must be falsey and defaults to `undefined`.
     *
     * ```
     * const x = Ok(1);
@@ -48,8 +46,8 @@ class ResultType<T, E> {
     * ```
     */
    into(): T | undefined;
-   into<U extends FalseyValues | Error>(err: U): T | U;
-   into(err?: FalseyValues | Error): T | FalseyValues | Error {
+   into<U extends FalseyValues>(err: U): T | U;
+   into(err?: FalseyValues): T | FalseyValues {
       return this[T] ? (this[Val] as T) : err;
    }
 
@@ -121,19 +119,24 @@ class ResultType<T, E> {
    }
 
    /**
-    * Inverts the `Result`<T, E>`, turning `Ok` into `Err` and vice versa.
-    * Returns the new `Result<E, T>`.
+    * Creates an `Option<T>` by calling `f` with the contained `Ok` value.
+    * Converts `Ok` to `Some` if the filter returns true, or `None` otherwise.
+    *
+    * For more advanced filtering, consider `match`.
     *
     * ```
-    * const x: Result<number, string> = Ok(10);
-    * assert.equal(x.unwrap(), 10);
+    * const x = Ok(1);
+    * assert.equal(x.filter((v) => v < 5).equals(Some(1)), true);
     *
-    * const y: Result<string, number> = x.invert();
-    * assert.equal(y.unwrapErr(), 10);
+    * const x = Ok(10);
+    * assert.equal(x.filter((v) => v < 5).isNone(), true);
+    *
+    * const x = Err(1);
+    * assert.equal(x.filter((v) => v < 5).isNone(), true);
     * ```
     */
-   invert(): Result<E, T> {
-      return new ResultType(this[Val] as E & T, !this[T]);
+   filter(f: (val: T) => boolean): Option<T> {
+      return this[T] && f(this[Val] as T) ? Some(this[Val] as T) : None;
    }
 
    /**

@@ -27,10 +27,8 @@ class OptionType<T> {
    }
 
    /**
-    * Return the contained `T`, or `none` if the option is `None`. A `none`
-    * value must be falsey or an instance of `Error`.
-    *
-    * If `none` is not set, `undefined` is used.
+    * Return the contained `T`, or `none` if the option is `None`. The `none`
+    * value must be falsey and defaults to `undefined`.
     *
     * ```
     * const x: Option<number> = Some(1);
@@ -44,8 +42,8 @@ class OptionType<T> {
     * ```
     */
    into(): T | undefined;
-   into<U extends FalseyValues | Error>(none: U): T | U;
-   into(none?: FalseyValues | Error): T | FalseyValues | Error {
+   into<U extends FalseyValues>(none: U): T | U;
+   into(none?: FalseyValues): T | FalseyValues {
       return this[T] ? this[Val] : none;
    }
 

@@ -5,6 +5,9 @@ for TypeScript. Zero dependencies, full test coverage and complete in-editor doc
 
 # Installation
 
+Release 1.0 includes new features, removes old features and has breaking
+changes. [Check out what's changed](#changes-in-10).
+
 ```
 $ npm install oxide.ts --save
 ```
@@ -29,12 +32,6 @@ $ npm install oxide.ts --save
 -  [Combined Match](#combined-match)
 -  [Match Chains](#chained-match)
 -  [Compiling](#compiling)
-
-### Tests
-
-```
-npm run test
-```
 
 # Importing
 
@@ -126,7 +123,9 @@ types without having to write lots of additional functions.
 ## from
 
 Convert to an `Option`/`Result` which is `Some<T>`/`Ok<T>` unless the value is
-falsey, an instance of `Error` or an invalid `Date`. The `T` is narrowed to exclude any falsey values or Errors.
+falsey, an instance of `Error` or an invalid `Date`.
+
+The `T` is narrowed to exclude any falsey values or Errors.
 
 ```ts
 const people = ["Fry", "Leela", "Bender"];
@@ -145,9 +144,10 @@ In the case of `Result`, the `E` type includes:
 function randomName(): string | false;
 function tryName(): string | Error;
 function randomNumbers(): number[] | Error;
+
 // Create a Result<string, null>
 const person = Result.from(randomName());
-// Create a Result<string, Error | null> (string could be falsey)
+// Create a Result<string, Error | null>
 const name = Result(tryName());
 // Create a Result<number[], Error>
 const num = Result(randomNumbers());
@@ -155,17 +155,17 @@ const num = Result(randomNumbers());
 
 ## into
 
-Convert an existing `Option`/`Result` into a union type containing `T` and a
-provided falsey/error value (defaults to `undefined`).
+Convert an existing `Option`/`Result` into a union type containing `T` and
+`undefined` (or a provided falsey value).
 
 ```ts
 function maybeName(): Option<string>;
-function maybeNumbers(): Result<number[], Error | null>;
+function maybeNumbers(): Result<number[], Error>;
 
 const name: string | undefined = maybeName().into();
-const name: string | null = maybeName.into(null);
+const name: string | null = maybeName().into(null);
 
-// Note that a contained Err value is always discarded
+// Note that the into type does not reflect the E type:
 const numbers: number[] | undefined = maybeNumbers().into();
 const numbers: number[] | false = maybeNumbers().into(false);
 ```
@@ -176,21 +176,22 @@ Convert to an `Option`/`Result` which is `Some<T>`/`Ok<T>` unless the value
 provided is `undefined`, `null` or `NaN`.
 
 ```ts
-const users = ["Fry", "Leela", "Bender"];
-const result = Option(users.find((user) => user.startsWith("B")));
+function getNum(): number | null;
+function getStr(): string | null;
+
+const num = Option.nonNull(getNum()).unwrapOr(100); // Could be 0
+const str = Option.nonNull(getStr()).unwrapOr("none"); // Could be ""
 ```
 
 [&laquo; To contents](#usage)
 
 # Nesting
 
-There is no reason you can't nest `Option` and `Result` structures. The
-following example uses nesting to distinguish between _found something_,
-_found nothing_ and _database error_:
+You can nest `Option` and `Result` structures. The following example uses
+nesting to distinguish between _found something_, _found nothing_ and
+_database error_:
 
 ```ts
-import { Result, Option, Some, None, Ok, Err, match } from "oxide.ts";
-
 function search(query: string): Result<Option<SearchResult>, string> {
    const [err, result] = database.search(query);
    if (err) {
@@ -221,8 +222,6 @@ The compiler will complain if the inner type is not definitely iterable
 (including `any`), or if the monad is known to be `None` or `Err`.
 
 ```ts
-import { Option, None } from "oxide.ts";
-
 const numbers = Option([1.12, 2.23, 3.34]);
 for (const num of numbers) {
    console.log("Number is:", num.toFixed(1));
@@ -237,8 +236,6 @@ for (const num of numbers) {
 It's also possible to iterate over nested monads in the same way:
 
 ```ts
-import { Option, Result } from "oxide.ts";
-
 const numbers = Option(Result(Option([1, 2, 3])));
 for (const num of numbers) {
    console.log("Number is:", num.toFixed(1));
@@ -422,8 +419,6 @@ More detail about chained matching patterns is available in the bundled JSDoc.
 ## Examples
 
 ```ts
-import { match, _ } from "oxide.ts";
-
 function matchArr(arr: number[]): string {
    return match(arr, [
       [[1], "1"],
@@ -441,8 +436,6 @@ assert.equal(matchArr([2, 4, 6]), "other");
 ```
 
 ```ts
-import { match, _ } from "oxide.ts";
-
 interface ExampleObj {
    a: number;
    b?: { c: number };
@@ -485,3 +478,13 @@ assert.equal(matchSome(None), "none");
 ```
 
 [&laquo; To contents](#usage)
+
+# Changes in 1.0
+
+## New Features
+
+## Breaking Changes
+
+-  Rust-style `snake_case` API removed.
+-  Guarded functions removed.
+-  Match helper functions `SomeIs`, `OkIs` and `ErrIs` removed.
