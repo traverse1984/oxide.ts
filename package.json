@@ -11,7 +11,8 @@
       "dist/**/*"
    ],
    "scripts": {
-      "test": "nyc mocha -r ts-node/register 'tests/**/*'"
+      "test": "nyc mocha -r ts-node/register 'tests/**/*'",
+      "bench": "for file in bench/tests/*.bench.ts; do ts-node $file; done"
    },
    "keywords": [
       "rust",

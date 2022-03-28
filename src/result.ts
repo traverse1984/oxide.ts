@@ -121,17 +121,18 @@ class ResultType<T, E> {
    }
 
    /**
-    * Reverses the `Result<T, E>`, returning a `Result<E, T>`.
+    * Inverts the `Result`<T, E>`, turning `Ok` into `Err` and vice versa.
+    * Returns the new `Result<E, T>`.
     *
     * ```
     * const x: Result<number, string> = Ok(10);
     * assert.equal(x.unwrap(), 10);
     *
-    * const y: Result<string, number> = x.reverse();
+    * const y: Result<string, number> = x.invert();
     * assert.equal(y.unwrapErr(), 10);
     * ```
     */
-   reverse(): Result<E, T> {
+   invert(): Result<E, T> {
       return new ResultType(this[Val] as E & T, !this[T]);
    }
 
