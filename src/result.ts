@@ -532,10 +532,11 @@ export function Err<E>(val: E): Err<E> {
  * Creates a new `Result<T, E>` which is `Ok<T>` unless the provided `val` is
  * falsey, an instance of `Error` or an invalid `Date`.
  *
- * The `T` is narrowed to exclude any falsey or Error values.
+ * The `T` is narrowed to exclude any falsey values or Errors.
  *
- * For `E`, falsey values and invalid dates are replaced by `null` and `Errors`
- * are retained.
+ * The `E` type includes:
+ * - `null` (if `val` could have been falsey or an invalid date)
+ * -  `Error` types excluded from `T` (if there are any)
  *
  * ```
  * assert.equal(Result.from(1).unwrap(), 1);
