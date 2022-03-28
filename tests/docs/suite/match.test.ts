@@ -11,7 +11,7 @@ import {
    _,
 } from "../../../src";
 
-export default function match_docs() {
+export default function matchDocs() {
    it("Mapped", mappedMatchBasic);
    it("Nested Mapped", mappedMatchNested);
    it("Combined", combinedMatch);
@@ -21,6 +21,7 @@ export default function match_docs() {
    it("Chained Array", chainedMatchArray);
    it("Chained Monad", chainedMatchMonad);
    it("Chained Fn", chainedMatchFn);
+   it("Compile", compileMatch);
 }
 
 function mappedMatchBasic() {
@@ -36,9 +37,7 @@ function mappedMatchBasic() {
 function mappedMatchNested() {
    function nested(val: Result<Option<number>, string>): string {
       return match(val, {
-         Ok: {
-            Some: (num) => `found ${num}`,
-         },
+         Ok: { Some: (num) => `found ${num}` },
          _: () => "nothing",
       });
    }
@@ -174,4 +173,46 @@ function chainedMatchFn() {
    assert.equal(matchFn(fnOne)(), "fnOne");
    assert.equal(matchFn(fnTwo)(), "fnTwo");
    assert.equal(matchFn(() => 0)(), "fnDefault");
+}
+
+function compileMatch() {
+   it("Compile Mapped Match", compileMappedMatch);
+   it("Compile Chained Match", compileChainedMatch);
+   it("Compile Nested Match", compileNestedMatch);
+}
+
+function compileMappedMatch() {
+   const matchSome = match.compile({
+      Some: (n: number) => `got some ${n}`,
+      None: () => "got none",
+   });
+
+   assert.equal(matchSome(Some(1)), "got some 1");
+   assert.equal(matchSome(None), "got none");
+}
+
+function compileChainedMatch() {
+   const matchNum = match.compile([
+      [1, "got 1"],
+      [2, "got 2"],
+      [(n) => n > 100, "got > 100"],
+      () => "default",
+   ]);
+
+   assert.equal(matchNum(1), "got 1");
+   assert.equal(matchNum(2), "got 2");
+   assert.equal(matchNum(5), "default");
+   assert.equal(matchNum(150), "got > 100");
+}
+
+function compileNestedMatch() {
+   type ResOpt = Result<Option<string>, number>;
+   const matchResOpt = match.compile<ResOpt, string>({
+      Ok: { Some: (s) => `some ${s}` },
+      _: () => "default",
+   });
+
+   assert.equal(matchResOpt(Ok(Some("test"))), "some test");
+   assert.equal(matchResOpt(Ok(None)), "default");
+   assert.equal(matchResOpt(Err(1)), "default");
 }

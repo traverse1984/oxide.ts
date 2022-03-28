@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import { Option, Some, None } from "../../../src";
 
-export default function option_docs() {
+export default function optionDocs() {
    it("Option", optionMain);
    it("Option.safe (function)", optionSafeFunction);
    it("Option.safe (promise)", optionSafePromise);

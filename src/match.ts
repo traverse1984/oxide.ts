@@ -2,11 +2,9 @@ import { T, Val, MarkFn } from "./common";
 import { Option, Some, None } from "./option";
 import { Result, Ok, Err } from "./result";
 
-type MappedBranches<T, U> = T extends Option<infer V>
-   ? OptionMapped<V, U>
-   : never | T extends Result<infer V, infer E>
-   ? ResultMapped<V, E, U>
-   : never;
+type MappedBranches<T, U> =
+   | (T extends Option<infer V> ? OptionMapped<V, U> : never)
+   | (T extends Result<infer V, infer E> ? ResultMapped<V, E, U> : never);
 
 type ChainedBranches<T, U> =
    | Branch<T, U>[]
@@ -74,9 +72,7 @@ type MonadMapped<T, U> =
  * ```
  * function nested(val: Result<Option<number>, string>): string {
  *    return match(val, {
- *       Ok: {
- *          Some: (num) => `found ${num}`,
- *       },
+ *       Ok: { Some: (num) => `found ${num}` },
  *       _: () => "nothing",
  *    });
  * }
@@ -227,6 +223,12 @@ type MonadMapped<T, U> =
  *       () => "other",
  *    ]);
  * }
+ *
+ * assert.equal(matchArr([1, 2, 3]), "1");
+ * assert.equal(matchArr([2, 12, 6]), "2, > 10");
+ * assert.equal(matchArr([3, 6, 9]), "other");
+ * assert.equal(matchArr([3, 6, 9, 12]), "3, 6, 9, 12");
+ * assert.equal(matchArr([2, 4, 6]), "other");
  * ```
  *
  * #### Some, Ok and Err
@@ -235,7 +237,7 @@ type MonadMapped<T, U> =
  * provided value and the inner `condition` matches the inner value.
  *
  * **Note:** Filter functions are not called for any condition wrapped in a
- * monad. See the section on Combined Matching.
+ * monad. See the section on Combined Matching for a way to match inner values.
  *
  * ```
  * type NumberMonad = Option<number> | Result<number, number>;
@@ -257,9 +259,9 @@ type MonadMapped<T, U> =
  *
  * #### Fn (function as value)
  *
- * This wrapper distinguishes between a function to be called (e.g. a filter
- * function) and a function to be treated as a value. It is needed where the
- * function value could be confused with a filter function or result function.
+ * This wrapper distinguishes between a function to be called and a function to
+ * be treated as a value. It is needed where the function value could be confused
+ * with a filter function or result function.
  *
  * ```
  * const fnOne = () => 1;
@@ -286,7 +288,99 @@ export function match<T, U>(
    return matchDispatch(val, pattern, Default);
 }
 
+match.compile = compile;
 export type match = typeof match;
+
+/**
+ * Compile a `match` pattern to a new function. This can improve performance
+ * by re-using the same pattern object on every invocation.
+ *
+ * #### Mapped Match
+ *
+ * ```
+ * const matchSome = match.compile({
+ *    Some: (n: number) => `got some ${n}`,
+ *    None: () => "got none",
+ * });
+ *
+ * assert.equal(matchSome(Some(1)), "got some 1");
+ * assert.equal(matchSome(None), "got none");
+ * ```
+ *
+ * #### Chained Match
+ *
+ * ```
+ * const matchNum = match.compile([
+ *    [1, "got 1"],
+ *    [2, "got 2"],
+ *    [(n) => n > 100, "got > 100"],
+ *    () => "default",
+ * ]);
+ *
+ * assert.equal(matchNum(1), "got 1");
+ * assert.equal(matchNum(2), "got 2");
+ * assert.equal(matchNum(5), "default");
+ * assert.equal(matchNum(150), "got > 100");
+ * ```
+ *
+ * #### Advanced Types
+ *
+ * The compiler can't always infer the correct input type from the pattern. In
+ * these cases we need to provide them:
+ *
+ * ```
+ * type ResOpt = Result<Option<string>, number>;
+ * const matchResOpt = match.compile<ResOpt, string>({
+ *    Ok: { Some: (s) => `some ${s}` },
+ *    _: () => "default",
+ * });
+ *
+ * assert.equal(matchResOpt(Ok(Some("test"))), "some test");
+ * assert.equal(matchResOpt(Ok(None)), "default");
+ * assert.equal(matchResOpt(Err(1)), "default");
+ * ```
+ */
+function compile<T, U>(
+   pattern: MappedBranches<T, U> | ChainedBranches<T, U>
+): (val: T) => U;
+function compile<T, U>(
+   pattern: MappedBranches<Option<T>, U>
+): (val: Option<T>) => U;
+function compile<T, E, U>(
+   pattern: MappedBranches<Result<T, E>, U>
+): (val: Result<T, E>) => U;
+function compile<T, U>(
+   pattern: MappedBranches<T, U> | ChainedBranches<T, U>
+): (val: T) => U {
+   return (val) => match(val, pattern);
+}
+
+/**
+ * The `Default` (or `_`) value. Used as a marker to indicate "any value".
+ */
+export const Default: any = Object.freeze(() => {
+   throw new Error("Match failed (exhausted)");
+});
+export type Default = any;
+
+/**
+ * The `_` value. Used as a marker to indicate "any value".
+ */
+export const _ = Default;
+export type _ = any;
+
+/**
+ * Creates a wrapper for a function so that it will be treated as a value
+ * within a chained matching block. See `match` for more information about
+ * when this needs to be used.
+ */
+export function Fn<T extends (...args: any) => any>(fn: T): () => T {
+   const val: any = () => throwFnCalled();
+   (val as any)[MarkFn] = fn;
+   return val;
+}
+
+export type Fn<T> = { (): never; [MarkFn]: T };
 
 function matchMapped<T, U>(
    val: T,
@@ -422,32 +516,6 @@ function throwFnCalled(): never {
    throw new Error("Match error (wrapped function called)");
 }
 
-/**
- * The `Default` (or `_`) value. Used as a marker to indicate "any value".
- */
-export const Default: any = Object.freeze(() => {
-   throw new Error("Match failed (exhausted)");
-});
-export type Default = any;
-
-/**
- * The `_` value. Used as a marker to indicate "any value".
- */
-export const _ = Default;
-export type _ = any;
-
-/**
- * Creates a wrapper for a function so that it will be treated as a value
- * within a chained matching block. See `match` for more information about
- * when this needs to be used.
- */
-export function Fn<T extends (...args: any) => any>(fn: T): () => T {
-   const val: any = () => throwFnCalled();
-   (val as any)[MarkFn] = fn;
-   return val;
-}
-
-export type Fn<T> = { (): never; [MarkFn]: T };
-
 Object.freeze(Fn);
 Object.freeze(match);
+Object.freeze(compile);

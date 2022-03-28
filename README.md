@@ -11,31 +11,43 @@ $ npm install oxide.ts --save
 
 # Usage
 
-The the best documentation is in the JSDoc and tests directory, there are
-several examples there not covered in this Readme. If you're using VSCode
-you should also be able to hover over methods to see some examples.
+## Core Features
 
-### Core Features
-
+-  [Importing](#importing)
 -  [Option](#option)
 -  [Result](#result)
--  [Converting (from and into)](#converting-from-into-and-nonnull)
+-  [Converting](#converting)
 -  [Nesting](#nesting)
+-  [Safe](#safe)
 -  [All](#all)
 -  [Any](#any)
+-  [Iteration](#iteration)
+
+## Match
+
 -  [Match](#match)
-
-### Advanced Features
-
--  [Word to the wise](#word-to-the-wise)
--  [Safe functions and Promises](#safe)
--  [Combined Match](#combined-matching)
--  [Match Chains](#chained-matching)
+-  [Combined Match](#combined-match)
+-  [Match Chains](#chained-match)
+-  [Compiling](#compiling)
 
 ### Tests
 
 ```
 npm run test
+```
+
+# Importing
+
+You can import the complete **oxide.ts** library:
+
+```ts
+import { Option, Some, None, Result, Ok, Err, match, Fn, _ } from "oxide.ts";
+```
+
+Or just the **core** library, which exclues the `match` feature:
+
+```ts
+import { Option, Some, None, Result, Ok, Err } from "oxide.ts/core";
 ```
 
 # Option
@@ -48,25 +60,21 @@ Some or None until pulling the value out:
 import { Option, Some, None } from "oxide.ts";
 
 function divide(x: number, by: number): Option<number> {
-   if (by === 0) {
-      return None;
-   } else {
-      return Some(x / by);
-   }
+   return by === 0 ? None : Some(x / by);
 }
 
 const val = divide(100, 20);
 
 // Pull the value out, or throw if None:
 const res: number = val.unwrap();
-// Throw our own error message in the case of None:
+// Throw a custom error message in the case of None:
 const res: number = val.expect("Don't divide by zero!");
 // Pull the value out, or use a default if None:
 const res: number = val.unwrapOr(1);
 
 // Map the Option<T> to Option<U> by applying a function:
 const strval: Option<string> = val.map((num) => `val = ${num}`);
-// Then unwrap the value or use a default if None:
+// Unwrap the value or use a default if None:
 const res: string = strval.unwrapOr("val = <none>");
 // Map, assign a default and unwrap in one line:
 const res: string = val.mapOr("val = <none>", (num) => `val = ${num}`);
@@ -106,15 +114,15 @@ const strval: Result<string, string> = val.map((num) => `val = ${num}`);
 const res: string = strval.unwrapOr("val = <err>");
 const res: string = val.mapOr("val = <err>", (num) => `val = ${num}`);
 
-// We can unwrap/expect the error, which throws if the Result is Ok:
+// Unwrap or expect the Err (throws if the Result is Ok):
 const err: string = val.unwrapErr();
 const err: string = val.expectErr("Expected division by zero!");
 
-// Or map the error, mapping Result<T, E> to Result<T, F>
+// Or map the Err, converting Result<T, E> to Result<T, F>
 const errobj: Result<string, Error> = val.mapErr((msg) => new Error(msg));
 ```
 
-# Converting (from, into and nonNull)
+# Converting
 
 These methods provide a way to jump in to (and out of) `Option` and `Result`
 types without having to write lots of additional functions.
@@ -204,43 +212,6 @@ const output: string = match(result, {
    },
    Err: (err) => `Error: ${err}.`,
 });
-```
-
-[&laquo; To contents](#usage)
-
-### Match
-
-Mapped matching is possible on `Option` and `Result` types. There are
-other ways to use `match` described in the [advanced](#advanced-features)
-section.
-
-```ts
-const num = Option(10);
-const res = match(num, {
-   Some: (n) => n + 1,
-   None: () => 0,
-});
-
-assert.equal(res, 11);
-```
-
-You can nest mapped matching patterns and provide defaults. If a default is
-not found in the current level it will fall back to the previous level. When
-no suitable match or default is found, an exhausted error is thrown.
-
-```ts
-function nested(val: Result<Option<number>, string>): string {
-   return match(val, {
-      Ok: {
-         Some: (num) => `found ${num}`,
-      },
-      _: () => "nothing",
-   });
-}
-
-assert.equal(nested(Ok(Some(10))), "found 10");
-assert.equal(nested(Ok(None)), "nothing");
-assert.equal(nested(Err("Not a number")), "nothing");
 ```
 
 [&laquo; To contents](#usage)
@@ -349,120 +320,160 @@ assert.equal(g, "Value 8 is too low.");
 
 [&laquo; To contents](#usage)
 
-# Advanced Features
+# Iteration
 
-## Word to the wise
-
-The `match` adaptation shifts the TypeScript idiom and may not be suitable for your project - especially if you work with others.
-
-### Combined Matching
-
-It's possible to combine the [mapped](#match) and [chained](#chained-matching) matching approach.
+An `Option` or `Result` that contains an iterable `T` type can be iterated upon
+directly. In the case of `None` or `Err`, an empty iterator is returned. The
+compiler will complain if the inner type is not definitely iterable (including
+`any`), or if the monad is known to be `None` or `Err`.
 
 ```ts
-import { Option, match } from "oxide.ts";
+import { Option, None } from "oxide.ts";
 
-// Easiest to build upon
-function player_allowed(player: Option<Player>): boolean {
-   return match(player, {
-      Some: [
-         [{ status: "banned" }, false],
-         [{ age: (n) => n > 18 }, true],
-      ],
-      _: () => false,
-   });
+const numbers = Option([1.12, 2.23, 3.34]);
+for (const num of numbers) {
+   console.log("Number is:", num.toFixed(1));
+}
+
+const numbers: Option<number[]> = None;
+for (const num of numbers) {
+   console.log("Unreachable:", num.toFixed());
 }
 ```
 
 [&laquo; To contents](#usage)
 
-## Chained Matching
+# Match
 
-Can be performed on any type. A chain is an array of branches which are
-tested in sequence. A branch is a tuple of [`<condition>`, `<result>`].
-Chain branches follow the following rules:
-
--  Primitive comparisons test for exact equality (`===`).
--  Any comparison with the condition `_` (`Default`) succeeds automatically.
--  Matching against arrays is a key-to-key comparison (just like objects). As
-   such, a match condition of `[10, 20]` doesn't check if 10 and 20 are in
-   the array, but instead checks specifically that index `0` is 10 and index
-   `1` is 20.
--  Tuple elements are "functions first", such that any `<condition>` that is
-   a function will be called to determine if the branch matches, and any
-   `<result>` that is a function is called with the input value to determine
-   the return value. To match or return a function, see `Fn`.
--  On the matter of functions, a `<condition>` is always a sync function.
-   A `<result>` can be async, but if so every branch must return an async
-   function.
--  `Option` and `Result` types are recursively evaluated to their deepest
-   reachable values and evaluated like any other condition. Using mapped or
-   combined matching for these types is better.
-
-At the end of a chain, an optional default branch may be included which is
-called with the input value when no other branch matches. If no default is
-provided, `match` will throw an error if no other branch matches.
-
-**Note:** Deeply nesting `Option`/`Result` matches may not allow for
-complete type information to be presented to the user (though they should
-still be verified). It is also slower (execution time and type computation)
-than mapped matching or combined matching.
-
-### Primitive Example
+Mapped matching is possible on `Option` and `Result` types:
 
 ```ts
-import { match } from "oxide.ts";
+const num = Option(10);
+const res = match(num, {
+   Some: (n) => n + 1,
+   None: () => 0,
+});
 
-const matchNum = (num: number) =>
-   match(num, [
-      [5, "five"],
-      [(n) => n > 100, "big number"],
-      [(n) => n < 0, (n) => `negative ${n}`],
-      () => "other",
-   ]);
-
-assert.equal(matchNum(5), "five");
-assert.equal(matchNum(150), "big number");
-assert.equal(matchNum(-20), "negative -20");
-assert.equal(matchNum(50), "other");
+assert.equal(res, 11);
 ```
 
-### Object Example
+You can nest mapped matching patterns and provide defaults. If a default is
+not found in the current level it will fall back to the previous level. When
+no suitable match or default is found, an exhausted error is thrown.
 
 ```ts
-import { match } from "oxide.ts";
+function nested(val: Result<Option<number>, string>): string {
+   return match(val, {
+      Ok: { Some: (num) => `found ${num}` },
+      _: () => "nothing",
+   });
+}
 
-const matchObj = (obj: { a: number; b: { c: number } }) =>
-   match(obj, [
-      [{ a: 5 }, "a is 5"],
-      [{ b: { c: 5 } }, "c is 5"],
-      [{ a: 10, b: { c: (n) => n > 10 } }, "a 10 c gt10"],
-      () => "other",
-   ]);
-
-assert.equal(matchObj({ a: 5, b: { c: 5 } }), "a is 5");
-assert.equal(matchObj({ a: 50, b: { c: 5 } }), "c is 5");
-assert.equal(matchObj({ a: 10, b: { c: 20 } }), "a 10 c gt 10");
-assert.equal(matchObj({ a: 8, b: { c: 8 } }), "other");
+assert.equal(nested(Ok(Some(10))), "found 10");
+assert.equal(nested(Ok(None)), "nothing");
+assert.equal(nested(Err("Not a number")), "nothing");
 ```
 
-### Array Example
+[&laquo; To contents](#usage)
+
+# Combined Match
+
+[Mapped](#match) Matching and [Chained](#chained-match) Matching can be
+combined. A match chain can be provided instead of a function for `Some`,
+`Ok` and `Err`.
+
+```ts
+function matchNum(val: Option<number>): string {
+   return match(val, {
+      Some: [
+         [5, "5"],
+         [(x) => x < 10, "< 10"],
+         [(x) => x > 20, "> 20"],
+      ],
+      _: () => "none or not matched",
+   });
+}
+
+assert.equal(matchNum(Some(5)), "5");
+assert.equal(matchNum(Some(7)), "< 10");
+assert.equal(matchNum(Some(25)), "> 20");
+assert.equal(matchNum(Some(15)), "none or not matched");
+assert.equal(matchNum(None), "none or not matched");
+```
+
+[&laquo; To contents](#usage)
+
+# Match Chains
+
+Chained matching is possible on any type. Branches are formed by associating
+a `condition` with a `result` (with an optional default at the end). The first
+matching branch is the result.
+
+More detail about chained matching patterns is available in the bundled JSDoc.
+
+## Examples
 
 ```ts
 import { match, _ } from "oxide.ts";
 
-const matchArr = (arr: number[]) =>
-   match(arr, [
+function matchArr(arr: number[]): string {
+   return match(arr, [
       [[1], "1"],
-      [[2, (n) => n > 10], "2 gt10"],
-      [[_, 6, _, 12], "_ 6 _ 12"],
+      [[2, (x) => x > 10], "2, > 10"],
+      [[_, 6, 9, _], (a) => a.join(", ")],
       () => "other",
    ]);
+}
 
 assert.equal(matchArr([1, 2, 3]), "1");
-assert.equal(matchArr([2, 12, 6]), "2 gt10");
-assert.equal(matchArr([3, 6, 9, 12]), "_ 6 _ 12");
+assert.equal(matchArr([2, 12, 6]), "2, > 10");
+assert.equal(matchArr([3, 6, 9]), "other");
+assert.equal(matchArr([3, 6, 9, 12]), "3, 6, 9, 12");
 assert.equal(matchArr([2, 4, 6]), "other");
+```
+
+```ts
+import { match, _ } from "oxide.ts";
+
+interface ExampleObj {
+   a: number;
+   b?: { c: number };
+   o?: number;
+}
+
+function matchObj(obj: ExampleObj): string {
+   return match(obj, [
+      [{ a: 5 }, "a = 5"],
+      [{ b: { c: 5 } }, "c = 5"],
+      [{ a: 10, o: _ }, "a = 10, o = _"],
+      [{ a: 15, b: { c: (n) => n > 10 } }, "a = 15; c > 10"],
+      () => "other",
+   ]);
+}
+
+assert.equal(matchObj({ a: 5 }), "a = 5");
+assert.equal(matchObj({ a: 50, b: { c: 5 } }), "c = 5");
+assert.equal(matchObj({ a: 10 }), "other");
+assert.equal(matchObj({ a: 10, o: 1 }), "a = 10, o = _");
+assert.equal(matchObj({ a: 15, b: { c: 20 } }), "a = 15; c > 10");
+assert.equal(matchObj({ a: 8, b: { c: 8 }, o: 1 }), "other");
+```
+
+[&laquo; To contents](#usage)
+
+# Compiling
+
+Match patterns can also be _compiled_ into a function. More detail about
+compiling is available in the bundled JSDoc.
+
+```ts
+const matchSome = match.compile({
+   Some: (n: number) => `some ${n}`,
+   None: () => "none",
+});
+
+assert.equal(matchSome(Some(1)), "some 1");
+assert.equal(matchSome(None), "none");
 ```
 
 [&laquo; To contents](#usage)

@@ -1,7 +1,7 @@
 import { assert } from "chai";
 import { Result, Ok, Err } from "../../../src";
 
-export default function result_docs() {
+export default function resultDocs() {
    it("Result", resultMain);
    it("Result.safe (function)", resultSafeFunction);
    it("Result.safe (promise)", resultSafePromise);

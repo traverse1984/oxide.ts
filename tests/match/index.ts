@@ -8,6 +8,7 @@ import union from "./suite/union.test";
 import fn from "./suite/function.test";
 import nesting from "./suite/nesting.test";
 import async_ from "./suite/async.test";
+import compile from "./suite/compile.test";
 
 export default function match() {
    describe("Call Signature", call);
@@ -20,4 +21,5 @@ export default function match() {
    describe("Fn within Option/Result", fn);
    describe("Nesting", nesting);
    describe("Async", async_);
+   describe("Compile", compile);
 }
