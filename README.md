@@ -136,10 +136,10 @@ const person = Option.from(people.find((name) => name === "Fry"));
 const person = Option(people.find((name) => name === "Bender"));
 ```
 
--  In the case of `Result`, the `E` type includes:
+In the case of `Result`, the `E` type includes:
 
-*  `null` (if `val` could have been falsey or an invalid date)
-*  `Error` types excluded from `T` (if there are any)
+-  `null` (if `val` could have been falsey or an invalid date)
+-  `Error` types excluded from `T` (if there are any)
 
 ```ts
 function randomName(): string | false;
