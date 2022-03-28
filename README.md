@@ -18,12 +18,12 @@ $ npm install oxide.ts --save
 -  [Result](#result)
 -  [Converting](#converting)
 -  [Nesting](#nesting)
+-  [Iteration](#iteration)
 -  [Safe](#safe)
 -  [All](#all)
 -  [Any](#any)
--  [Iteration](#iteration)
 
-## Match
+## Advanced
 
 -  [Match](#match)
 -  [Combined Match](#combined-match)
@@ -216,6 +216,41 @@ const output: string = match(result, {
 
 [&laquo; To contents](#usage)
 
+# Iteration
+
+An `Option` or `Result` that contains an iterable `T` type can be iterated upon
+directly. In the case of `None` or `Err`, an empty iterator is returned.
+
+The compiler will complain if the inner type is not definitely iterable
+(including `any`), or if the monad is known to be `None` or `Err`.
+
+```ts
+import { Option, None } from "oxide.ts";
+
+const numbers = Option([1.12, 2.23, 3.34]);
+for (const num of numbers) {
+   console.log("Number is:", num.toFixed(1));
+}
+
+const numbers: Option<number[]> = None;
+for (const num of numbers) {
+   console.log("Unreachable:", num.toFixed());
+}
+```
+
+It's also possible to iterate over nested monads in the same way:
+
+```ts
+import { Option, Result } from "oxide.ts";
+
+const numbers = Option(Result(Option([1, 2, 3])));
+for (const num of numbers) {
+   console.log("Number is:", num.toFixed(1));
+}
+```
+
+[&laquo; To contents](#usage)
+
 # Safe
 
 Capture the outcome of a function or Promise as an `Option<T>` or
@@ -316,29 +351,6 @@ const [e, f, g] = efg.unwrapErr();
 assert.equal(e, "Value 2 is too low.");
 assert.equal(f, "Value 5 is too low.");
 assert.equal(g, "Value 8 is too low.");
-```
-
-[&laquo; To contents](#usage)
-
-# Iteration
-
-An `Option` or `Result` that contains an iterable `T` type can be iterated upon
-directly. In the case of `None` or `Err`, an empty iterator is returned. The
-compiler will complain if the inner type is not definitely iterable (including
-`any`), or if the monad is known to be `None` or `Err`.
-
-```ts
-import { Option, None } from "oxide.ts";
-
-const numbers = Option([1.12, 2.23, 3.34]);
-for (const num of numbers) {
-   console.log("Number is:", num.toFixed(1));
-}
-
-const numbers: Option<number[]> = None;
-for (const num of numbers) {
-   console.log("Unreachable:", num.toFixed());
-}
 ```
 
 [&laquo; To contents](#usage)
