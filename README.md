@@ -485,6 +485,16 @@ assert.equal(matchSome(None), "none");
 
 ## Breaking Changes
 
--  Rust-style `snake_case` API removed.
--  Guarded functions removed.
--  Match helper functions `SomeIs`, `OkIs` and `ErrIs` removed.
+-  Removed `snake_case` (Rust-style) API
+-  Removed [guarded functions](https://github.com/traverse1984/oxide.ts/blob/922d70a286b47d4b13efdb24662c6d81de2e29a5/README.md#guarded-option-function)
+-  Option/Result
+-  -
+-  -  Removed `neq`
+-  -  Renamed `is` to `isLike`
+-  -  Renamed `eq` to `equals`
+-  Match
+-  -  Removed `SomeIs`, `OkIs` and `ErrIs`
+-  -  Functions within a monad (at any depth) are no longer called as filters
+      in match chains - they are always treated as values.
+
+[&laquo; To contents](#usage)

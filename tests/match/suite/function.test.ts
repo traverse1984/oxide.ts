@@ -24,6 +24,17 @@ export default function fn() {
       expect(second.wasCalled()).to.be.false;
    });
 
+   it("Does not call functions nested within monads", () => {
+      const nested = createWatchFn("nested");
+      expect(
+         match(Some({ a: [1] }), [
+            [Some({ a: [nested as any] }), "fail"],
+            () => "default",
+         ])
+      ).to.equal("default");
+      expect(nested.wasCalled()).to.be.false;
+   });
+
    it("Returns the wrapped function if the default branch is Fn", () =>
       expect(
          match(first, [

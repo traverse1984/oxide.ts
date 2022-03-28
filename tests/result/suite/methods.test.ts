@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Result, Ok, Err, Some, None } from "../../../src";
+import { Result, Ok, Err, Some } from "../../../src";
 
 function AsRes<T>(val: unknown): Result<T, T> {
    return val as Result<T, T>;

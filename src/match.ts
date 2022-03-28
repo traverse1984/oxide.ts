@@ -358,9 +358,9 @@ function compile<T, U>(
 /**
  * The `Default` (or `_`) value. Used as a marker to indicate "any value".
  */
-export const Default: any = Object.freeze(() => {
+export const Default: any = () => {
    throw new Error("Match failed (exhausted)");
-});
+};
 export type Default = any;
 
 /**
@@ -377,7 +377,7 @@ export type _ = any;
 export function Fn<T extends (...args: any) => any>(fn: T): () => T {
    const val: any = () => throwFnCalled();
    (val as any)[MarkFn] = fn;
-   return val;
+   return Object.freeze(val);
 }
 
 export type Fn<T> = { (): never; [MarkFn]: T };
@@ -516,6 +516,8 @@ function throwFnCalled(): never {
    throw new Error("Match error (wrapped function called)");
 }
 
-Object.freeze(Fn);
 Object.freeze(match);
+Object.freeze(Default);
+Object.freeze(Fn);
+
 Object.freeze(compile);

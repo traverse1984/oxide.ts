@@ -11,11 +11,9 @@ export const MarkFn = Symbol("MarkFn");
 export const EmptyArray = Object.freeze([] as any[]);
 
 export type FalseyValues = false | null | undefined | 0 | 0n | "";
-
 export function isTruthy(val: unknown): boolean {
    return val instanceof Date ? val.getTime() === val.getTime() : !!val;
 }
 
-export type IterType<T> = T extends { [Symbol.iterator](): infer I }
-   ? I
-   : unknown;
+export type IterType<T> =
+   | T extends { [Symbol.iterator](): infer I } ? I : unknown;

@@ -22,6 +22,7 @@ class ResultType<T, E> {
    constructor(val: T | E, ok: boolean) {
       this[Val] = val;
       this[T] = ok;
+      Object.freeze(this);
    }
 
    [Symbol.iterator](): IterType<T> {

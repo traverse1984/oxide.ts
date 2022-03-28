@@ -18,6 +18,7 @@ class OptionType<T> {
    constructor(val: T, some: boolean) {
       this[T] = some;
       this[Val] = val;
+      Object.freeze(this);
    }
 
    [Symbol.iterator](): IterType<T> {
