@@ -481,9 +481,7 @@ function is(val: unknown): val is Option<unknown> {
  * ```
  */
 function from<T>(val: T): Option<From<T>> {
-   return isTruthy(val) && !(val instanceof Error)
-      ? (new OptionType(val, true) as any)
-      : None;
+   return isTruthy(val) && !(val instanceof Error) ? (Some(val) as any) : None;
 }
 
 /**
@@ -500,6 +498,22 @@ function nonNull<T>(val: T): Option<NonNullable<T>> {
    return val === undefined || val === null || val !== val
       ? None
       : Some(val as NonNullable<T>);
+}
+
+/**
+ * Creates a new Option<number> which is `Some` when the provided `val` is a
+ * finite integer greater than or equal to 0.
+ *
+ * ```
+ * const x = Option.qty("test".indexOf("s"));
+ * assert.equal(x.unwrap(), 2);
+ *
+ * const x = Option.qty("test".indexOf("z"));
+ * assert.equal(x.isNone(), true);
+ * ```
+ */
+function qty<T extends number>(val: T): Option<number> {
+   return val >= 0 && Number.isInteger(val) ? Some(val) : None;
 }
 
 /**
@@ -562,14 +576,14 @@ function safe<T, A extends any[]>(
 ): Option<T> | Promise<Option<T>> {
    if (fn instanceof Promise) {
       return fn.then(
-         (value) => Some(value),
+         (val) => Some(val),
          () => None
       );
    }
 
    try {
       return Some(fn(...args));
-   } catch (err) {
+   } catch {
       return None;
    }
 }
@@ -635,11 +649,13 @@ function any<O extends Option<any>[]>(
 }
 
 Option.is = Object.freeze(is);
-Option.from = Object.freeze(from);
-Option.nonNull = Object.freeze(nonNull);
 Option.safe = Object.freeze(safe);
 Option.all = Object.freeze(all);
 Option.any = Object.freeze(any);
+
+Option.from = Object.freeze(from);
+Option.nonNull = Object.freeze(nonNull);
+Option.qty = Object.freeze(qty);
 
 Object.freeze(Option);
 Object.freeze(Some);

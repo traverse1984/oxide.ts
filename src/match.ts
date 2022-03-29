@@ -288,7 +288,6 @@ export function match<T, U>(
    return matchDispatch(val, pattern, Default);
 }
 
-match.compile = compile;
 export type match = typeof match;
 
 /**
@@ -516,8 +515,8 @@ function throwFnCalled(): never {
    throw new Error("Match error (wrapped function called)");
 }
 
+match.compile = Object.freeze(compile);
+
 Object.freeze(match);
 Object.freeze(Default);
 Object.freeze(Fn);
-
-Object.freeze(compile);

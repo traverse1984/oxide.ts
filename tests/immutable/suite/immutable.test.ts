@@ -12,7 +12,7 @@ import {
    Default,
 } from "../../../src";
 
-const CommonMethods = ["from", "nonNull", "safe", "all", "any"];
+const CommonMethods = ["is", "from", "nonNull", "qty", "safe", "all", "any"];
 
 export default function immutable() {
    describe("Option", option);

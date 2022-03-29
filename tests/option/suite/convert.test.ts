@@ -4,6 +4,7 @@ import { Option } from "../../../src";
 export default function convert() {
    describe("from", from);
    describe("nonNull", nonNull);
+   describe("qty", qty);
 }
 
 function from() {
@@ -43,5 +44,24 @@ function nonNull() {
       [false, 0, -0, 0n, "", new Date("never"), new Error("never")].forEach(
          (val) => expect(Option.nonNull(val).unwrap()).to.equal(val)
       );
+   });
+}
+
+function qty() {
+   it("Should cast numbers >= 0 to Some<number>", () => {
+      expect(Option.qty(0).unwrap()).to.equal(0);
+      expect(Option.qty(1).unwrap()).to.equal(1);
+   });
+
+   it("Should cast numbers < 0 to None", () =>
+      expect(Option.qty(-1).isNone()).to.be.true);
+
+   it("Should cast non-numbers to None", () =>
+      expect(Option.qty("test" as any).isNone()).to.be.true);
+
+   it("Should cast NaN, Infinity and -Infinity to None", () => {
+      expect(Option.qty(NaN).isNone()).to.be.true;
+      expect(Option.qty(Infinity).isNone()).to.be.true;
+      expect(Option.qty(-Infinity).isNone()).to.be.true;
    });
 }

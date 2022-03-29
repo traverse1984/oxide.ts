@@ -540,7 +540,10 @@ export function Err<E>(val: E): Err<E> {
  *
  * The `E` type includes:
  * - `null` (if `val` could have been falsey or an invalid date)
- * -  `Error` types excluded from `T` (if there are any)
+ * - `Error` types excluded from `T` (if there are any)
+ *
+ * **Note:** `null` is not a useful value. If there are no `Error` types to
+ * handle, consider `Option.from` instead.
  *
  * ```
  * assert.equal(Result.from(1).unwrap(), 1);
@@ -548,6 +551,9 @@ export function Err<E>(val: E): Err<E> {
  *
  * const err = Result.from(new Error("msg"));
  * assert.equal(err.unwrapErr().message, "msg");
+ *
+ * // Create a Result<number, string>
+ * const x = Option.from(1).okOr("Falsey Value");
  * ```
  */
 function from<T>(
@@ -559,23 +565,49 @@ function from<T>(
 > {
    return isTruthy(val)
       ? new ResultType(val as any, !(val instanceof Error))
-      : new ResultType(null, false);
+      : Err(null);
 }
 
 /**
  * Creates a new `Result<T, null>` which is `Ok` unless the provided `val` is
  * `undefined`, `null` or `NaN`.
  *
+ * **Note:** `null` is not a useful value. Consider `Option.nonNull` instead.
+ *
  * ```
  * assert.equal(Result.nonNull(1).unwrap(), 1);
  * assert.equal(Result.nonNull(0).unwrap(), 0);
  * assert.equal(Result.nonNull(null).isErr(), true);
+ *
+ * // Create a Result<number, string>
+ * const x = Option.nonNull(1).okOr("Nullish Value");
  * ```
  */
 function nonNull<T>(val: T): Result<NonNullable<T>, null> {
    return val === undefined || val === null || val !== val
       ? Err(null)
       : Ok(val as NonNullable<T>);
+}
+
+/**
+ * Creates a new Result<number, null> which is `Ok` when the provided `val` is
+ * a finite integer greater than or equal to 0.
+ *
+ * **Note:** `null` is not a useful value. Consider `Option.qty` instead.
+ *
+ * ```
+ * const x = Result.qty("test".indexOf("s"));
+ * assert.equal(x.unwrap(), 2);
+ *
+ * const x = Result.qty("test".indexOf("z"));
+ * assert.equal(x.unwrapErr(), null);
+ *
+ * // Create a Result<number, string>
+ * const x = Option.qty("test".indexOf("s")).orElse("Not Found");
+ * ```
+ */
+function qty<T extends number>(val: T): Result<number, null> {
+   return val >= 0 && Number.isInteger(val) ? Ok(val) : Err(null);
 }
 
 /**
@@ -643,18 +675,18 @@ function safe<T, A extends any[]>(
    ...args: A
 ): Result<T, Error> | Promise<Result<T, Error>> {
    if (fn instanceof Promise) {
-      return fn.then(
-         (value) => Ok(value),
-         (err) =>
-            err instanceof Error ? Err(err) : Err(new Error(String(err)))
-      );
+      return fn.then((val) => Ok(val), toError);
    }
 
    try {
       return Ok(fn(...args));
    } catch (err) {
-      return err instanceof Error ? Err(err) : Err(new Error(String(err)));
+      return toError(err);
    }
+}
+
+function toError(err: unknown): Err<Error> {
+   return err instanceof Error ? Err(err) : Err(new Error(String(err)));
 }
 
 /**
@@ -729,11 +761,13 @@ function any<R extends Result<any, any>[]>(
 }
 
 Result.is = Object.freeze(is);
-Result.from = Object.freeze(from);
-Result.nonNull = Object.freeze(nonNull);
 Result.safe = Object.freeze(safe);
 Result.all = Object.freeze(all);
 Result.any = Object.freeze(any);
+
+Result.from = Object.freeze(from);
+Result.nonNull = Object.freeze(nonNull);
+Result.qty = Object.freeze(qty);
 
 Object.freeze(Result);
 Object.freeze(Ok);

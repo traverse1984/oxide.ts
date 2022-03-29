@@ -494,6 +494,7 @@ assert.equal(matchSome(None), "none");
 -  -  Renamed `eq` to `equals`
 -  Match
 -  -  Removed `SomeIs`, `OkIs` and `ErrIs`
+-  -  Using `_` to match in an Object/Array now requires the key be present.
 -  -  Functions within a monad (at any depth) are no longer called as filters
       in match chains - they are always treated as values.
 
