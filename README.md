@@ -519,9 +519,9 @@ assert.equal(matchSome(None), "none");
 -  New methods on Option/Result - [into](#converting) and `filter`.
 -  Inline [iteration](#iteration) support.
 -  Type Improvements:
--  -  `Ok<T, E>` is now `Ok<T>`
--  -  `Err<E, T>` is now `Err<E>`
--  -  `None<T>` is now `None`
+   -  `Ok<T, E>` is now `Ok<T>`
+   -  `Err<E, T>` is now `Err<E>`
+   -  `None<T>` is now `None`
 -  Better type guards on `isSome`, `isOk` and `isErr`.
 -  New [compile](#compiling) method.
 -  Nested [mapped matching](#match) syntax improved.
@@ -534,15 +534,15 @@ assert.equal(matchSome(None), "none");
 -  Removed `snake_case` (Rust-style) API.
 -  Removed [guarded functions](https://github.com/traverse1984/oxide.ts/blob/922d70a286b47d4b13efdb24662c6d81de2e29a5/README.md#guarded-option-function).
 -  Option/Result
--  -  Removed `neq`.
--  -  Renamed `is` to `isLike`.
--  -  Renamed `eq` to `equals`.
--  -  Improvements to monad types could in some cases cause compile errors.
+   -  Removed `neq`.
+   -  Renamed `is` to `isLike`.
+   -  Renamed `eq` to `equals`.
+   -  Improvements to monad types could in some cases cause compile errors.
 -  Match
--  -  Mapped matching syntax has changed for nested matches.
--  -  Removed `SomeIs`, `OkIs` and `ErrIs`.
--  -  Using `_` to match in an Object/Array now requires the key be present.
--  -  Functions within a monad (at any depth) are no longer called as filters
+   -  Mapped matching syntax has changed for nested matches.
+   -  Removed `SomeIs`, `OkIs` and `ErrIs`.
+   -  Using `_` to match in an Object/Array now requires the key be present.
+   -  Functions within a monad (at any depth) are no longer called as filters
       in match chains - they are always treated as values.
 -  Changes to internal structures and logic - should only cause issues if you
    were doing something unusual.
