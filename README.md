@@ -517,6 +517,7 @@ assert.equal(matchSome(None), "none");
    [nonNull](#nonnull) and [qty](#qty).
 -  New [safe](#safe), [all](#all) and [any](#any) methods (since 0.9.8).
 -  New methods on Option/Result - [into](#converting) and `filter`.
+-  Inline [iteration](#iteration) support.
 -  Type Improvements:
 -  -  `Ok<T, E>` is now `Ok<T>`
 -  -  `Err<E, T>` is now `Err<E>`
@@ -527,7 +528,6 @@ assert.equal(matchSome(None), "none");
 -  Mapped matching now allows for an `Option` | `Result` type union.
 -  Option to import only core library from **oxide.ts/core**.
 -  Performance improvements.
--  More examples and better documentation.
 
 ### Breaking Changes
 
@@ -547,6 +547,12 @@ assert.equal(matchSome(None), "none");
 -  Changes to internal structures and logic - should only cause issues if you
    were doing something unusual.
 
+### Other stuff
+
+-  Tidied up and improved documentation in lots of places.
+-  Tests are better organized and more tests added.
+-  Compiler target is now ES2021.
+
 [&laquo; To contents](#usage)
 
-[Top of Page](#oxidets)
+[&laquo; To top of page](#oxidets)

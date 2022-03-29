@@ -1,6 +1,6 @@
 {
    "name": "oxide.ts",
-   "version": "1.0.0-next.3",
+   "version": "1.0.0-next.4",
    "description": "Rust's Option<T> and Result<T, E>, implemented for TypeScript.",
    "exports": {
       ".": "./dist/index.js",
