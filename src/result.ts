@@ -542,8 +542,7 @@ export function Err<E>(val: E): Err<E> {
  * - `null` (if `val` could have been falsey or an invalid date)
  * - `Error` types excluded from `T` (if there are any)
  *
- * **Note:** `null` is not a useful value. If there are no `Error` types to
- * handle, consider `Option.from` instead.
+ * **Note:** `null` is not a useful value. Consider `Option.from` or `mapErr`.
  *
  * ```
  * assert.equal(Result.from(1).unwrap(), 1);
@@ -572,7 +571,8 @@ function from<T>(
  * Creates a new `Result<T, null>` which is `Ok` unless the provided `val` is
  * `undefined`, `null` or `NaN`.
  *
- * **Note:** `null` is not a useful value. Consider `Option.nonNull` instead.
+ * **Note:** `null` is not a useful value. Consider `Option.nonNull` or
+ * `mapErr`.
  *
  * ```
  * assert.equal(Result.nonNull(1).unwrap(), 1);
@@ -593,7 +593,7 @@ function nonNull<T>(val: T): Result<NonNullable<T>, null> {
  * Creates a new Result<number, null> which is `Ok` when the provided `val` is
  * a finite integer greater than or equal to 0.
  *
- * **Note:** `null` is not a useful value. Consider `Option.qty` instead.
+ * **Note:** `null` is not a useful value. Consider `Option.qty` or `mapErr`.
  *
  * ```
  * const x = Result.qty("test".indexOf("s"));
@@ -603,7 +603,7 @@ function nonNull<T>(val: T): Result<NonNullable<T>, null> {
  * assert.equal(x.unwrapErr(), null);
  *
  * // Create a Result<number, string>
- * const x = Option.qty("test".indexOf("s")).orElse("Not Found");
+ * const x = Result.qty("test".indexOf("s")).mapErr(() => "Not Found");
  * ```
  */
 function qty<T extends number>(val: T): Result<number, null> {

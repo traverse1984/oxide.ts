@@ -118,7 +118,36 @@ const errobj: Result<string, Error> = val.mapErr((msg) => new Error(msg));
 # Converting
 
 These methods provide a way to jump in to (and out of) `Option` and `Result`
-types without having to write lots of additional functions.
+types. Particularly these methods can streamline things where:
+
+-  A function returns `T | null`, `T | false` or similar.
+-  You are working with physical quantities or using an `indexOf` method.
+-  A function accepts an optional argument, `T | null` or similar.
+
+**Note:** Converting to a Result often leaves you with a `Result<T, null>`.
+Consider the equivalent Option method to create an `Option<T>`, or use `mapErr`
+to change the `E` type.
+
+## into
+
+Convert an existing `Option`/`Result` into a union type containing `T` and
+`undefined` (or a provided falsey value).
+
+```ts
+function maybeName(): Option<string>;
+function maybeNumbers(): Result<number[], Error>;
+function printOut(msg?: string): void;
+
+const name: string | undefined = maybeName().into();
+const name: string | null = maybeName().into(null);
+
+// Note that the into type does not reflect the E type:
+const numbers: number[] | undefined = maybeNumbers().into();
+const numbers: number[] | false = maybeNumbers().into(false);
+
+// As a function argument:
+printOut(name.into());
+```
 
 ## from
 
@@ -153,23 +182,6 @@ const name = Result(tryName());
 const num = Result(randomNumbers());
 ```
 
-## into
-
-Convert an existing `Option`/`Result` into a union type containing `T` and
-`undefined` (or a provided falsey value).
-
-```ts
-function maybeName(): Option<string>;
-function maybeNumbers(): Result<number[], Error>;
-
-const name: string | undefined = maybeName().into();
-const name: string | null = maybeName().into(null);
-
-// Note that the into type does not reflect the E type:
-const numbers: number[] | undefined = maybeNumbers().into();
-const numbers: number[] | false = maybeNumbers().into(false);
-```
-
 ## nonNull
 
 Convert to an `Option`/`Result` which is `Some<T>`/`Ok<T>` unless the value
@@ -177,10 +189,26 @@ provided is `undefined`, `null` or `NaN`.
 
 ```ts
 function getNum(): number | null;
-function getStr(): string | null;
-
 const num = Option.nonNull(getNum()).unwrapOr(100); // Could be 0
-const str = Option.nonNull(getStr()).unwrapOr("none"); // Could be ""
+
+const words = ["express", "", "planet"];
+const str = Option.nonNull(words[getNum()]);
+str.unwrapOr("No such index"); // Could be ""
+```
+
+## qty
+
+Convert to an `Option`/`Result` which is which is `Some<number>`/`Ok<number>`
+when the provided `val` is a finite integer greater than or equal to 0.
+
+```ts
+const word = "Buggalo";
+
+const g = Option.qty(word.indexOf("g"));
+assert.equal(g.unwrap(), 2);
+
+const z = Option.qty(word.indexOf("z"));
+assert.equal(z.isNone(), true);
 ```
 
 [&laquo; To contents](#usage)
@@ -483,17 +511,19 @@ assert.equal(matchSome(None), "none");
 
 ## New Features
 
+-
+
 ## Breaking Changes
 
--  Removed `snake_case` (Rust-style) API
--  Removed [guarded functions](https://github.com/traverse1984/oxide.ts/blob/922d70a286b47d4b13efdb24662c6d81de2e29a5/README.md#guarded-option-function)
+-  Removed `snake_case` (Rust-style) API.
+-  Removed [guarded functions](https://github.com/traverse1984/oxide.ts/blob/922d70a286b47d4b13efdb24662c6d81de2e29a5/README.md#guarded-option-function).
 -  Option/Result
--  -
--  -  Removed `neq`
--  -  Renamed `is` to `isLike`
--  -  Renamed `eq` to `equals`
+-  -  Removed `neq`.
+-  -  Renamed `is` to `isLike`.
+-  -  Renamed `eq` to `equals`.
+-  -  Improvements to monad types could in some cases cause compile errors.
 -  Match
--  -  Removed `SomeIs`, `OkIs` and `ErrIs`
+-  -  Removed `SomeIs`, `OkIs` and `ErrIs`.
 -  -  Using `_` to match in an Object/Array now requires the key be present.
 -  -  Functions within a monad (at any depth) are no longer called as filters
       in match chains - they are always treated as values.
