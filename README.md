@@ -3,10 +3,12 @@
 [Rust](https://rust-lang.org)'s `Option<T>` and `Result<T, E>`, implemented
 for TypeScript. Zero dependencies, full test coverage and complete in-editor documentation.
 
-# Installation
+# Release 1.0
 
 Release 1.0 includes new features, removes old features and has breaking
-changes. [Check out what's changed](#changes-in-10).
+changes. [Check out what's new in 1.0](#new-in-10).
+
+# Installation
 
 ```
 $ npm install oxide.ts --save
@@ -125,8 +127,8 @@ types. Particularly these methods can streamline things where:
 -  A function accepts an optional argument, `T | null` or similar.
 
 **Note:** Converting to a Result often leaves you with a `Result<T, null>`.
-Consider the equivalent Option method to create an `Option<T>`, or use `mapErr`
-to change the `E` type.
+The null value here is not very useful - consider the equivalent Option method
+to create an `Option<T>`, or use `mapErr` to change the `E` type.
 
 ## into
 
@@ -507,11 +509,25 @@ assert.equal(matchSome(None), "none");
 
 [&laquo; To contents](#usage)
 
-# Changes in 1.0
+# New in 1.0
 
-## New Features
+## Features and Improvements
 
--
+-  [From](#converting) concept with three new methods - [from](#from),
+   [nonNull](#nonnull) and [qty](#qty).
+-  New [safe](#safe), [all](#all) and [any](#any) methods (since 0.9.8).
+-  New methods on Option/Result - [into](#converting) and `filter`.
+-  Type Improvements:
+-  -  `Ok<T, E>` is now `Ok<T>`
+-  -  `Err<E, T>` is now `Err<E>`
+-  -  `None<T>` is now `None`
+-  Better type guards on `isSome`, `isOk` and `isErr`.
+-  New [compile](#compiling) method.
+-  Nested [mapped matching](#match) syntax improved.
+-  Mapped matching now allows for an `Option` | `Result` type union.
+-  Option to import only core library from **oxide.ts/core**.
+-  Performance improvements.
+-  More examples and better documentation.
 
 ## Breaking Changes
 
@@ -523,9 +539,14 @@ assert.equal(matchSome(None), "none");
 -  -  Renamed `eq` to `equals`.
 -  -  Improvements to monad types could in some cases cause compile errors.
 -  Match
+-  -  Mapped matching syntax has changed for nested matches.
 -  -  Removed `SomeIs`, `OkIs` and `ErrIs`.
 -  -  Using `_` to match in an Object/Array now requires the key be present.
 -  -  Functions within a monad (at any depth) are no longer called as filters
       in match chains - they are always treated as values.
+-  Changes to internal structures and logic - should only cause issues if you
+   were doing something unusual.
 
 [&laquo; To contents](#usage)
+
+[Top of Page](#oxidets)
