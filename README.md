@@ -6,7 +6,9 @@ for TypeScript. Zero dependencies, full test coverage and complete in-editor doc
 ## Release 1.0
 
 Release 1.0 includes new features, removes old features and has breaking
-changes. [Check out what's new in 1.0](#new-in-10).
+changes.
+
+[Check out what's new in 1.0](#new-in-10).
 
 ## Installation
 
