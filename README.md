@@ -3,20 +3,20 @@
 [Rust](https://rust-lang.org)'s `Option<T>` and `Result<T, E>`, implemented
 for TypeScript. Zero dependencies, full test coverage and complete in-editor documentation.
 
-# Release 1.0
+## Release 1.0
 
 Release 1.0 includes new features, removes old features and has breaking
 changes. [Check out what's new in 1.0](#new-in-10).
 
-# Installation
+## Installation
 
 ```
 $ npm install oxide.ts --save
 ```
 
-# Usage
+## Usage
 
-## Core Features
+### Core Features
 
 -  [Importing](#importing)
 -  [Option](#option)
@@ -28,14 +28,14 @@ $ npm install oxide.ts --save
 -  [All](#all)
 -  [Any](#any)
 
-## Advanced
+### Advanced
 
 -  [Match](#match)
 -  [Combined Match](#combined-match)
 -  [Match Chains](#chained-match)
 -  [Compiling](#compiling)
 
-# Importing
+## Importing
 
 You can import the complete **oxide.ts** library:
 
@@ -49,7 +49,7 @@ Or just the **core** library, which exclues the `match` feature:
 import { Option, Some, None, Result, Ok, Err } from "oxide.ts/core";
 ```
 
-# Option
+## Option
 
 An Option represents either something, or nothing. If we hold a value of type `Option<T>`, we know it is either `Some<T>` or `None`. Both types share a
 common API, so we can chain operations without having to worry whether we have
@@ -84,7 +84,7 @@ _the correct types would be inferred._
 
 [&laquo; To contents](#usage)
 
-# Result
+## Result
 
 A Result represents either something good (`T`) or something not so good (`E`).
 If we hold a value of type `Result<T, E>` we know it's either `Ok<T>` or
@@ -117,7 +117,7 @@ const err: string = val.expectErr("Expected division by zero!");
 const errobj: Result<string, Error> = val.mapErr((msg) => new Error(msg));
 ```
 
-# Converting
+## Converting
 
 These methods provide a way to jump in to (and out of) `Option` and `Result`
 types. Particularly these methods can streamline things where:
@@ -130,7 +130,7 @@ types. Particularly these methods can streamline things where:
 The null value here is not very useful - consider the equivalent Option method
 to create an `Option<T>`, or use `mapErr` to change the `E` type.
 
-## into
+### into
 
 Convert an existing `Option`/`Result` into a union type containing `T` and
 `undefined` (or a provided falsey value).
@@ -151,7 +151,7 @@ const numbers: number[] | false = maybeNumbers().into(false);
 printOut(name.into());
 ```
 
-## from
+### from
 
 Convert to an `Option`/`Result` which is `Some<T>`/`Ok<T>` unless the value is
 falsey, an instance of `Error` or an invalid `Date`.
@@ -184,7 +184,7 @@ const name = Result(tryName());
 const num = Result(randomNumbers());
 ```
 
-## nonNull
+### nonNull
 
 Convert to an `Option`/`Result` which is `Some<T>`/`Ok<T>` unless the value
 provided is `undefined`, `null` or `NaN`.
@@ -198,7 +198,7 @@ const str = Option.nonNull(words[getNum()]);
 str.unwrapOr("No such index"); // Could be ""
 ```
 
-## qty
+### qty
 
 Convert to an `Option`/`Result` which is which is `Some<number>`/`Ok<number>`
 when the provided `val` is a finite integer greater than or equal to 0.
@@ -215,7 +215,7 @@ assert.equal(z.isNone(), true);
 
 [&laquo; To contents](#usage)
 
-# Nesting
+## Nesting
 
 You can nest `Option` and `Result` structures. The following example uses
 nesting to distinguish between _found something_, _found nothing_ and
@@ -243,7 +243,7 @@ const output: string = match(result, {
 
 [&laquo; To contents](#usage)
 
-# Iteration
+## Iteration
 
 An `Option` or `Result` that contains an iterable `T` type can be iterated upon
 directly. In the case of `None` or `Err`, an empty iterator is returned.
@@ -274,12 +274,12 @@ for (const num of numbers) {
 
 [&laquo; To contents](#usage)
 
-# Safe
+## Safe
 
 Capture the outcome of a function or Promise as an `Option<T>` or
 `Result<T, E>`, preventing throwing (function) or rejection (Promise).
 
-## Safe Functions
+### Safe Functions
 
 Calls the passed function with the arguments provided and returns an
 `Option<T>` or `Result<T, Error>`. The outcome is `Some`/`Ok` if the function
@@ -307,7 +307,7 @@ rejected by the type signature. `Result<Promise<T>, Error>` or
 `Option<Promise<T>>` are not useful types - using it in this way is likely
 to be a mistake.
 
-## Safe Promises
+### Safe Promises
 
 Accepts a `Promise` and returns a new Promise which always resolves to either
 an `Option<T>` or `Result<T, Error>`. The Result is `Some`/`Ok` if the original
@@ -332,7 +332,7 @@ assert.equal(x.unwrap(), "Hello World");
 
 [&laquo; To contents](#usage)
 
-# All
+## All
 
 Reduce multiple `Option`s or `Result`s to a single one. The first `None` or
 `Err` encountered is returned, otherwise the outcome is a `Some`/`Ok`
@@ -356,7 +356,7 @@ assert.equal(err.unwrapErr(), "Value 5 is too low.");
 
 [&laquo; To contents](#usage)
 
-# Any
+## Any
 
 Reduce multiple `Option`s or `Result`s into a single one. The first `Some`/`Ok`
 found (if any) is returned, otherwise the outcome is `None`, or in the case of `Result` - an `Err` containing an array of all the unwrapped errors.
@@ -378,7 +378,7 @@ assert.equal(g, "Value 8 is too low.");
 
 [&laquo; To contents](#usage)
 
-# Match
+## Match
 
 Mapped matching is possible on `Option` and `Result` types:
 
@@ -411,7 +411,7 @@ assert.equal(nested(Err("Not a number")), "nothing");
 
 [&laquo; To contents](#usage)
 
-# Combined Match
+## Combined Match
 
 [Mapped](#match) Matching and [Chained](#chained-match) Matching can be
 combined. A match chain can be provided instead of a function for `Some`,
@@ -438,7 +438,7 @@ assert.equal(matchNum(None), "none or not matched");
 
 [&laquo; To contents](#usage)
 
-# Match Chains
+## Match Chains
 
 Chained matching is possible on any type. Branches are formed by associating
 a `condition` with a `result` (with an optional default at the end). The first
@@ -446,7 +446,7 @@ matching branch is the result.
 
 More detail about chained matching patterns is available in the bundled JSDoc.
 
-## Examples
+### Examples
 
 ```ts
 function matchArr(arr: number[]): string {
@@ -492,7 +492,7 @@ assert.equal(matchObj({ a: 8, b: { c: 8 }, o: 1 }), "other");
 
 [&laquo; To contents](#usage)
 
-# Compiling
+## Compiling
 
 Match patterns can also be _compiled_ into a function. More detail about
 compiling is available in the bundled JSDoc.
@@ -509,9 +509,9 @@ assert.equal(matchSome(None), "none");
 
 [&laquo; To contents](#usage)
 
-# New in 1.0
+## New in 1.0
 
-## Features and Improvements
+### Features and Improvements
 
 -  [From](#converting) concept with three new methods - [from](#from),
    [nonNull](#nonnull) and [qty](#qty).
@@ -529,7 +529,7 @@ assert.equal(matchSome(None), "none");
 -  Performance improvements.
 -  More examples and better documentation.
 
-## Breaking Changes
+### Breaking Changes
 
 -  Removed `snake_case` (Rust-style) API.
 -  Removed [guarded functions](https://github.com/traverse1984/oxide.ts/blob/922d70a286b47d4b13efdb24662c6d81de2e29a5/README.md#guarded-option-function).
