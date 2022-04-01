@@ -25,7 +25,7 @@ class ResultType<T, E> {
       Object.freeze(this);
    }
 
-   [Symbol.iterator](): IterType<T> {
+   [Symbol.iterator](this: Result<T, E>): IterType<T> {
       return this[T]
          ? (this[Val] as any)[Symbol.iterator]()
          : EmptyArray[Symbol.iterator]();
@@ -46,9 +46,9 @@ class ResultType<T, E> {
     * assert.equal(x.into(null), null);
     * ```
     */
-   into(): T | undefined;
-   into<U extends FalseyValues>(err: U): T | U;
-   into(err?: FalseyValues): T | FalseyValues {
+   into(this: Result<T, E>): T | undefined;
+   into<U extends FalseyValues>(this: Result<T, E>, err: U): T | U;
+   into(this: Result<T, E>, err?: FalseyValues): T | FalseyValues {
       return this[T] ? (this[Val] as T) : err;
    }
 
@@ -68,7 +68,7 @@ class ResultType<T, E> {
     * assert.equal(o.equals(e), false);
     * ```
     */
-   equals(cmp: Result<T, E>): boolean {
+   equals(this: Result<T, E>, cmp: Result<T, E>): boolean {
       return this[T] === cmp[T] && this[Val] === cmp[Val];
    }
 
@@ -85,7 +85,7 @@ class ResultType<T, E> {
     * assert.equal(o.isLike(e), false);
     * ```
     */
-   isLike(cmp: unknown): cmp is Result<unknown, unknown> {
+   isLike(this: Result<T, E>, cmp: unknown): cmp is Result<unknown, unknown> {
       return cmp instanceof ResultType && this[T] === cmp[T];
    }
 
@@ -100,7 +100,7 @@ class ResultType<T, E> {
     * assert.equal(x.isOk(), false);
     * ```
     */
-   isOk(): this is Ok<T> {
+   isOk(this: Result<T, E>): this is Ok<T> {
       return this[T];
    }
 
@@ -115,7 +115,7 @@ class ResultType<T, E> {
     * assert.equal(x.isErr(), true);
     * ```
     */
-   isErr(): this is Err<E> {
+   isErr(this: Result<T, E>): this is Err<E> {
       return !this[T];
    }
 
@@ -136,7 +136,7 @@ class ResultType<T, E> {
     * assert.equal(x.filter((v) => v < 5).isNone(), true);
     * ```
     */
-   filter(f: (val: T) => boolean): Option<T> {
+   filter(this: Result<T, E>, f: (val: T) => boolean): Option<T> {
       return this[T] && f(this[Val] as T) ? Some(this[Val] as T) : None;
    }
 
@@ -154,7 +154,7 @@ class ResultType<T, E> {
     * const y = x.expect("Was Err"); // throws
     * ```
     */
-   expect(msg: string): T {
+   expect(this: Result<T, E>, msg: string): T {
       if (this[T]) {
          return this[Val] as T;
       } else {
@@ -175,7 +175,7 @@ class ResultType<T, E> {
     * assert.equal(x.expectErr("Was Ok"), 1);
     * ```
     */
-   expectErr(msg: string): E {
+   expectErr(this: Result<T, E>, msg: string): E {
       if (this[T]) {
          throw new Error(msg);
       } else {
@@ -198,7 +198,7 @@ class ResultType<T, E> {
     * const y = x.unwrap(); // throws
     * ```
     */
-   unwrap(): T {
+   unwrap(this: Result<T, E>): T {
       return this.expect("Failed to unwrap Result (found Err)");
    }
 
@@ -216,7 +216,7 @@ class ResultType<T, E> {
     * assert.equal(x.unwrap(), 1);
     * ```
     */
-   unwrapErr(): E {
+   unwrapErr(this: Result<T, E>): E {
       return this.expectErr("Failed to unwrapErr Result (found Ok)");
    }
 
@@ -234,7 +234,7 @@ class ResultType<T, E> {
     * assert.equal(x.unwrapOr(1), 1);
     * ```
     */
-   unwrapOr(def: T): T {
+   unwrapOr(this: Result<T, E>, def: T): T {
       return this[T] ? (this[Val] as T) : def;
    }
 
@@ -249,7 +249,7 @@ class ResultType<T, E> {
     * assert.equal(x.unwrapOrElse(() => 1 + 1), 2);
     * ```
     */
-   unwrapOrElse(f: () => T): T {
+   unwrapOrElse(this: Result<T, E>, f: () => T): T {
       return this[T] ? (this[Val] as T) : f();
    }
 
@@ -267,7 +267,7 @@ class ResultType<T, E> {
     * assert.equal(x.unwrapUnchecked(), 20);
     * ```
     */
-   unwrapUnchecked(): T | E {
+   unwrapUnchecked(this: Result<T, E>): T | E {
       return this[Val];
    }
 
@@ -287,7 +287,7 @@ class ResultType<T, E> {
     * assert.equal(xor.unwrap(), 1);
     * ```
     */
-   or(resb: Result<T, E>): Result<T, E> {
+   or(this: Result<T, E>, resb: Result<T, E>): Result<T, E> {
       return this[T] ? (this as any) : resb;
    }
 
@@ -309,7 +309,7 @@ class ResultType<T, E> {
     * assert.equal(xor.unwrapErr(), "val 10");
     * ```
     */
-   orElse<F>(f: (err: E) => Result<T, F>): Result<T, F> {
+   orElse<F>(this: Result<T, E>, f: (err: E) => Result<T, F>): Result<T, F> {
       return this[T] ? (this as unknown as Result<T, F>) : f(this[Val] as E);
    }
 
@@ -330,7 +330,7 @@ class ResultType<T, E> {
     * assert.equal(xand.unwrapErr(), 1);
     * ```
     */
-   and<U>(resb: Result<U, E>): Result<U, E> {
+   and<U>(this: Result<T, E>, resb: Result<U, E>): Result<U, E> {
       return this[T] ? resb : (this as any);
    }
 
@@ -352,7 +352,7 @@ class ResultType<T, E> {
     * assert.equal(xand.unwrapErr(), 1);
     * ```
     */
-   andThen<U>(f: (val: T) => Result<U, E>): Result<U, E> {
+   andThen<U>(this: Result<T, E>, f: (val: T) => Result<U, E>): Result<U, E> {
       return this[T] ? f(this[Val] as T) : (this as any);
    }
 
@@ -366,7 +366,7 @@ class ResultType<T, E> {
     * assert.equal(xmap.unwrap(), "number 10");
     * ```
     */
-   map<U>(f: (val: T) => U): Result<U, E> {
+   map<U>(this: Result<T, E>, f: (val: T) => U): Result<U, E> {
       return new ResultType(
          this[T] ? f(this[Val] as T) : (this[Val] as E),
          this[T]
@@ -383,7 +383,7 @@ class ResultType<T, E> {
     * assert.equal(xmap.unwrapErr(), "number 10");
     * ```
     */
-   mapErr<F>(op: (err: E) => F): Result<T, F> {
+   mapErr<F>(this: Result<T, E>, op: (err: E) => F): Result<T, F> {
       return new ResultType(
          this[T] ? (this[Val] as T) : op(this[Val] as E),
          this[T]
@@ -407,7 +407,7 @@ class ResultType<T, E> {
     * assert.equal(xmap.unwrap(), 1);
     * ```
     */
-   mapOr<U>(def: U, f: (val: T) => U): U {
+   mapOr<U>(this: Result<T, E>, def: U, f: (val: T) => U): U {
       return this[T] ? f(this[Val] as T) : def;
    }
 
@@ -425,7 +425,7 @@ class ResultType<T, E> {
     * assert.equal(xmap.unwrap(), 2);
     * ```
     */
-   mapOrElse<U>(def: (err: E) => U, f: (val: T) => U): U {
+   mapOrElse<U>(this: Result<T, E>, def: (err: E) => U, f: (val: T) => U): U {
       return this[T] ? f(this[Val] as T) : def(this[Val] as E);
    }
 
@@ -445,7 +445,7 @@ class ResultType<T, E> {
     * const y = x.unwrap(); // throws
     * ```
     */
-   ok(): Option<T> {
+   ok(this: Result<T, E>): Option<T> {
       return this[T] ? Some(this[Val] as T) : None;
    }
 }

@@ -21,7 +21,7 @@ class OptionType<T> {
       Object.freeze(this);
    }
 
-   [Symbol.iterator](): IterType<T> {
+   [Symbol.iterator](this: Option<T>): IterType<T> {
       return this[T]
          ? (this[Val] as any)[Symbol.iterator]()
          : EmptyArray[Symbol.iterator]();
@@ -42,9 +42,9 @@ class OptionType<T> {
     * assert.equal(x.into(null), null);
     * ```
     */
-   into(): T | undefined;
-   into<U extends FalseyValues>(none: U): T | U;
-   into(none?: FalseyValues): T | FalseyValues {
+   into(this: Option<T>): T | undefined;
+   into<U extends FalseyValues>(this: Option<T>, none: U): T | U;
+   into(this: Option<T>, none?: FalseyValues): T | FalseyValues {
       return this[T] ? this[Val] : none;
    }
 
@@ -63,7 +63,7 @@ class OptionType<T> {
     * assert.equal(s.equals(n), false);
     * ```
     */
-   equals(cmp: Option<T>): boolean {
+   equals(this: Option<T>, cmp: Option<T>): boolean {
       return this[T] === cmp[T] && this[Val] === cmp[Val];
    }
 
@@ -80,7 +80,7 @@ class OptionType<T> {
     * assert.equal(s.isLike(n), false);
     * ```
     */
-   isLike(cmp: unknown): cmp is Option<unknown> {
+   isLike(this: Option<T>, cmp: unknown): cmp is Option<unknown> {
       return cmp instanceof OptionType && this[T] === cmp[T];
    }
 
@@ -95,7 +95,7 @@ class OptionType<T> {
     * assert.equal(x.Is(), false);
     * ```
     */
-   isSome(): this is Some<T> {
+   isSome(this: Option<T>): this is Some<T> {
       return this[T];
    }
 
@@ -110,7 +110,7 @@ class OptionType<T> {
     * assert.equal(x.isNone(), true);
     * ```
     */
-   isNone(): this is None {
+   isNone(this: Option<T>): this is None {
       return !this[T];
    }
 
@@ -131,7 +131,7 @@ class OptionType<T> {
     * assert.equal(x.filter((v) => v < 5).isNone(), true);
     * ```
     */
-   filter(f: (val: T) => boolean): Option<T> {
+   filter(this: Option<T>, f: (val: T) => boolean): Option<T> {
       return this[T] && f(this[Val]) ? this : None;
    }
 
@@ -149,7 +149,7 @@ class OptionType<T> {
     * const y = x.expect("Is empty"); // throws
     * ```
     */
-   expect(msg: string): T {
+   expect(this: Option<T>, msg: string): T {
       if (this[T]) {
          return this[Val];
       } else {
@@ -172,7 +172,7 @@ class OptionType<T> {
     * const y = x.unwrap(); // throws
     * ```
     */
-   unwrap(): T {
+   unwrap(this: Option<T>): T {
       return this.expect("Failed to unwrap Option (found None)");
    }
 
@@ -190,7 +190,7 @@ class OptionType<T> {
     * assert.equal(x.unwrapOr(1), 1);
     * ```
     */
-   unwrapOr(def: T): T {
+   unwrapOr(this: Option<T>, def: T): T {
       return this[T] ? this[Val] : def;
    }
 
@@ -205,7 +205,7 @@ class OptionType<T> {
     * assert.equal(x.unwrapOrElse(() => 1 + 1), 2);
     * ```
     */
-   unwrapOrElse(f: () => T): T {
+   unwrapOrElse(this: Option<T>, f: () => T): T {
       return this[T] ? this[Val] : f();
    }
 
@@ -223,7 +223,7 @@ class OptionType<T> {
     * assert.equal(x.unwrapUnchecked(), undefined);
     * ```
     */
-   unwrapUnchecked(): T | undefined {
+   unwrapUnchecked(this: Option<T>): T | undefined {
       return this[Val];
    }
 
@@ -243,7 +243,7 @@ class OptionType<T> {
     * assert.equal(xor.unwrap(), 1);
     * ```
     */
-   or(optb: Option<T>): Option<T> {
+   or(this: Option<T>, optb: Option<T>): Option<T> {
       return this[T] ? this : optb;
    }
 
@@ -260,7 +260,7 @@ class OptionType<T> {
     * assert.equal(xor.unwrap(), 1);
     * ```
     */
-   orElse(f: () => Option<T>): Option<T> {
+   orElse(this: Option<T>, f: () => Option<T>): Option<T> {
       return this[T] ? this : f();
    }
 
@@ -281,7 +281,7 @@ class OptionType<T> {
     * assert.equal(xand.isNone(), true);
     * ```
     */
-   and<U>(optb: Option<U>): Option<U> {
+   and<U>(this: Option<T>, optb: Option<U>): Option<U> {
       return this[T] ? optb : None;
    }
 
@@ -303,7 +303,7 @@ class OptionType<T> {
     * assert.equal(xand.isNone(), true);
     * ```
     */
-   andThen<U>(f: (val: T) => Option<U>): Option<U> {
+   andThen<U>(this: Option<T>, f: (val: T) => Option<U>): Option<U> {
       return this[T] ? f(this[Val]) : None;
    }
 
@@ -317,7 +317,7 @@ class OptionType<T> {
     * assert.equal(xmap.unwrap(), "number 10");
     * ```
     */
-   map<U>(f: (val: T) => U): Option<U> {
+   map<U>(this: Option<T>, f: (val: T) => U): Option<U> {
       return this[T] ? new OptionType(f(this[Val]), true) : None;
    }
 
@@ -338,7 +338,7 @@ class OptionType<T> {
     * assert.equal(xmap.unwrap(), 1);
     * ```
     */
-   mapOr<U>(def: U, f: (val: T) => U): U {
+   mapOr<U>(this: Option<T>, def: U, f: (val: T) => U): U {
       return this[T] ? f(this[Val]) : def;
    }
 
@@ -355,7 +355,7 @@ class OptionType<T> {
     * assert.equal(xmap.unwrap(), 2);
     * ```
     */
-   mapOrElse<U>(def: () => U, f: (val: T) => U): U {
+   mapOrElse<U>(this: Option<T>, def: () => U, f: (val: T) => U): U {
       return this[T] ? f(this[Val]) : def();
    }
 
@@ -375,7 +375,7 @@ class OptionType<T> {
     * assert.equal(x.unwrap_err(), "Is empty");
     * ```
     */
-   okOr<E>(err: E): Result<T, E> {
+   okOr<E>(this: Option<T>, err: E): Result<T, E> {
       return this[T] ? Ok(this[Val]) : Err(err);
    }
 
@@ -395,7 +395,7 @@ class OptionType<T> {
     * assert.equal(x.unwrap_err(), "Is empty");
     * ```
     */
-   okOrElse<E>(f: () => E): Result<T, E> {
+   okOrElse<E>(this: Option<T>, f: () => E): Result<T, E> {
       return this[T] ? Ok(this[Val]) : Err(f());
    }
 }
