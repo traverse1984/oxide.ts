@@ -467,8 +467,8 @@ function matches<T>(
    if (isObjectLike(cond)) {
       if (T in cond) {
          return (
-            (cond as Option<any> | Result<any, any>).isLike(val) &&
-            matches((cond as any)[Val], val[Val], false)
+            (cond as any).isLike(val) &&
+            matches((cond as any)[Val], (val as any)[Val], false)
          );
       }
 
