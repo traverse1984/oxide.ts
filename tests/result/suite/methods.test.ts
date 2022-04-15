@@ -13,14 +13,6 @@ export default function methods() {
       expect(Err(1).into(null)).to.equal(null);
    });
 
-   it("equals", () => {
-      expect(Ok(1).equals(Ok(1))).to.be.true;
-      expect(Err(1).equals(Err(1))).to.be.true;
-      expect(AsRes(Ok(1)).equals(Err(1))).to.be.false;
-      expect(AsRes(Err(1)).equals(Ok(1))).to.be.false;
-      expect(Ok(1).equals(Ok(2))).to.be.false;
-   });
-
    it("isLike", () => {
       expect(Ok(1).isLike(Ok(2))).to.be.true;
       expect(Err(1).isLike(Ok(1))).to.be.false;
@@ -40,7 +32,8 @@ export default function methods() {
 
    it("filter", () => {
       const lessThan5 = (x: number) => x < 5;
-      expect(Ok(1).filter(lessThan5).equals(Some(1))).to.be.true;
+      expect(Ok(1).filter(lessThan5).isLike(Some(1))).to.be.true;
+      expect(Ok(1).filter(lessThan5).unwrap()).to.equal(1);
       expect(Ok(10).filter(lessThan5).isNone()).to.be.true;
       expect(Err(1).filter(lessThan5).isNone()).to.be.true;
    });

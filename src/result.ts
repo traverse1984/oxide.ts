@@ -53,26 +53,6 @@ class ResultType<T, E> {
    }
 
    /**
-    * Compares the Result to `cmp` for equality. Returns `true` when both are
-    * the same type (`Ok`/`Err`) and their contained values are identical.
-    *
-    * ```
-    * const val = { x: 10 };
-    * const o: Result<{ x: number; }, { x: number; }> = Ok(val);
-    * const e: Result<{ x: number; }, { x: number; }> = Err(val);
-    *
-    * assert.equal(o.equals(Ok(val)), true);
-    * assert.equal(e.equals(Err(val)), true):
-    * assert.equal(o.equals(Ok({ x: 10 })), false);
-    * assert.equal(e.equals(Err({ x: 10 })), false);
-    * assert.equal(o.equals(e), false);
-    * ```
-    */
-   equals(this: Result<T, E>, cmp: Result<T, E>): boolean {
-      return this[T] === cmp[T] && this[Val] === cmp[Val];
-   }
-
-   /**
     * Compares the Result to `cmp`, returns true if both are `Ok` or both
     * are `Err` and acts as a type guard.
     *
@@ -127,7 +107,8 @@ class ResultType<T, E> {
     *
     * ```
     * const x = Ok(1);
-    * assert.equal(x.filter((v) => v < 5).equals(Some(1)), true);
+    * assert.equal(x.filter((v) => v < 5).isLike(Some(1)), true);
+    * assert.equal(x.filter((v) => v < 5).unwrap(), 1);
     *
     * const x = Ok(10);
     * assert.equal(x.filter((v) => v < 5).isNone(), true);

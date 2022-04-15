@@ -49,25 +49,6 @@ class OptionType<T> {
    }
 
    /**
-    * Compares the Option to `cmp` for equality. Returns `true` when both are
-    * the same type (`Some`/`None`) and their contained values are identical.
-    *
-    * ```
-    * const val = { x: 10 };
-    * const s: Option<{ x: number; }> = Some(val);
-    * const n: Option<{ x: number; }> = None;
-    *
-    * assert.equal(s.equals(Some(val)), true);
-    * assert.equal(n.equals(None), true):
-    * assert.equal(s.equals(Some({ x: 10 })), false);
-    * assert.equal(s.equals(n), false);
-    * ```
-    */
-   equals(this: Option<T>, cmp: Option<T>): boolean {
-      return this[T] === cmp[T] && this[Val] === cmp[Val];
-   }
-
-   /**
     * Compares the Option to `cmp`, returns true if both are `Some` or both
     * are `None` and acts as a type guard.
     *
