@@ -1,4 +1,4 @@
-import { T, Val, MarkFn } from "./common";
+import { T, Val, FnVal } from "./common";
 import { Option, Some, None } from "./option";
 import { Result, Ok, Err } from "./result";
 
@@ -375,11 +375,11 @@ export type _ = any;
  */
 export function Fn<T extends (...args: any) => any>(fn: T): () => T {
    const val: any = () => throwFnCalled();
-   (val as any)[MarkFn] = fn;
+   (val as any)[FnVal] = fn;
    return Object.freeze(val);
 }
 
-export type Fn<T> = { (): never; [MarkFn]: T };
+export type Fn<T> = { (): never; [FnVal]: T };
 
 function matchMapped<T, U>(
    val: T,
@@ -429,15 +429,13 @@ function matchChained<T, U>(
 ): U {
    for (const branch of pattern) {
       if (typeof branch === "function") {
-         return (branch as Fn<U>)[MarkFn]
-            ? (branch as Fn<U>)[MarkFn]
-            : branch();
+         return (branch as Fn<U>)[FnVal] ? (branch as Fn<U>)[FnVal] : branch();
       } else {
          const [cond, result] = branch;
          if (matches(cond, val, true)) {
             if (typeof result === "function") {
-               return (result as Fn<U>)[MarkFn]
-                  ? (result as Fn<U>)[MarkFn]
+               return (result as Fn<U>)[FnVal]
+                  ? (result as Fn<U>)[FnVal]
                   : (result as (val: T) => U)(val);
             } else {
                return result;
@@ -459,8 +457,8 @@ function matches<T>(
    }
 
    if (typeof cond === "function") {
-      return (cond as Fn<T>)[MarkFn]
-         ? (cond as Fn<T>)[MarkFn] === val
+      return (cond as Fn<T>)[FnVal]
+         ? (cond as Fn<T>)[FnVal] === val
          : evaluate && (cond as (val: T) => boolean)(val);
    }
 
