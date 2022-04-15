@@ -550,6 +550,7 @@ assert.equal(matchSome(None), "none");
 
 ### Other stuff
 
+-  Removed most uses of Object.freeze.
 -  Tidied up and improved documentation in lots of places.
 -  Tests are better organized and more tests added.
 -  Compiler target is now ES2021.
