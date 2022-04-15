@@ -536,9 +536,8 @@ assert.equal(matchSome(None), "none");
 -  Removed `snake_case` (Rust-style) API.
 -  Removed [guarded functions](https://github.com/traverse1984/oxide.ts/blob/922d70a286b47d4b13efdb24662c6d81de2e29a5/README.md#guarded-option-function).
 -  Option/Result
-   -  Removed `neq`.
+   -  Removed `eq` and `neq` (briefly renamed `eq` to `equals` before removing).
    -  Renamed `is` to `isLike`.
-   -  Renamed `eq` to `equals`.
    -  Improvements to monad types could in some cases cause compile errors.
 -  Match
    -  Mapped matching syntax has changed for nested matches.
