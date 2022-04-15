@@ -12,18 +12,12 @@ type OptionTypes<O> = {
 };
 
 class OptionType<T> {
-   static freeze = false;
-
    readonly [T]: boolean;
    readonly [Val]: T;
 
    constructor(val: T, some: boolean) {
       this[T] = some;
       this[Val] = val;
-
-      if (OptionType.freeze) {
-         Object.freeze(this);
-      }
    }
 
    [Symbol.iterator](this: Option<T>): IterType<T> {

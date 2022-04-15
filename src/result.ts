@@ -16,18 +16,12 @@ type ResultErrors<R> = {
 };
 
 export class ResultType<T, E> {
-   static freeze = false;
-
    readonly [T]: boolean;
    readonly [Val]: T | E;
 
    constructor(val: T | E, ok: boolean) {
       this[Val] = val;
       this[T] = ok;
-
-      if (ResultType.freeze) {
-         Object.freeze(this);
-      }
    }
 
    [Symbol.iterator](this: Result<T, E>): IterType<T> {
