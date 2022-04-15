@@ -12,13 +12,18 @@ type OptionTypes<O> = {
 };
 
 class OptionType<T> {
+   static freeze = false;
+
    readonly [T]: boolean;
    readonly [Val]: T;
 
    constructor(val: T, some: boolean) {
       this[T] = some;
       this[Val] = val;
-      Object.freeze(this);
+
+      if (OptionType.freeze) {
+         Object.freeze(this);
+      }
    }
 
    [Symbol.iterator](this: Option<T>): IterType<T> {
@@ -407,6 +412,14 @@ export function Option<T>(val: T): Option<From<T>> {
    return from(val);
 }
 
+Option.is = is;
+Option.from = from;
+Option.nonNull = nonNull;
+Option.qty = qty;
+Option.safe = safe;
+Option.all = all;
+Option.any = any;
+
 /**
  * Creates a `Some<T>` value, which can be used where an `Option<T>` is
  * required. See Option for more examples.
@@ -431,7 +444,9 @@ export function Some<T>(val: T): Some<T> {
  * const y = x.unwrap(); // throws
  * ```
  */
-export const None = new OptionType<never>(undefined as never, false);
+export const None = Object.freeze(
+   new OptionType<never>(undefined as never, false)
+);
 
 /**
  * Tests whether the provided `val` is an Option, and acts as a type guard.
@@ -628,18 +643,3 @@ function any<O extends Option<any>[]>(
    }
    return None;
 }
-
-Option.is = Object.freeze(is);
-Option.safe = Object.freeze(safe);
-Option.all = Object.freeze(all);
-Option.any = Object.freeze(any);
-
-Option.from = Object.freeze(from);
-Option.nonNull = Object.freeze(nonNull);
-Option.qty = Object.freeze(qty);
-
-Object.freeze(Option);
-Object.freeze(Some);
-Object.freeze(None);
-Object.freeze(OptionType);
-Object.freeze(OptionType.prototype);

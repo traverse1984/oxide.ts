@@ -288,6 +288,8 @@ export function match<T, U>(
    return matchDispatch(val, pattern, Default);
 }
 
+match.compile = compile;
+
 export type match = typeof match;
 
 /**
@@ -376,7 +378,7 @@ export type _ = any;
 export function Fn<T extends (...args: any) => any>(fn: T): () => T {
    const val: any = () => throwFnCalled();
    (val as any)[FnVal] = fn;
-   return Object.freeze(val);
+   return val;
 }
 
 export type Fn<T> = { (): never; [FnVal]: T };
@@ -512,9 +514,3 @@ function throwInvalidPattern(): never {
 function throwFnCalled(): never {
    throw new Error("Match error (wrapped function called)");
 }
-
-match.compile = Object.freeze(compile);
-
-Object.freeze(match);
-Object.freeze(Default);
-Object.freeze(Fn);

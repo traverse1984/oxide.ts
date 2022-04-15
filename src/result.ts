@@ -15,14 +15,19 @@ type ResultErrors<R> = {
    [K in keyof R]: R[K] extends Result<any, infer U> ? U : never;
 };
 
-class ResultType<T, E> {
+export class ResultType<T, E> {
+   static freeze = false;
+
    readonly [T]: boolean;
    readonly [Val]: T | E;
 
    constructor(val: T | E, ok: boolean) {
       this[Val] = val;
       this[T] = ok;
-      Object.freeze(this);
+
+      if (ResultType.freeze) {
+         Object.freeze(this);
+      }
    }
 
    [Symbol.iterator](this: Result<T, E>): IterType<T> {
@@ -477,6 +482,14 @@ export function Result<T>(
    return from(val) as any;
 }
 
+Result.is = is;
+Result.from = from;
+Result.nonNull = nonNull;
+Result.qty = qty;
+Result.safe = safe;
+Result.all = all;
+Result.any = any;
+
 /**
  * Creates an `Ok<T>` value, which can be used where a `Result<T, E>` is
  * required. See Result for more examples.
@@ -740,18 +753,3 @@ function any<R extends Result<any, any>[]>(
 
    return Err(err) as Err<ResultErrors<R>>;
 }
-
-Result.is = Object.freeze(is);
-Result.safe = Object.freeze(safe);
-Result.all = Object.freeze(all);
-Result.any = Object.freeze(any);
-
-Result.from = Object.freeze(from);
-Result.nonNull = Object.freeze(nonNull);
-Result.qty = Object.freeze(qty);
-
-Object.freeze(Result);
-Object.freeze(Ok);
-Object.freeze(Err);
-Object.freeze(ResultType);
-Object.freeze(ResultType.prototype);
