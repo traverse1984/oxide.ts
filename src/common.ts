@@ -5,7 +5,7 @@
  * This library sometimes assumes a value with this key is an Option or Result
  * without explicitly checking the instance type or other properties.
  */
-export const T = Symbol("T");
+export const T_ = Symbol("T");
 export const Val = Symbol("Val");
 export const FnVal = Symbol("FnVal");
 export const EmptyArray = Object.freeze([] as any[]);

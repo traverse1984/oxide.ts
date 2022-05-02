@@ -1,13 +1,19 @@
-import { T, Val, EmptyArray, IterType, FalseyValues, isTruthy } from "./common";
+import {
+   T_,
+   Val,
+   EmptyArray,
+   IterType,
+   FalseyValues,
+   isTruthy,
+} from "./common";
 import { Option, Some, None } from "./option";
 
-export type Ok<T> = ResultType<T, never>;
-export type Err<E> = ResultType<never, E>;
-export type Result<T, E> = ResultType<T, E>;
+export type Ok<T> = Result<T, never>;
+export type Err<E> = Result<never, E>;
 
 type From<T> = Exclude<T, Error | FalseyValues>;
 
-type ResultTypes<R> = {
+type Results<R> = {
    [K in keyof R]: R[K] extends Result<infer T, any> ? T : never;
 };
 
@@ -15,17 +21,78 @@ type ResultErrors<R> = {
    [K in keyof R]: R[K] extends Result<any, infer U> ? U : never;
 };
 
-export class ResultType<T, E> {
-   readonly [T]: boolean;
-   readonly [Val]: T | E;
+class UnreachableError extends Error {
+   constructor() {
+      super("Unreachable code reached");
+   }
+}
 
-   constructor(val: T | E, ok: boolean) {
+function unreachable(): never {
+   throw new UnreachableError();
+}
+
+export class Result<T, E> {
+   private readonly [T_]: boolean;
+   private readonly [Val]: T | E;
+
+   private constructor(val: T, ok: true);
+   private constructor(val: E, ok: false);
+   private constructor(val: T | E, ok: boolean) {
       this[Val] = val;
-      this[T] = ok;
+      this[T_] = ok;
+   }
+
+   /**
+    * Tests the provided `val` is an Result and acts as a type guard.
+    *
+    * ```
+    * assert.equal(Result.is(Ok(1), true);
+    * assert.equal(Result.is(Err(1), true));
+    * assert.equal(Result.is(Some(1), false));
+    * ```
+    */
+   static is(val: unknown): val is Result<unknown, unknown> {
+      return val instanceof Result;
+   }
+
+   /**
+    * Creates an `Ok<T>` value, which can be used where a `Result<T, E>` is
+    * required. See Result for more examples.
+    *
+    * Note that the counterpart `Err` type `E` is set to the same type as `T`
+    * by default. TypeScript will usually infer the correct `E` type from the
+    * context (e.g. a function which accepts or returns a Result).
+    *
+    * ```
+    * const x = Ok(10);
+    * assert.equal(x.isSome(), true);
+    * assert.equal(x.unwrap(), 10);
+    * ```
+    */
+   static Ok<T>(val: T): Ok<T> {
+      return new Result(val, true);
+   }
+
+   /**
+    * Creates an `Err<E>` value, which can be used where a `Result<T, E>` is
+    * required. See Result for more examples.
+    *
+    * Note that the counterpart `Ok` type `T` is set to the same type as `E`
+    * by default. TypeScript will usually infer the correct `T` type from the
+    * context (e.g. a function which accepts or returns a Result).
+    *
+    * ```
+    * const x = Err(10);
+    * assert.equal(x.isErr(), true);
+    * assert.equal(x.unwrapErr(), 10);
+    * ```
+    */
+   static Err<E>(val: E): Err<E> {
+      return new Result(val, false);
    }
 
    [Symbol.iterator](this: Result<T, E>): IterType<T> {
-      return this[T]
+      return this.isOk()
          ? (this[Val] as any)[Symbol.iterator]()
          : EmptyArray[Symbol.iterator]();
    }
@@ -48,7 +115,7 @@ export class ResultType<T, E> {
    into(this: Result<T, E>): T | undefined;
    into<U extends FalseyValues>(this: Result<T, E>, err: U): T | U;
    into(this: Result<T, E>, err?: FalseyValues): T | FalseyValues {
-      return this[T] ? (this[Val] as T) : err;
+      return this.isOk() ? this[Val] : err;
    }
 
    /**
@@ -65,7 +132,7 @@ export class ResultType<T, E> {
     * ```
     */
    isLike(this: Result<T, E>, cmp: unknown): cmp is Result<unknown, unknown> {
-      return cmp instanceof ResultType && this[T] === cmp[T];
+      return cmp instanceof Result && this[T_] === cmp[T_];
    }
 
    /**
@@ -80,7 +147,7 @@ export class ResultType<T, E> {
     * ```
     */
    isOk(this: Result<T, E>): this is Ok<T> {
-      return this[T];
+      return this[T_];
    }
 
    /**
@@ -95,7 +162,7 @@ export class ResultType<T, E> {
     * ```
     */
    isErr(this: Result<T, E>): this is Err<E> {
-      return !this[T];
+      return !this[T_];
    }
 
    /**
@@ -117,7 +184,7 @@ export class ResultType<T, E> {
     * ```
     */
    filter(this: Result<T, E>, f: (val: T) => boolean): Option<T> {
-      return this[T] && f(this[Val] as T) ? Some(this[Val] as T) : None;
+      return this[T_] && f(this[Val] as T) ? Some(this[Val] as T) : None;
    }
 
    /**
@@ -135,8 +202,8 @@ export class ResultType<T, E> {
     * ```
     */
    expect(this: Result<T, E>, msg: string): T {
-      if (this[T]) {
-         return this[Val] as T;
+      if (this.isOk()) {
+         return this[Val];
       } else {
          throw new Error(msg);
       }
@@ -156,10 +223,10 @@ export class ResultType<T, E> {
     * ```
     */
    expectErr(this: Result<T, E>, msg: string): E {
-      if (this[T]) {
-         throw new Error(msg);
+      if (this.isErr()) {
+         return this[Val];
       } else {
-         return this[Val] as E;
+         throw new Error(msg);
       }
    }
 
@@ -215,7 +282,7 @@ export class ResultType<T, E> {
     * ```
     */
    unwrapOr(this: Result<T, E>, def: T): T {
-      return this[T] ? (this[Val] as T) : def;
+      return this.isOk() ? this[Val] : def;
    }
 
    /**
@@ -230,7 +297,7 @@ export class ResultType<T, E> {
     * ```
     */
    unwrapOrElse(this: Result<T, E>, f: () => T): T {
-      return this[T] ? (this[Val] as T) : f();
+      return this.isOk() ? this[Val] : f();
    }
 
    /**
@@ -267,8 +334,8 @@ export class ResultType<T, E> {
     * assert.equal(xor.unwrap(), 1);
     * ```
     */
-   or(this: Result<T, E>, resb: Result<T, E>): Result<T, E> {
-      return this[T] ? (this as any) : resb;
+   or(resb: Result<T, E>): Result<T, E> {
+      return this.isOk() ? this : resb;
    }
 
    /**
@@ -289,8 +356,8 @@ export class ResultType<T, E> {
     * assert.equal(xor.unwrapErr(), "val 10");
     * ```
     */
-   orElse<F>(this: Result<T, E>, f: (err: E) => Result<T, F>): Result<T, F> {
-      return this[T] ? (this as unknown as Result<T, F>) : f(this[Val] as E);
+   orElse<F>(f: (err: E) => Result<T, F>): Result<T, F> {
+      return this.isOk() ? this : this.isErr() ? f(this[Val]) : unreachable();
    }
 
    /**
@@ -310,8 +377,8 @@ export class ResultType<T, E> {
     * assert.equal(xand.unwrapErr(), 1);
     * ```
     */
-   and<U>(this: Result<T, E>, resb: Result<U, E>): Result<U, E> {
-      return this[T] ? resb : (this as any);
+   and<U>(resb: Result<U, E>): Result<U, E> {
+      return this.isErr() ? this : resb;
    }
 
    /**
@@ -333,7 +400,7 @@ export class ResultType<T, E> {
     * ```
     */
    andThen<U>(this: Result<T, E>, f: (val: T) => Result<U, E>): Result<U, E> {
-      return this[T] ? f(this[Val] as T) : (this as any);
+      return this.isOk() ? f(this[Val]) : this.isErr() ? this : unreachable();
    }
 
    /**
@@ -347,9 +414,9 @@ export class ResultType<T, E> {
     * ```
     */
    map<U>(this: Result<T, E>, f: (val: T) => U): Result<U, E> {
-      return new ResultType(
-         this[T] ? f(this[Val] as T) : (this[Val] as E),
-         this[T]
+      return new Result(
+         this.isOk() ? f(this[Val]) : this.isErr() ? this[Val] : unreachable(),
+         this[T_] as any
       ) as Result<U, E>;
    }
 
@@ -364,9 +431,9 @@ export class ResultType<T, E> {
     * ```
     */
    mapErr<F>(this: Result<T, E>, op: (err: E) => F): Result<T, F> {
-      return new ResultType(
-         this[T] ? (this[Val] as T) : op(this[Val] as E),
-         this[T]
+      return new Result(
+         this.isOk() ? this[Val] : this.isErr() ? op(this[Val]) : unreachable(),
+         this[T_] as any
       ) as Result<T, F>;
    }
 
@@ -387,8 +454,8 @@ export class ResultType<T, E> {
     * assert.equal(xmap.unwrap(), 1);
     * ```
     */
-   mapOr<U>(this: Result<T, E>, def: U, f: (val: T) => U): U {
-      return this[T] ? f(this[Val] as T) : def;
+   mapOr<U>(def: U, f: (val: T) => U): U {
+      return this.isOk() ? f(this[Val]) : def;
    }
 
    /**
@@ -406,7 +473,11 @@ export class ResultType<T, E> {
     * ```
     */
    mapOrElse<U>(this: Result<T, E>, def: (err: E) => U, f: (val: T) => U): U {
-      return this[T] ? f(this[Val] as T) : def(this[Val] as E);
+      return this.isOk()
+         ? f(this[Val])
+         : this.isErr()
+         ? def(this[Val])
+         : unreachable();
    }
 
    /**
@@ -426,324 +497,260 @@ export class ResultType<T, E> {
     * ```
     */
    ok(this: Result<T, E>): Option<T> {
-      return this[T] ? Some(this[Val] as T) : None;
-   }
-}
-
-/**
- * Tests the provided `val` is an Result and acts as a type guard.
- *
- * ```
- * assert.equal(Result.is(Ok(1), true);
- * assert.equal(Result.is(Err(1), true));
- * assert.equal(Result.is(Some(1), false));
- * ```
- */
-function is(val: unknown): val is Result<unknown, unknown> {
-   return val instanceof ResultType;
-}
-
-/**
- * A Result represents success, or failure. If we hold a value
- * of type `Result<T, E>`, we know it is either `Ok<T>` or `Err<E>`.
- *
- * As a function, `Result` is an alias for `Result.from`.
- *
- * ```
- * const users = ["Fry", "Bender"];
- * function fetch_user(username: string): Result<string, string> {
- *    return users.includes(username) ? Ok(username) : Err("Wha?");
- * }
- *
- * function greet(username: string): string {
- *    return fetch_user(username).mapOrElse(
- *       (err) => `Error: ${err}`,
- *       (user) => `Good news everyone, ${user} is here!`
- *    );
- * }
- *
- * assert.equal(greet("Bender"), "Good news everyone, Bender is here!");
- * assert.equal(greet("SuperKing"), "Error: Wha?");
- * ```
- */
-export function Result<T>(
-   val: T
-): Result<
-   From<T>,
-   | (T extends Error ? T : never)
-   | (Extract<FalseyValues, T> extends never ? never : null)
-> {
-   return from(val) as any;
-}
-
-Result.is = is;
-Result.from = from;
-Result.nonNull = nonNull;
-Result.qty = qty;
-Result.safe = safe;
-Result.all = all;
-Result.any = any;
-
-/**
- * Creates an `Ok<T>` value, which can be used where a `Result<T, E>` is
- * required. See Result for more examples.
- *
- * Note that the counterpart `Err` type `E` is set to the same type as `T`
- * by default. TypeScript will usually infer the correct `E` type from the
- * context (e.g. a function which accepts or returns a Result).
- *
- * ```
- * const x = Ok(10);
- * assert.equal(x.isSome(), true);
- * assert.equal(x.unwrap(), 10);
- * ```
- */
-export function Ok<T>(val: T): Ok<T> {
-   return new ResultType<T, never>(val, true);
-}
-
-/**
- * Creates an `Err<E>` value, which can be used where a `Result<T, E>` is
- * required. See Result for more examples.
- *
- * Note that the counterpart `Ok` type `T` is set to the same type as `E`
- * by default. TypeScript will usually infer the correct `T` type from the
- * context (e.g. a function which accepts or returns a Result).
- *
- * ```
- * const x = Err(10);
- * assert.equal(x.isErr(), true);
- * assert.equal(x.unwrapErr(), 10);
- * ```
- */
-export function Err<E>(val: E): Err<E> {
-   return new ResultType<never, E>(val, false);
-}
-
-/**
- * Creates a new `Result<T, E>` which is `Ok<T>` unless the provided `val` is
- * falsey, an instance of `Error` or an invalid `Date`.
- *
- * The `T` is narrowed to exclude any falsey values or Errors.
- *
- * The `E` type includes:
- * - `null` (if `val` could have been falsey or an invalid date)
- * - `Error` types excluded from `T` (if there are any)
- *
- * **Note:** `null` is not a useful value. Consider `Option.from` or `mapErr`.
- *
- * ```
- * assert.equal(Result.from(1).unwrap(), 1);
- * assert.equal(Result(0).isErr(), true);
- *
- * const err = Result.from(new Error("msg"));
- * assert.equal(err.unwrapErr().message, "msg");
- *
- * // Create a Result<number, string>
- * const x = Option.from(1).okOr("Falsey Value");
- * ```
- */
-function from<T>(
-   val: T
-): Result<
-   From<T>,
-   | (T extends Error ? T : never)
-   | (Extract<FalseyValues, T> extends never ? never : null)
-> {
-   return isTruthy(val)
-      ? new ResultType(val as any, !(val instanceof Error))
-      : Err(null);
-}
-
-/**
- * Creates a new `Result<T, null>` which is `Ok` unless the provided `val` is
- * `undefined`, `null` or `NaN`.
- *
- * **Note:** `null` is not a useful value. Consider `Option.nonNull` or
- * `mapErr`.
- *
- * ```
- * assert.equal(Result.nonNull(1).unwrap(), 1);
- * assert.equal(Result.nonNull(0).unwrap(), 0);
- * assert.equal(Result.nonNull(null).isErr(), true);
- *
- * // Create a Result<number, string>
- * const x = Option.nonNull(1).okOr("Nullish Value");
- * ```
- */
-function nonNull<T>(val: T): Result<NonNullable<T>, null> {
-   return val === undefined || val === null || val !== val
-      ? Err(null)
-      : Ok(val as NonNullable<T>);
-}
-
-/**
- * Creates a new Result<number, null> which is `Ok` when the provided `val` is
- * a finite integer greater than or equal to 0.
- *
- * **Note:** `null` is not a useful value. Consider `Option.qty` or `mapErr`.
- *
- * ```
- * const x = Result.qty("test".indexOf("s"));
- * assert.equal(x.unwrap(), 2);
- *
- * const x = Result.qty("test".indexOf("z"));
- * assert.equal(x.unwrapErr(), null);
- *
- * // Create a Result<number, string>
- * const x = Result.qty("test".indexOf("s")).mapErr(() => "Not Found");
- * ```
- */
-function qty<T extends number>(val: T): Result<number, null> {
-   return val >= 0 && Number.isInteger(val) ? Ok(val) : Err(null);
-}
-
-/**
- * Capture the outcome of a function or Promise as a `Result<T, Error>`,
- * preventing throwing (function) or rejection (Promise).
- *
- * **Note:** If the function throws (or the Promise rejects with) a value that
- * is not an instance of `Error`, the value is converted to a string and used
- * as the message text for a new Error instance.
- *
- * ### Usage for functions
- *
- * Calls `fn` with the provided `args` and returns a `Result<T, Error>`. The
- * Result is `Ok` if the provided function returned, or `Err` if it threw.
- *
- * **Note:** Any function which returns a Promise (or PromiseLike) value is
- * rejected by the type signature. `Result<Promise<T>, Error>` is not a useful
- * type, and using it in this way is likely to be a mistake.
- *
- * ```
- * function mightThrow(throws: boolean) {
- *    if (throws) {
- *       throw new Error("Throw");
- *    }
- *    return "Hello World";
- * }
- *
- * const x: Result<string, Error> = Result.safe(mightThrow, true);
- * assert.equal(x.unwrapErr() instanceof Error, true);
- * assert.equal(x.unwrapErr().message, "Throw");
- *
- * const x = Result.safe(() => mightThrow(false));
- * assert.equal(x.unwrap(), "Hello World");
- * ```
- *
- * ### Usage for Promises
- *
- * Accepts `promise` and returns a new Promise which always resolves to
- * `Result<T, Error>`. The Result is `Ok` if the original promise
- * resolved, or `Err` if it rejected.
- *
- * ```
- * async function mightThrow(throws: boolean) {
- *    if (throws) {
- *       throw new Error("Throw")
- *    }
- *    return "Hello World";
- * }
- *
- * const x = await Result.safe(mightThrow(true));
- * assert.equal(x.unwrapErr() instanceof Error, true);
- * assert.equal(x.unwrapErr().message, "Throw");
- *
- * const x = await Result.safe(mightThrow(false));
- * assert.equal(x.unwrap(), "Hello World");
- * ```
- */
-function safe<T, A extends any[]>(
-   fn: (...args: A) => T extends PromiseLike<any> ? never : T,
-   ...args: A
-): Result<T, Error>;
-function safe<T>(promise: Promise<T>): Promise<Result<T, Error>>;
-function safe<T, A extends any[]>(
-   fn: ((...args: A) => T) | Promise<T>,
-   ...args: A
-): Result<T, Error> | Promise<Result<T, Error>> {
-   if (fn instanceof Promise) {
-      return fn.then((val) => Ok(val), toError);
+      return this[T_] ? Some(this[Val] as T) : None;
    }
 
-   try {
-      return Ok(fn(...args));
-   } catch (err) {
-      return toError(err);
+   /**
+    * Transforms the `Option<Option<T>>` into an `Option<T>`
+    *
+    * ```
+    * const x = Some(Some(10));
+    * assert.equal(x.flatten().unwrap(), 10);
+    * const y = x.flatten();
+    * assert.equal(y.flatten(), Ok(10));
+    *
+    * const x = Some(None);
+    * const y = x.flatten();
+    * assert.equal(y.isNone(), true);
+    * const z = y.unwrap(); // throws
+    * ```
+    */
+   flatten<T, E>(this: Result<Result<T, E>, E>): Result<T, E> {
+      return this.andThen((x) => x);
    }
-}
 
-function toError(err: unknown): Err<Error> {
-   return err instanceof Error ? Err(err) : Err(new Error(String(err)));
-}
+   /**
+    * Creates a new `Result<T, E>` which is `Ok<T>` unless the provided `val` is
+    * falsey, an instance of `Error` or an invalid `Date`.
+    *
+    * The `T` is narrowed to exclude any falsey values or Errors.
+    *
+    * The `E` type includes:
+    * - `null` (if `val` could have been falsey or an invalid date)
+    * - `Error` types excluded from `T` (if there are any)
+    *
+    * **Note:** `null` is not a useful value. Consider `Option.from` or `mapErr`.
+    *
+    * ```
+    * assert.equal(Result.from(1).unwrap(), 1);
+    * assert.equal(Result(0).isErr(), true);
+    *
+    * const err = Result.from(new Error("msg"));
+    * assert.equal(err.unwrapErr().message, "msg");
+    *
+    * // Create a Result<number, string>
+    * const x = Option.from(1).okOr("Falsey Value");
+    * ```
+    */
+   static from<T>(
+      val: T
+   ): Result<
+      From<T>,
+      | (T extends Error ? T : never)
+      | (Extract<FalseyValues, T> extends never ? never : null)
+   > {
+      return isTruthy(val)
+         ? new Result(val as any, !(val instanceof Error) as any)
+         : (Result.Err(null) as any);
+   }
 
-/**
- * Converts a number of `Result`s into a single Result. The first `Err` found
- * (if any) is returned, otherwise the new Result is `Ok` and contains an array
- * of all the unwrapped values.
- *
- * ```
- * function num(val: number): Result<number, string> {
- *    return val > 10 ? Ok(val) : Err(`Value ${val} is too low.`);
- * }
- *
- * const xyz = Result.all(num(20), num(30), num(40));
- * const [x, y, z] = xyz.unwrap();
- * assert.equal(x, 20);
- * assert.equal(y, 30);
- * assert.equal(z, 40);
- *
- * const err = Result.all(num(20), num(5), num(40));
- * assert.equal(err.isErr(), true);
- * assert.equal(err.unwrapErr(), "Value 5 is too low.");
- * ```
- */
-function all<R extends Result<any, any>[]>(
-   ...results: R
-): Result<ResultTypes<R>, ResultErrors<R>[number]> {
-   const ok = [];
-   for (const result of results) {
-      if (result.isOk()) {
-         ok.push(result.unwrapUnchecked());
-      } else {
-         return result;
+   /**
+    * Creates a new `Result<T, null>` which is `Ok` unless the provided `val` is
+    * `undefined`, `null` or `NaN`.
+    *
+    * **Note:** `null` is not a useful value. Consider `Option.nonNull` or
+    * `mapErr`.
+    *
+    * ```
+    * assert.equal(Result.nonNull(1).unwrap(), 1);
+    * assert.equal(Result.nonNull(0).unwrap(), 0);
+    * assert.equal(Result.nonNull(null).isErr(), true);
+    *
+    * // Create a Result<number, string>
+    * const x = Option.nonNull(1).okOr("Nullish Value");
+    * ```
+    */
+   static nonNull<T>(val: T | null | undefined): Result<T, null> {
+      return val === undefined || val === null || val !== val
+         ? Result.Err(null)
+         : Result.Ok(val);
+   }
+
+   /**
+    * Creates a new Result<number, null> which is `Ok` when the provided `val` is
+    * a finite integer greater than or equal to 0.
+    *
+    * **Note:** `null` is not a useful value. Consider `Option.qty` or `mapErr`.
+    *
+    * ```
+    * const x = Result.qty("test".indexOf("s"));
+    * assert.equal(x.unwrap(), 2);
+    *
+    * const x = Result.qty("test".indexOf("z"));
+    * assert.equal(x.unwrapErr(), null);
+    *
+    * // Create a Result<number, string>
+    * const x = Result.qty("test".indexOf("s")).mapErr(() => "Not Found");
+    * ```
+    */
+   static qty<T extends number>(val: T): Result<number, null> {
+      return val >= 0 && Number.isInteger(val)
+         ? Result.Ok(val)
+         : Result.Err(null);
+   }
+
+   /**
+    * Capture the outcome of a function or Promise as a `Result<T, Error>`,
+    * preventing throwing (function) or rejection (Promise).
+    *
+    * **Note:** If the function throws (or the Promise rejects with) a value that
+    * is not an instance of `Error`, the value is converted to a string and used
+    * as the message text for a new Error instance.
+    *
+    * ### Usage for functions
+    *
+    * Calls `fn` with the provided `args` and returns a `Result<T, Error>`. The
+    * Result is `Ok` if the provided function returned, or `Err` if it threw.
+    *
+    * **Note:** Any function which returns a Promise (or PromiseLike) value is
+    * rejected by the type signature. `Result<Promise<T>, Error>` is not a useful
+    * type, and using it in this way is likely to be a mistake.
+    *
+    * ```
+    * function mightThrow(throws: boolean) {
+    *    if (throws) {
+    *       throw new Error("Throw");
+    *    }
+    *    return "Hello World";
+    * }
+    *
+    * const x: Result<string, Error> = Result.safe(mightThrow, true);
+    * assert.equal(x.unwrapErr() instanceof Error, true);
+    * assert.equal(x.unwrapErr().message, "Throw");
+    *
+    * const x = Result.safe(() => mightThrow(false));
+    * assert.equal(x.unwrap(), "Hello World");
+    * ```
+    *
+    * ### Usage for Promises
+    *
+    * Accepts `promise` and returns a new Promise which always resolves to
+    * `Result<T, Error>`. The Result is `Ok` if the original promise
+    * resolved, or `Err` if it rejected.
+    *
+    * ```
+    * async function mightThrow(throws: boolean) {
+    *    if (throws) {
+    *       throw new Error("Throw")
+    *    }
+    *    return "Hello World";
+    * }
+    *
+    * const x = await Result.safe(mightThrow(true));
+    * assert.equal(x.unwrapErr() instanceof Error, true);
+    * assert.equal(x.unwrapErr().message, "Throw");
+    *
+    * const x = await Result.safe(mightThrow(false));
+    * assert.equal(x.unwrap(), "Hello World");
+    * ```
+    */
+   static safe<T, A extends any[]>(
+      fn: (...args: A) => T extends PromiseLike<any> ? never : T,
+      ...args: A
+   ): Result<T, Error>;
+   static safe<T>(promise: Promise<T>): Promise<Result<T, Error>>;
+   static safe<T, A extends any[]>(
+      fn: ((...args: A) => T) | Promise<T>,
+      ...args: A
+   ): Result<T, Error> | Promise<Result<T, Error>> {
+      if (fn instanceof Promise) {
+         return fn.then((val) => Result.Ok(val), Result.toError);
+      }
+
+      try {
+         return Result.Ok(fn(...args));
+      } catch (err) {
+         return Result.toError(err);
       }
    }
 
-   return Ok(ok) as Ok<ResultTypes<R>>;
-}
-
-/**
- * Converts a number of `Result`s into a single Result. The first `Ok` found
- * (if any) is returned, otherwise the new Result is an `Err` containing an
- * array of all the unwrapped errors.
- *
- * ```
- * function num(val: number): Result<number, string> {
- *    return val > 10 ? Ok(val) : Err(`Value ${val} is too low.`);
- * }
- *
- * const x = Result.any(num(5), num(20), num(2));
- * assert.equal(x.unwrap(), 20);
- *
- * const efg = Result.any(num(2), num(5), num(8));
- * const [e, f, g] = efg.unwrapErr();
- * assert.equal(e, "Value 2 is too low.");
- * assert.equal(f, "Value 5 is too low.");
- * assert.equal(g, "Value 8 is too low.");
- * ```
- */
-function any<R extends Result<any, any>[]>(
-   ...results: R
-): Result<ResultTypes<R>[number], ResultErrors<R>> {
-   const err = [];
-   for (const result of results) {
-      if (result.isOk()) {
-         return result;
-      } else {
-         err.push(result.unwrapUnchecked());
-      }
+   static toError(err: unknown): Err<Error> {
+      return err instanceof Error
+         ? Result.Err(err)
+         : Result.Err(new Error(String(err)));
    }
 
-   return Err(err) as Err<ResultErrors<R>>;
+   /**
+    * Converts a number of `Result`s into a single Result. The first `Err` found
+    * (if any) is returned, otherwise the new Result is `Ok` and contains an array
+    * of all the unwrapped values.
+    *
+    * ```
+    * function num(val: number): Result<number, string> {
+    *    return val > 10 ? Ok(val) : Err(`Value ${val} is too low.`);
+    * }
+    *
+    * const xyz = Result.all(num(20), num(30), num(40));
+    * const [x, y, z] = xyz.unwrap();
+    * assert.equal(x, 20);
+    * assert.equal(y, 30);
+    * assert.equal(z, 40);
+    *
+    * const err = Result.all(num(20), num(5), num(40));
+    * assert.equal(err.isErr(), true);
+    * assert.equal(err.unwrapErr(), "Value 5 is too low.");
+    * ```
+    */
+   static all<R extends Result<unknown, unknown>[]>(
+      ...results: R
+   ): Result<Results<R>, ResultErrors<R>[number]> {
+      const ok = [];
+      for (const result of results) {
+         if (result.isOk()) {
+            ok.push(result.unwrapUnchecked());
+         } else {
+            return result as any;
+         }
+      }
+
+      return Result.Ok(ok as Results<R>);
+   }
+
+   /**
+    * Converts a number of `Result`s into a single Result. The first `Ok` found
+    * (if any) is returned, otherwise the new Result is an `Err` containing an
+    * array of all the unwrapped errors.
+    *
+    * ```
+    * function num(val: number): Result<number, string> {
+    *    return val > 10 ? Ok(val) : Err(`Value ${val} is too low.`);
+    * }
+    *
+    * const x = Result.any(num(5), num(20), num(2));
+    * assert.equal(x.unwrap(), 20);
+    *
+    * const efg = Result.any(num(2), num(5), num(8));
+    * const [e, f, g] = efg.unwrapErr();
+    * assert.equal(e, "Value 2 is too low.");
+    * assert.equal(f, "Value 5 is too low.");
+    * assert.equal(g, "Value 8 is too low.");
+    * ```
+    */
+   static any<R extends Result<unknown, unknown>[]>(
+      ...results: R
+   ): Result<Results<R>[number], ResultErrors<R>> {
+      const err = [];
+      for (const result of results) {
+         if (result.isOk()) {
+            return result as any;
+         } else {
+            err.push(result.unwrapUnchecked());
+         }
+      }
+
+      return Result.Err(err as ResultErrors<R>);
+   }
 }
+
+export const Ok = Result.Ok;
+export const Err = Result.Err;

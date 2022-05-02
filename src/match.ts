@@ -1,4 +1,4 @@
-import { T, Val, FnVal } from "./common";
+import { T_, Val, FnVal } from "./common";
 import { Option, Some, None } from "./option";
 import { Result, Ok, Err } from "./result";
 
@@ -12,7 +12,7 @@ type ChainedBranches<T, U> =
 
 type BranchCondition<T> =
    | Mapped<T, boolean>
-   | (T extends { [T]: boolean } ? MonadCondition<T> : Condition<T>);
+   | (T extends { [T_]: boolean } ? MonadCondition<T> : Condition<T>);
 
 type Branch<T, U> = [BranchCondition<T>, BranchResult<T, U>];
 type Mapped<T, U> = (val: T) => U;
@@ -389,7 +389,7 @@ function matchMapped<T, U>(
    defaultBranch: DefaultBranch<U>
 ): U {
    if (Option.is(val)) {
-      if (val[T]) {
+      if (val[T_]) {
          if (pattern.Some) {
             if (typeof pattern.Some === "function") {
                return pattern.Some(val[Val]);
@@ -405,7 +405,7 @@ function matchMapped<T, U>(
          return pattern.None();
       }
    } else if (Result.is(val)) {
-      const Branch = val[T] ? pattern.Ok : pattern.Err;
+      const Branch = val[T_] ? pattern.Ok : pattern.Err;
       if (Branch) {
          if (typeof Branch === "function") {
             return Branch(val[Val]);
@@ -465,7 +465,7 @@ function matches<T>(
    }
 
    if (isObjectLike(cond)) {
-      if (T in cond) {
+      if (T_ in cond) {
          return (
             (cond as any).isLike(val) &&
             matches((cond as any)[Val], (val as any)[Val], false)

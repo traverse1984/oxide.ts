@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Result } from "../../../src";
+import { Result, Ok } from "../../../src";
 
 export default function convert() {
    describe("from", from);
@@ -33,8 +33,8 @@ function from() {
    });
 
    it("Should be aliased by Result", () => {
-      expect(Result(0).unwrapErr()).to.equal(null);
-      expect(Result(1).unwrap()).to.equal(1);
+      expect(Result.from(0).unwrapErr()).to.equal(null);
+      expect(Ok(1).unwrap()).to.equal(1);
    });
 }
 

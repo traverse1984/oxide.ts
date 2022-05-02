@@ -25,7 +25,7 @@ export default function matchDocs() {
 }
 
 function mappedMatchBasic() {
-   const num = Option(10);
+   const num = Some(10);
    const res = match(num, {
       Some: (n) => n + 1,
       None: () => 0,

@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Option } from "../../../src";
+import { Option, Some } from "../../../src";
 
 export default function convert() {
    describe("from", from);
@@ -28,8 +28,8 @@ function from() {
    });
 
    it("Should be aliased by Option", () => {
-      expect(Option(0).isNone()).to.be.true;
-      expect(Option(1).unwrap()).to.equal(1);
+      expect(Option.from(0).isNone()).to.be.true;
+      expect(Some(1).unwrap()).to.equal(1);
    });
 }
 
