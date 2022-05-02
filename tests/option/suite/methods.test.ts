@@ -6,27 +6,18 @@ function AsOpt(val: Option<any>): Option<number> {
 }
 
 export default function methods() {
-   it("is", () => {
-      expect(Some(1).is(Some(2))).to.be.true;
-      expect(AsOpt(None).is(Some(1))).to.be.false;
-      expect(Some(1).is(None)).to.be.false;
-      expect(None.is(None)).to.be.true;
+   it("into", () => {
+      expect(Some(1).into()).to.equal(1);
+      expect(None.into()).to.equal(undefined);
+      expect(None.into(false)).to.equal(false);
+      expect(None.into(null)).to.equal(null);
    });
 
-   it("eq", () => {
-      expect(Some(1).eq(Some(1))).to.be.true;
-      expect(None.eq(None)).to.be.true;
-      expect(Some(1).eq(None)).to.be.false;
-      expect(AsOpt(None).eq(Some(1))).to.be.false;
-      expect(Some(1).eq(Some(2))).to.be.false;
-   });
-
-   it("neq", () => {
-      expect(Some(1).neq(Some(1))).to.be.false;
-      expect(None.neq(None)).to.be.false;
-      expect(Some(1).neq(None)).to.be.true;
-      expect(AsOpt(None).neq(Some(1))).to.be.true;
-      expect(Some(1).neq(Some(2))).to.be.true;
+   it("isLike", () => {
+      expect(Some(1).isLike(Some(2))).to.be.true;
+      expect(AsOpt(None).isLike(Some(1))).to.be.false;
+      expect(Some(1).isLike(None)).to.be.false;
+      expect(None.isLike(None)).to.be.true;
    });
 
    it("isSome", () => {
@@ -37,6 +28,13 @@ export default function methods() {
    it("isNone", () => {
       expect(Some(1).isNone()).to.be.false;
       expect(None.isNone()).to.be.true;
+   });
+
+   it("filter", () => {
+      const lessThan5 = (x: number) => x < 5;
+      expect(Some(1).filter(lessThan5).unwrap()).to.equal(1);
+      expect(Some(10).filter(lessThan5).isNone()).to.be.true;
+      expect(None.filter(lessThan5).isNone()).to.be.true;
    });
 
    it("expect", () => {

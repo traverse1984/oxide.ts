@@ -1,26 +1,23 @@
 import { expect } from "chai";
-import { Result, Ok, Err } from "../../../src";
+import { Result, Ok, Err, Some } from "../../../src";
+
+function AsRes<T>(val: unknown): Result<T, T> {
+   return val as Result<T, T>;
+}
 
 export default function methods() {
-   it("is", () => {
-      expect(Ok(1).is(Ok(2))).to.be.true;
-      expect(Err(1).is(Ok(1))).to.be.false;
-      expect(Ok(1).is(Err(1))).to.be.false;
-      expect(Err(1).is(Err(2))).to.be.true;
+   it("into", () => {
+      expect(Ok(1).into()).to.equal(1);
+      expect(Err(1).into()).to.equal(undefined);
+      expect(Err(1).into(false)).to.equal(false);
+      expect(Err(1).into(null)).to.equal(null);
    });
 
-   it("eq", () => {
-      expect(Ok(1).eq(Ok(1))).to.be.true;
-      expect(Err(1).eq(Err(1))).to.be.true;
-      expect(Ok(1).eq(Err(1))).to.be.false;
-      expect(Ok(1).eq(Ok(2))).to.be.false;
-   });
-
-   it("neq", () => {
-      expect(Ok(1).neq(Ok(1))).to.be.false;
-      expect(Err(1).neq(Err(1))).to.be.false;
-      expect(Ok(1).neq(Err(1))).to.be.true;
-      expect(Ok(1).neq(Ok(2))).to.be.true;
+   it("isLike", () => {
+      expect(Ok(1).isLike(Ok(2))).to.be.true;
+      expect(Err(1).isLike(Ok(1))).to.be.false;
+      expect(Ok(1).isLike(Err(1))).to.be.false;
+      expect(Err(1).isLike(Err(2))).to.be.true;
    });
 
    it("isOk", () => {
@@ -28,9 +25,17 @@ export default function methods() {
       expect(Err(1).isOk()).to.be.false;
    });
 
-   it("isNone", () => {
+   it("isErr", () => {
       expect(Ok(1).isErr()).to.be.false;
       expect(Err(1).isErr()).to.be.true;
+   });
+
+   it("filter", () => {
+      const lessThan5 = (x: number) => x < 5;
+      expect(Ok(1).filter(lessThan5).isLike(Some(1))).to.be.true;
+      expect(Ok(1).filter(lessThan5).unwrap()).to.equal(1);
+      expect(Ok(10).filter(lessThan5).isNone()).to.be.true;
+      expect(Err(1).filter(lessThan5).isNone()).to.be.true;
    });
 
    it("expect", () => {
@@ -55,12 +60,12 @@ export default function methods() {
 
    it("unwrapOr", () => {
       expect(Ok(1).unwrapOr(2)).to.equal(1);
-      expect(Err(1).unwrapOr(2)).to.equal(2);
+      expect(AsRes(Err(1)).unwrapOr(2)).to.equal(2);
    });
 
    it("unwrapOrElse", () => {
       expect(Ok(1).unwrapOrElse(() => 2)).to.equal(1);
-      expect(Err(1).unwrapOrElse(() => 2)).to.equal(2);
+      expect(AsRes(Err(1)).unwrapOrElse(() => 2)).to.equal(2);
    });
 
    it("unwrapUnchecked", () => {
@@ -70,7 +75,7 @@ export default function methods() {
 
    it("or", () => {
       expect(Ok(1).or(Ok(2)).unwrap()).to.equal(1);
-      expect(Err(1).or(Ok(2)).unwrap()).to.equal(2);
+      expect(AsRes(Err(1)).or(Ok(2)).unwrap()).to.equal(2);
    });
 
    it("orElse", () => {
@@ -87,14 +92,14 @@ export default function methods() {
    });
 
    it("and", () => {
-      expect(Ok(1).and(Err(2)).isErr()).to.be.true;
+      expect(AsRes(Ok(1)).and(Err(2)).isErr()).to.be.true;
       expect(Err(1).and(Ok(2)).isErr()).to.be.true;
       expect(Ok(1).and(Ok("two")).unwrap()).to.equal("two");
    });
 
    it("andThen", () => {
       expect(
-         Ok(1)
+         AsRes(Ok(1))
             .andThen(() => Err(1))
             .isErr()
       ).to.be.true;

@@ -1,26 +1,22 @@
 import { expect } from "chai";
-import {
-   Option,
-   Result,
-   Some,
-   None,
-   Ok,
-   Err,
-   match,
-   Fn,
-   SomeIs,
-   OkIs,
-   ErrIs,
-   _,
-   Default,
-} from "../../../src";
+import { match, _, Default, Some } from "../../../src";
 
 export default function call() {
-   it("Throws when input is neither Option or Result and pattern is not an array", () =>
-      expect(() => match("test", {} as any)).to.throw(/call signature/));
-   it("Throws when first-position pattern is not object-like", () =>
-      expect(() => match(true as any)).to.throw(/call signature/));
    it("Default and _ are the same", () => expect(_).to.equal(Default));
    it("Default type throws the exhausted error", () =>
       expect(() => _()).to.throw(/exhausted/));
+
+   it("Mapped matching without a pattern throws exhausted", () =>
+      expect(() => match(Some(1), {})).to.throw(/exhausted/));
+   it("Chained matching without a pattern throws exhausted", () =>
+      expect(() => match("never", [])).to.throw(/exhausted/));
+
+   it("Throws when trying to use mapped matching on a non-monad", () =>
+      expect(
+         () => match("never", { _: () => true } as any) //
+      ).to.throw(/invalid pattern/));
+   it("Throws when the pattern is not object-like", () =>
+      expect(
+         () => match(true as any, null as any) //
+      ).to.throw(/invalid pattern/));
 }

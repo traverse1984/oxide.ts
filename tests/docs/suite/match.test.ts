@@ -1,147 +1,218 @@
-import { expect } from "chai";
+import { assert } from "chai";
 import {
    Option,
    Some,
-   SomeIs,
    None,
    Result,
    Ok,
    Err,
    match,
+   Fn,
    _,
 } from "../../../src";
 
-export default function match_tests() {
-   {
-      const num: Option<number> = Some(10);
-      const res = match(num, {
-         Some: (n) => n + 1,
-         None: () => 0,
-      });
+export default function matchDocs() {
+   it("Mapped", mappedMatchBasic);
+   it("Nested Mapped", mappedMatchNested);
+   it("Combined", combinedMatch);
+   it("Chained Primitive", chainedMatchPrimitive);
+   it("Chained Filter Function", chainedMatchFilterFunction);
+   it("Chained Object", chainedMatchObject);
+   it("Chained Array", chainedMatchArray);
+   it("Chained Monad", chainedMatchMonad);
+   it("Chained Fn", chainedMatchFn);
+   it("Compile", compileMatch);
+}
 
-      it("Basic Matching (mapped)", () => expect(res).to.equal(11));
-   }
-
-   {
-      const matchNest = (input: Result<Option<number>, string>) =>
-         match(input, {
-            Ok: match({
-               Some: (n) => `num ${n}`,
-            }),
-            _: () => "nothing",
-         });
-
-      it("Basic Matching (mapped 2)", () => {
-         expect(matchNest(Ok(Some(10)))).to.equal("num 10");
-         expect(matchNest(Ok(None))).to.equal("nothing");
-         expect(matchNest(Err("none"))).to.equal("nothing");
-      });
-   }
-
-   {
-      const matchNum = (num: number) =>
-         match(num, [
-            [5, "five"],
-            [(n) => n > 100, "big number"],
-            [(n) => n < 0, (n) => `negative ${n}`],
-            () => "other",
-         ]);
-
-      it("Basic Matching (number)", () => {
-         expect(matchNum(5)).to.equal("five");
-         expect(matchNum(150)).to.equal("big number");
-         expect(matchNum(-20)).to.equal("negative -20");
-         expect(matchNum(50)).to.equal("other");
-      });
-   }
-
-   {
-      const matchObj = (obj: { a: number; b: { c: number } }) =>
-         match(obj, [
-            [{ a: 5 }, "a is 5"],
-            [{ b: { c: 5 } }, "c is 5"],
-            [{ a: 10, b: { c: (n) => n > 10 } }, "a 10 c gt 10"],
-            () => "other",
-         ]);
-
-      it("Basic Matching (object)", () => {
-         expect(matchObj({ a: 5, b: { c: 5 } })).to.equal("a is 5");
-         expect(matchObj({ a: 50, b: { c: 5 } })).to.equal("c is 5");
-         expect(matchObj({ a: 10, b: { c: 20 } })).to.equal("a 10 c gt 10");
-         expect(matchObj({ a: 8, b: { c: 8 } })).to.equal("other");
-      });
-   }
-
-   {
-      const matchArr = (arr: number[]) =>
-         match(arr, [
-            [[1], "1"],
-            [[2, (n) => n > 10], "2 gt10"],
-            [[_, 6, _, 12], "_ 6 _ 12"],
-            () => "other",
-         ]);
-
-      it("Basic Matching (array)", () => {
-         expect(matchArr([1, 2, 3])).to.equal("1");
-         expect(matchArr([2, 12, 6])).to.equal("2 gt10");
-         expect(matchArr([3, 6, 9, 12])).to.equal("_ 6 _ 12");
-         expect(matchArr([2, 4, 6])).to.equal("other");
-      });
-   }
-
-   interface Player {
-      name: string;
-      age: number;
-      status: string;
-   }
-
-   const player1: Player = { name: "Paul", age: 80, status: "ok" };
-   const player2: Player = { name: "SuperKing77", age: 12, status: "ok" };
-   const player3: Player = { name: "BadGuy99", age: 24, status: "banned" };
-
-   function can_proceed_1(player: Option<Player>): boolean {
-      return match(player, {
-         Some: (pl) => pl.age >= 18 && pl.status !== "banned",
-         None: () => false,
-      });
-   }
-
-   it("can_proceed (1)", () => {
-      expect(can_proceed_1(Some(player1))).to.be.true;
-      expect(can_proceed_1(Some(player2))).to.be.false;
-      expect(can_proceed_1(Some(player3))).to.be.false;
-      expect(can_proceed_1(None)).to.be.false;
+function mappedMatchBasic() {
+   const num = Option(10);
+   const res = match(num, {
+      Some: (n) => n + 1,
+      None: () => 0,
    });
 
-   function can_proceed_2(player: Option<Player>): boolean {
-      return match(player, {
+   assert.equal(res, 11);
+}
+
+function mappedMatchNested() {
+   function nested(val: Result<Option<number>, string>): string {
+      return match(val, {
+         Ok: { Some: (num) => `found ${num}` },
+         _: () => "nothing",
+      });
+   }
+
+   assert.equal(nested(Ok(Some(10))), "found 10");
+   assert.equal(nested(Ok(None)), "nothing");
+   assert.equal(nested(Err("Not a number")), "nothing");
+}
+
+function combinedMatch() {
+   function matchNum(val: Option<number>): string {
+      return match(val, {
          Some: [
-            [{ status: "banned" }, false],
-            [{ age: (n) => n > 18 }, true],
+            [5, "5"],
+            [(x) => x < 10, "< 10"],
+            [(x) => x > 20, "> 20"],
          ],
-         _: () => false,
+         _: () => "none or not matched",
       });
    }
 
-   it("can_proceed (2)", () => {
-      expect(can_proceed_2(Some(player1))).to.be.true;
-      expect(can_proceed_2(Some(player2))).to.be.false;
-      expect(can_proceed_2(Some(player3))).to.be.false;
-      expect(can_proceed_2(None)).to.be.false;
-   });
+   assert.equal(matchNum(Some(5)), "5");
+   assert.equal(matchNum(Some(7)), "< 10");
+   assert.equal(matchNum(Some(25)), "> 20");
+   assert.equal(matchNum(Some(15)), "none or not matched");
+   assert.equal(matchNum(None), "none or not matched");
+}
 
-   function can_proceed_3(player: Option<Player>): boolean {
-      return match(player, [
-         [Some({ status: "banned" }), false],
-         [SomeIs((pl) => pl.age >= 18), true],
-         () => false,
+function chainedMatchPrimitive() {
+   function matchNum(num: number): string {
+      return match(num, [
+         [5, "five"],
+         [10, "ten"],
+         [15, (x) => `fifteen (${x})`],
+         () => "other",
       ]);
    }
 
-   it("can_proceed (3)", () => {
-      expect(can_proceed_3(Some(player1))).to.be.true;
-      expect(can_proceed_3(Some(player2))).to.be.false;
-      expect(can_proceed_3(Some(player3))).to.be.false;
-      expect(can_proceed_3(None)).to.be.false;
+   assert.equal(matchNum(5), "five");
+   assert.equal(matchNum(10), "ten");
+   assert.equal(matchNum(15), "fifteen (15)");
+   assert.equal(matchNum(20), "other");
+}
+
+function chainedMatchFilterFunction() {
+   function matchNum(num: number): string {
+      return match(num, [
+         [5, "five"],
+         [(x) => x < 20, "< 20"],
+         [(x) => x > 30, "> 30"],
+         () => "other",
+      ]);
+   }
+
+   assert.equal(matchNum(5), "five");
+   assert.equal(matchNum(15), "< 20");
+   assert.equal(matchNum(50), "> 30");
+   assert.equal(matchNum(25), "other");
+}
+
+function chainedMatchObject() {
+   interface ExampleObj {
+      a: number;
+      b?: { c: number };
+      o?: number;
+   }
+
+   function matchObj(obj: ExampleObj): string {
+      return match(obj, [
+         [{ a: 5 }, "a = 5"],
+         [{ b: { c: 5 } }, "c = 5"],
+         [{ a: 10, o: _ }, "a = 10, o = _"],
+         [{ a: 15, b: { c: (n) => n > 10 } }, "a = 15; c > 10"],
+         () => "other",
+      ]);
+   }
+
+   assert.equal(matchObj({ a: 5 }), "a = 5");
+   assert.equal(matchObj({ a: 50, b: { c: 5 } }), "c = 5");
+   assert.equal(matchObj({ a: 10 }), "other");
+   assert.equal(matchObj({ a: 10, o: 1 }), "a = 10, o = _");
+   assert.equal(matchObj({ a: 15, b: { c: 20 } }), "a = 15; c > 10");
+   assert.equal(matchObj({ a: 8, b: { c: 8 }, o: 1 }), "other");
+}
+
+function chainedMatchArray() {
+   function matchArr(arr: number[]): string {
+      return match(arr, [
+         [[1], "1"],
+         [[2, (x) => x > 10], "2, > 10"],
+         [[_, 6, 9, _], (a) => a.join(", ")],
+         () => "other",
+      ]);
+   }
+
+   assert.equal(matchArr([1, 2, 3]), "1");
+   assert.equal(matchArr([2, 12, 6]), "2, > 10");
+   assert.equal(matchArr([3, 6, 9]), "other");
+   assert.equal(matchArr([3, 6, 9, 12]), "3, 6, 9, 12");
+   assert.equal(matchArr([2, 4, 6]), "other");
+}
+
+function chainedMatchMonad() {
+   type NumberMonad = Option<number> | Result<number, number>;
+   function matchMonad(val: NumberMonad): string {
+      return match(val, [
+         [Some(1), "Some"],
+         [Ok(1), "Ok"],
+         [Err(1), "Err"],
+         () => "None",
+      ]);
+   }
+
+   assert.equal(matchMonad(Some(1)), "Some");
+   assert.equal(matchMonad(Ok(1)), "Ok");
+   assert.equal(matchMonad(Err(1)), "Err");
+   assert.equal(matchMonad(None), "None");
+}
+
+function chainedMatchFn() {
+   const fnOne = () => 1;
+   const fnTwo = () => 2;
+   const fnDefault = () => "fnDefault";
+
+   function matchFn(fnVal: (...args: any) => any): () => string {
+      return match(fnVal, [
+         [Fn(fnOne), () => () => "fnOne"],
+         [Fn(fnTwo), Fn(() => "fnTwo")],
+         () => fnDefault,
+      ]);
+   }
+
+   assert.equal(matchFn(fnOne)(), "fnOne");
+   assert.equal(matchFn(fnTwo)(), "fnTwo");
+   assert.equal(matchFn(() => 0)(), "fnDefault");
+}
+
+function compileMatch() {
+   it("Compile Mapped Match", compileMappedMatch);
+   it("Compile Chained Match", compileChainedMatch);
+   it("Compile Nested Match", compileNestedMatch);
+}
+
+function compileMappedMatch() {
+   const matchSome = match.compile({
+      Some: (n: number) => `got some ${n}`,
+      None: () => "got none",
    });
+
+   assert.equal(matchSome(Some(1)), "got some 1");
+   assert.equal(matchSome(None), "got none");
+}
+
+function compileChainedMatch() {
+   const matchNum = match.compile([
+      [1, "got 1"],
+      [2, "got 2"],
+      [(n) => n > 100, "got > 100"],
+      () => "default",
+   ]);
+
+   assert.equal(matchNum(1), "got 1");
+   assert.equal(matchNum(2), "got 2");
+   assert.equal(matchNum(5), "default");
+   assert.equal(matchNum(150), "got > 100");
+}
+
+function compileNestedMatch() {
+   type ResOpt = Result<Option<string>, number>;
+   const matchResOpt = match.compile<ResOpt, string>({
+      Ok: { Some: (s) => `some ${s}` },
+      _: () => "default",
+   });
+
+   assert.equal(matchResOpt(Ok(Some("test"))), "some test");
+   assert.equal(matchResOpt(Ok(None)), "default");
+   assert.equal(matchResOpt(Err(1)), "default");
 }

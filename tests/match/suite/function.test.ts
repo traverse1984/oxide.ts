@@ -1,37 +1,58 @@
 import { expect } from "chai";
-import {
-   Option,
-   Result,
-   Some,
-   None,
-   Ok,
-   Err,
-   match,
-   Fn,
-   SomeIs,
-   OkIs,
-   ErrIs,
-   _,
-   Default,
-} from "../../../src";
+import { Option, Some, match, Fn } from "../../../src";
 
 export default function fn() {
-   let called = false;
-   const testFn = () => {
-      called = true;
-      return "test";
-   };
+   const first = createWatchFn("first");
+   const second = createWatchFn("second");
 
-   function functionMatch(input: Option<() => string>): string {
+   function test(input: Option<() => string>): string {
       return match(input, [
-         [Some(Fn(testFn)), "test"],
-         () => "default", //
+         [Some(Fn(first)), "match-first"],
+         [Some(Fn(second)), "match-second"],
+         () => "default",
       ]);
    }
 
    it("Matches", () => {
-      expect(functionMatch(Some(testFn))).to.equal("test");
-      expect(called).to.be.false;
-      expect(functionMatch(Some(() => "none"))).to.equal("default");
+      expect(test(Some(first))).to.equal("match-first");
+      expect(first.wasCalled()).to.be.false;
+      expect(test(Some(() => "none"))).to.equal("default");
    });
+
+   it("Does not call functions within Monads", () => {
+      expect(test(Some(second))).to.equal("match-second");
+      expect(second.wasCalled()).to.be.false;
+   });
+
+   it("Does not call functions nested within monads", () => {
+      const nested = createWatchFn("nested");
+      expect(
+         match(Some({ a: [1] }), [
+            [Some({ a: [nested as any] }), "fail"],
+            () => "default",
+         ])
+      ).to.equal("default");
+      expect(nested.wasCalled()).to.be.false;
+   });
+
+   it("Returns the wrapped function if the default branch is Fn", () =>
+      expect(
+         match(first, [
+            Fn(() => "default"), // default branch
+         ])()
+      ).to.equal("default"));
+
+   it("Throws if the wrapped Fn is called", () =>
+      expect(Fn(() => 1)).to.throw(/wrapped function called/));
+}
+
+function createWatchFn(returns: string): { (): string; wasCalled(): boolean } {
+   let called = false;
+   const fn = () => {
+      called = true;
+      return returns;
+   };
+
+   fn.wasCalled = () => called;
+   return fn;
 }
