@@ -439,9 +439,9 @@ export class ResultType<T, E> {
     * const y = x.flatten();
     * assert.equal(y.unwrap(), 10);
     *
-    * const x = Err(10);
+    * const x = Ok(Err(10));
     * const y = x.flatten();
-    * assert.equal(y.isNone(), true);
+    * assert.equal(y.isErr(), true);
     * const z = y.unwrap(); // throws
     * ```
     */
