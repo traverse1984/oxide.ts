@@ -1,6 +1,6 @@
 {
    "name": "oxide.ts",
-   "version": "1.0.0-next.10",
+   "version": "1.0.0",
    "description": "Rust's Option<T> and Result<T, E>, implemented for TypeScript.",
    "main": "dist",
    "types": "dist",
@@ -13,7 +13,8 @@
    ],
    "scripts": {
       "test": "nyc mocha -r ts-node/register 'tests/**/*'",
-      "bench": "for file in bench/tests/*.bench.ts; do ts-node $file; done"
+      "bench": "for file in bench/tests/*.bench.ts; do ts-node $file; done",
+      "build": "tsc"
    },
    "keywords": [
       "rust",
