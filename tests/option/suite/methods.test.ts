@@ -154,4 +154,11 @@ export default function methods() {
       expect(None.okOrElse(() => "err").isErr()).to.be.true;
       expect(None.okOrElse(() => "err").unwrapErr()).to.equal("err");
    });
+
+  it("flatten", () => {
+    expect(Some(Some(1)).flatten().unwrap()).to.equal(1);
+    expect(Some(None).flatten().isNone()).to.be.true;
+    expect(Some(Some(1)).isSome()).to.be.true;
+    expect(Some(Some(1)).flatten().isSome()).to.be.true;
+  });
 }

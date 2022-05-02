@@ -332,7 +332,7 @@ export class ResultType<T, E> {
     * assert.equal(xand.unwrapErr(), 1);
     * ```
     */
-   andThen<U>(this: Result<T, E>, f: (val: T) => Result<U, E>): Result<U, E> {
+   andThen<U, E1>(this: Result<T, E>, f: (val: T) => Result<U, E1>): Result<U, E | E1> {
       return this[T] ? f(this[Val] as T) : (this as any);
    }
 
@@ -428,6 +428,26 @@ export class ResultType<T, E> {
    ok(this: Result<T, E>): Option<T> {
       return this[T] ? Some(this[Val] as T) : None;
    }
+
+   /**
+    * Transforms the `Result<Result<T, E>, E>` into a `Result<T, E>`
+    * As the type signature indicates, the Error types must be identical.
+    *
+    * ```
+    * const x = Ok(Ok(10));
+    * assert.equal(x.unwrap().isSome(), true);
+    * const y = x.flatten();
+    * assert.equal(y.unwrap(), 10);
+    *
+    * const x = Err(10);
+    * const y = x.flatten();
+    * assert.equal(y.isNone(), true);
+    * const z = y.unwrap(); // throws
+    * ```
+    */
+    flatten<T, E>(this: Result<Result<T, E>, E>): Result<T, E> {
+      return this.andThen(x => x)
+    }
 }
 
 /**

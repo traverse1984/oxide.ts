@@ -167,4 +167,11 @@ export default function methods() {
       expect(Err(1).ok().isNone()).to.be.true;
       expect(() => Err(1).ok().unwrap()).to.throw(/unwrap/);
    });
+
+  it("flatten", () => {
+    expect(Ok(Ok(1)).flatten().unwrap()).to.equal(1);
+    expect(Ok(Err("wat")).flatten().isErr()).to.be.true;
+    expect(Ok(Ok(1)).isOk()).to.be.true;
+    expect(Ok(Ok(1)).flatten().isOk()).to.be.true;
+  });
 }

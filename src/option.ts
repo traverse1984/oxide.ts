@@ -378,6 +378,25 @@ class OptionType<T> {
    okOrElse<E>(this: Option<T>, f: () => E): Result<T, E> {
       return this[T] ? Ok(this[Val]) : Err(f());
    }
+
+  /**
+    * Transforms the `Option<Option<T>>` into an `Option<T>`
+    *
+    * ```
+    * const x = Some(Some(10));
+    * assert.equal(x.flatten().unwrap(), 10);
+    * const y = x.flatten();
+    * assert.equal(y.flatten(), Ok(10));
+    *
+    * const x = Some(None);
+    * const y = x.flatten();
+    * assert.equal(y.isNone(), true);
+    * const z = y.unwrap(); // throws
+    * ```
+    */
+    flatten<T>(this: Option<Option<T>>): Option<T> {
+      return this.andThen((x) => x)
+    }
 }
 
 /**
