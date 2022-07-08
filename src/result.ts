@@ -1,5 +1,5 @@
-import { T, Val, EmptyArray, IterType, FalseyValues, isTruthy } from "./common";
-import { Option, Some, None } from "./option";
+import { EmptyArray, FalseyValues, IterType, T, Val, isTruthy } from "./common";
+import { None, Option, Some } from "./option";
 
 export type Ok<T> = ResultType<T, never>;
 export type Err<E> = ResultType<never, E>;
@@ -483,6 +483,7 @@ Result.qty = qty;
 Result.safe = safe;
 Result.all = all;
 Result.any = any;
+Result.fromCb = fromCb;
 
 /**
  * Creates an `Ok<T>` value, which can be used where a `Result<T, E>` is
@@ -553,6 +554,80 @@ function from<T>(
    return isTruthy(val)
       ? new ResultType(val as any, !(val instanceof Error))
       : Err(null);
+}
+
+/**
+ * Creates a new `Result<T, E>` by given callback's return value. If callback throws, thrown data will be returned as Err<E>,
+ * If callback returns a `Promise`, it returns a `Promise<Result<T, E>>`, resolved data will be `Ok<T>` and rejected data will be `Err<E>`
+ *
+ * ```
+ * assert.equal(Result.fromCb(() => 1).unwrap(), 1);
+ * assert.equal(
+ *    (await Result.fromCb(() => Promise.resolve(1))).unwrap(),
+ *    1
+ * );
+ * assert.equal(
+ *    Result.fromCb(() => {
+ *       throw 'something';
+ *    }).isErr(),
+ *    true
+ * );
+ *
+ * assert.equal(
+ *    (await Result.fromCb(() => Promise.reject())).isErr(),
+ *    true
+ * );
+ * assert.equal(
+ *    (await Result.fromCb(async () => {
+ *       throw 'something';
+ *    })).isErr(),
+ *    true
+ * );
+ * assert.equal(
+ *    Result.fromCb(() => {
+ *       throw 'something';
+ *    }).isErr(),
+ *    true
+ * );
+ *
+ * // Create a Result<number, NumberError>
+ * const myNumber: Result<number, NumberError> = Result.fromCb(() => {
+ *    if(otherNumber > 100) {
+ *       return otherNumber;
+ *    }
+ *    throw new NumberError();
+ * })
+ *
+ * // Create a Promise<Result<boolean, ValidationError>> and await it.
+ * const isValid: Result<boolean, ValidationError> = await Result.fromCb(async () => {
+ *    const valid = await doAsyncTask();
+ *
+ *    if(!valid) {
+ *       throw new ValidationError();
+ *    }
+ *    return valid;
+ * })
+ * ```
+ */
+
+export function fromCb<T, E>(
+   cb: () => T
+): T extends Promise<infer Data> ? Promise<Result<Data, E>> : Result<T, E>;
+export function fromCb(cb: () => any): any {
+   try {
+      const data = cb();
+      if (data instanceof Promise) {
+         return new Promise((resolve) =>
+            data //
+               .then((_data) => resolve(Ok(_data)))
+               .catch((error) => resolve(Err(error)))
+         );
+      }
+
+      return Ok(data);
+   } catch (error) {
+      return Err(error);
+   }
 }
 
 /**

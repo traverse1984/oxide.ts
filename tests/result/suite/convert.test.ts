@@ -1,10 +1,49 @@
-import { expect } from "chai";
 import { Result } from "../../../src";
+import { expect } from "chai";
 
 export default function convert() {
+   describe("fromCb", fromCb);
    describe("from", from);
    describe("nonNull", nonNull);
    describe("qty", qty);
+}
+
+function fromCb() {
+   it("Should return callback return value as Some", () => {
+      expect(Result.fromCb(() => "test").isOk()).to.be.true;
+      expect(Result.fromCb(() => "test").unwrap()).to.equal("test");
+   });
+
+   it("Should return a Promise<Result<T, E>> from callback that returns promise", async () => {
+      expect(Result.fromCb(async () => "test")).to.be.instanceOf(Promise);
+      expect((await Result.fromCb(async () => "test")).unwrap()).to.equal(
+         "test"
+      );
+   });
+
+   it("It should return Err<E> | Promise<Err<E>> if callback throws", async () => {
+      expect(
+         Result.fromCb<unknown, Error>(() => {
+            throw new Error("test");
+         }).unwrapErr()
+      ).to.be.instanceOf(Error);
+
+      expect(
+         (
+            await Result.fromCb<Promise<void>, Error>(async () => {
+               throw new Error("test");
+            })
+         ).unwrapErr()
+      ).to.be.instanceOf(Error);
+
+      expect(
+         (
+            await Result.fromCb<Promise<void>, Error>(() =>
+               Promise.reject("test")
+            )
+         ).unwrapErr()
+      ).to.equal("test");
+   });
 }
 
 function from() {
