@@ -1,5 +1,5 @@
-import { EmptyArray, FalseyValues, IterType, T, Val, isTruthy } from "./common";
-import { None, Option, Some } from "./option";
+import { T, Val, EmptyArray, IterType, FalseyValues, isTruthy } from "./common";
+import { Option, Some, None } from "./option";
 
 export type Ok<T> = ResultType<T, never>;
 export type Err<E> = ResultType<never, E>;
