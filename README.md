@@ -1,19 +1,17 @@
-# oxide.ts
+# oxide-ts
 
 [Rust](https://rust-lang.org)'s `Option<T>` and `Result<T, E>`, implemented
 for TypeScript. Zero dependencies, full test coverage and complete in-editor documentation.
 
-## Release 1.0
+## Renamed from oxide.ts
 
-Release 1.0 includes new features, removes old features and has breaking
-changes.
-
-[Check out what's new in 1.0](#new-in-10).
+Due to this potential [issue](https://github.com/traverse1984/oxide-ts/issues/9)
+the '''oxide.ts''' package has been deprecated in favour of this one.
 
 ## Installation
 
 ```
-$ npm install oxide.ts --save
+$ npm install oxide-ts --save
 ```
 
 ## Usage
@@ -39,16 +37,16 @@ $ npm install oxide.ts --save
 
 ## Importing
 
-You can import the complete **oxide.ts** library:
+You can import the complete **oxide-ts** library:
 
 ```ts
-import { Option, Some, None, Result, Ok, Err, match, Fn, _ } from "oxide.ts";
+import { Option, Some, None, Result, Ok, Err, match, Fn, _ } from "oxide-ts";
 ```
 
 Or just the **core** library, which exclues the `match` feature:
 
 ```ts
-import { Option, Some, None, Result, Ok, Err } from "oxide.ts/core";
+import { Option, Some, None, Result, Ok, Err } from "oxide-ts/core";
 ```
 
 ## Option
@@ -58,7 +56,7 @@ common API, so we can chain operations without having to worry whether we have
 Some or None until pulling the value out:
 
 ```ts
-import { Option, Some, None } from "oxide.ts";
+import { Option, Some, None } from "oxide-ts";
 
 function divide(x: number, by: number): Option<number> {
    return by === 0 ? None : Some(x / by);
@@ -93,7 +91,7 @@ If we hold a value of type `Result<T, E>` we know it's either `Ok<T>` or
 `Err<E>`. You could think of a Result as an Option where None has a value.
 
 ```ts
-import { Result, Ok, Err } from "oxide.ts";
+import { Result, Ok, Err } from "oxide-ts";
 
 function divide(x: number, by: number): Result<number, string> {
    return by === 0 ? Err("Division by zero") : Ok(x / by);
@@ -508,52 +506,6 @@ const matchSome = match.compile({
 assert.equal(matchSome(Some(1)), "some 1");
 assert.equal(matchSome(None), "none");
 ```
-
-[&laquo; To contents](#usage)
-
-## New in 1.0
-
-### Features and Improvements
-
--  [From](#converting) concept with three new methods - [from](#from),
-   [nonNull](#nonnull) and [qty](#qty).
--  New [safe](#safe), [all](#all) and [any](#any) methods (since 0.9.8).
--  New methods on Option/Result - [into](#converting) and `filter`.
--  Inline [iteration](#iteration) support.
--  Type Improvements:
-   -  `Ok<T, E>` is now `Ok<T>`
-   -  `Err<E, T>` is now `Err<E>`
-   -  `None<T>` is now `None`
--  Better type guards on `isSome`, `isOk` and `isErr`.
--  New [compile](#compiling) method.
--  Nested [mapped matching](#match) syntax improved.
--  Mapped matching now allows for an `Option` | `Result` type union.
--  Option to import only core library from **oxide.ts/core**.
--  Performance improvements.
-
-### Breaking Changes
-
--  Removed `snake_case` (Rust-style) API.
--  Removed [guarded functions](https://github.com/traverse1984/oxide.ts/blob/922d70a286b47d4b13efdb24662c6d81de2e29a5/README.md#guarded-option-function).
--  Option/Result
-   -  Removed `eq` and `neq` (briefly renamed `eq` to `equals` before removing).
-   -  Renamed `is` to `isLike`.
-   -  Improvements to monad types could in some cases cause compile errors.
--  Match
-   -  Mapped matching syntax has changed for nested matches.
-   -  Removed `SomeIs`, `OkIs` and `ErrIs`.
-   -  Using `_` to match in an Object/Array now requires the key be present.
-   -  Functions within a monad (at any depth) are no longer called as filters
-      in match chains - they are always treated as values.
--  Changes to internal structures and logic - should only cause issues if you
-   were doing something unusual.
-
-### Other stuff
-
--  Removed most uses of Object.freeze.
--  Tidied up and improved documentation in lots of places.
--  Tests are better organized and more tests added.
--  Compiler target is now ES2021.
 
 [&laquo; To contents](#usage)
 
