@@ -1,5 +1,5 @@
 {
-   "name": "oxide-ts",
+   "name": "oxide.ts",
    "version": "1.0.1",
    "description": "Rust's Option<T> and Result<T, E>, implemented for TypeScript.",
    "main": "dist",
@@ -29,7 +29,7 @@
    "license": "MIT",
    "repository": {
       "type": "git",
-      "url": "https://github.com/traverse1984/oxide-ts.git"
+      "url": "https://github.com/traverse1984/oxide.ts.git"
    },
    "dependencies": {},
    "devDependencies": {

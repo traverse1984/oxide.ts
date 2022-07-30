@@ -1,17 +1,17 @@
-# oxide-ts
+# oxide.ts
 
 [Rust](https://rust-lang.org)'s `Option<T>` and `Result<T, E>`, implemented
 for TypeScript. Zero dependencies, full test coverage and complete in-editor documentation.
 
 ## Renamed from oxide.ts
 
-Due to this potential [issue](https://github.com/traverse1984/oxide-ts/issues/9)
+Due to this potential [issue](https://github.com/traverse1984/oxide.ts/issues/9)
 the '''oxide.ts''' package has been deprecated in favour of this one.
 
 ## Installation
 
 ```
-$ npm install oxide-ts --save
+$ npm install oxide.ts --save
 ```
 
 ## Usage
@@ -37,16 +37,16 @@ $ npm install oxide-ts --save
 
 ## Importing
 
-You can import the complete **oxide-ts** library:
+You can import the complete **oxide.ts** library:
 
 ```ts
-import { Option, Some, None, Result, Ok, Err, match, Fn, _ } from "oxide-ts";
+import { Option, Some, None, Result, Ok, Err, match, Fn, _ } from "oxide.ts";
 ```
 
 Or just the **core** library, which exclues the `match` feature:
 
 ```ts
-import { Option, Some, None, Result, Ok, Err } from "oxide-ts/core";
+import { Option, Some, None, Result, Ok, Err } from "oxide.ts/core";
 ```
 
 ## Option
@@ -56,7 +56,7 @@ common API, so we can chain operations without having to worry whether we have
 Some or None until pulling the value out:
 
 ```ts
-import { Option, Some, None } from "oxide-ts";
+import { Option, Some, None } from "oxide.ts";
 
 function divide(x: number, by: number): Option<number> {
    return by === 0 ? None : Some(x / by);
@@ -91,7 +91,7 @@ If we hold a value of type `Result<T, E>` we know it's either `Ok<T>` or
 `Err<E>`. You could think of a Result as an Option where None has a value.
 
 ```ts
-import { Result, Ok, Err } from "oxide-ts";
+import { Result, Ok, Err } from "oxide.ts";
 
 function divide(x: number, by: number): Result<number, string> {
    return by === 0 ? Err("Division by zero") : Ok(x / by);
