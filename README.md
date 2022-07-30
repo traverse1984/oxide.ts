@@ -3,10 +3,10 @@
 [Rust](https://rust-lang.org)'s `Option<T>` and `Result<T, E>`, implemented
 for TypeScript. Zero dependencies, full test coverage and complete in-editor documentation.
 
-## Renamed from oxide.ts
+## Naming problem
 
 Due to this potential [issue](https://github.com/traverse1984/oxide.ts/issues/9)
-the '''oxide.ts''' package has been deprecated in favour of this one.
+the '''oxide.ts''' package may change in the future.
 
 ## Installation
 
