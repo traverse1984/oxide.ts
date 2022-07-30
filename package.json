@@ -1,6 +1,6 @@
 {
    "name": "oxide.ts",
-   "version": "1.0.1",
+   "version": "1.0.3",
    "description": "Rust's Option<T> and Result<T, E>, implemented for TypeScript.",
    "main": "dist",
    "types": "dist",
