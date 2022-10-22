@@ -48,6 +48,32 @@ class OptionType<T> {
    }
 
    /**
+    * Returns the contained `T` and `none` in a tuple `[none, T]`. The `none`
+    * value must be falsey and defaults to `undefined`.
+    *
+    * ```
+    * const x = Ok(1);
+    * const [none, some] = x.intoTuple(false);
+    * assert.equal(none, false);
+    * assert.equal(some, 1);
+    *
+    * const x = Ok(1);
+    * assert.deepEqual(x.intoTuple(), [undefined, 1]);
+    *
+    * const x = Err(1);
+    * assert.deepEqual(x.intoTuple(), [undefined, undefined]);
+    *
+    * const x = Err(1);
+    * assert.deepEqual(x.intoTuple(false), [false, undefined]);
+    * ```
+    */
+   intoTuple(this: Option<T>): [undefined, T];
+   intoTuple<U extends FalseyValues>(this: Option<T>, none: U): [U, T];
+   intoTuple(this: Option<T>, none?: FalseyValues): [FalseyValues, T] {
+      return [none, this[Val] as T];
+   }
+
+   /**
     * Compares the Option to `cmp`, returns true if both are `Some` or both
     * are `None` and acts as a type guard.
     *

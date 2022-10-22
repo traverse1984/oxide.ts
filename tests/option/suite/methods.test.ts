@@ -13,6 +13,13 @@ export default function methods() {
       expect(None.into(null)).to.equal(null);
    });
 
+   it("intoTuple", () => {
+      expect(Some(1).intoTuple()).to.deep.equal([undefined, 1]);
+      expect(None.intoTuple()).to.deep.equal([undefined, undefined]);
+      expect(None.intoTuple(false)).to.deep.equal([false, undefined]);
+      expect(None.intoTuple(null)).to.deep.equal([null, undefined]);
+   });
+
    it("isLike", () => {
       expect(Some(1).isLike(Some(2))).to.be.true;
       expect(AsOpt(None).isLike(Some(1))).to.be.false;
