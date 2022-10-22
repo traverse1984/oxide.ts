@@ -146,6 +146,26 @@ const numbers: number[] | false = maybeNumbers().into(false);
 printOut(name.into());
 ```
 
+### intoTuple
+
+Convert an existing `Option`/`Result` into a tuple containing `undefined` (or a provided falsey value) and `T`.
+
+```ts
+function maybePizzaSlice(): Option<string>;
+function maybeWhiskeys(): Result<number[], Error>;
+function printOut(msg?: string): void;
+
+const [err, pizza]: [undefined, string] = maybePizzaSlice().intoTuple();
+const [err, pizza]: [null, string] = maybePizzaSlice().intoTuple(null);
+
+// Note that the intoTuple type does not reflect the E type:
+const [err, whiskeys]: [undefined, number[]] = maybeWhiskeys().into();
+const [err, whiskeys]: [false, number[]] = maybeWhiskeys().into(false);
+
+// As a function argument:
+printOut(name.intoTuple());
+```
+
 ### from
 
 Convert to an `Option`/`Result` which is `Some<T>`/`Ok<T>` unless the value is
