@@ -52,6 +52,32 @@ export class ResultType<T, E> {
    }
 
    /**
+    * Returns the contained `T` and `err` in a tuple `[err, T]`. The `err`
+    * value must be falsey and defaults to `undefined`.
+    *
+    * ```
+    * const x = Ok(1);
+    * const [err, res] = x.intoTuple(false);
+    * assert.equal(err, false);
+    * assert.equal(res, 1);
+    *
+    * const x = Ok(1);
+    * assert.deepEqual(x.intoTuple(), [undefined, 1]);
+    *
+    * const x = Err(1);
+    * assert.deepEqual(x.intoTuple(), [undefined, undefined]);
+    *
+    * const x = Err(1);
+    * assert.deepEqual(x.intoTuple(false), [false, undefined]);
+    * ```
+    */
+   intoTuple(this: Result<T, E>): [undefined, T];
+   intoTuple<U extends FalseyValues>(this: Result<T, E>, err: U): [U, T];
+   intoTuple(this: Result<T, E>, err?: FalseyValues): [FalseyValues, T] {
+      return [err, this[Val] as T];
+   }
+
+   /**
     * Compares the Result to `cmp`, returns true if both are `Ok` or both
     * are `Err` and acts as a type guard.
     *
