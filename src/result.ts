@@ -52,6 +52,38 @@ export class ResultType<T, E> {
    }
 
    /**
+    * Returns the tuple `[null, T]`, or `[E, null]` if the result is `Err`, where `E` a is a non-null value.
+    *
+    * ```
+    * const o = Ok(1);
+    * const e = Err(1);
+    *
+    * assert.deepEqual(o.intoTuple(), [null, 1]);
+    * assert.deepEqual(e.intoTuple(), [Err(1), null]);
+    * ```
+    *
+    * Allows for a destructuring pattern such as:
+    *
+    * ```
+    * function divide(divisor, dividend): Result<number, string> {
+    *    return dividend !== 0 ? Ok(divisor / dividend) : Err("You can't do that.");
+    * }
+    *
+    * const x:  = divide(1, 0);
+    * const [err, res] = x.intoTuple();
+    *
+    * if (err !== null) {
+    *    const y: [string, null] = [err, res];
+    * } else {
+    *    const y: [null, number] = [err, res];
+    * }
+    * ```
+    */
+   intoTuple(this: Result<T, Exclude<E, null>>): [null, T] | [E, null] {
+      return this[T] ? [null, this[Val] as T] : [this[Val] as E, null];
+   }
+
+   /**
     * Compares the Result to `cmp`, returns true if both are `Ok` or both
     * are `Err` and acts as a type guard.
     *

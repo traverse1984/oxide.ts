@@ -13,6 +13,11 @@ export default function methods() {
       expect(Err(1).into(null)).to.equal(null);
    });
 
+   it("intoTuple", () => {
+      expect(Ok(1).intoTuple()).to.deep.equal([null, 1]);
+      expect(Err(1).intoTuple()).to.deep.equal([1, null]);
+   });
+
    it("isLike", () => {
       expect(Ok(1).isLike(Ok(2))).to.be.true;
       expect(Err(1).isLike(Ok(1))).to.be.false;
