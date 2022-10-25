@@ -64,7 +64,7 @@ export class ResultType<T, E> {
     * assert.deepEqual(x.intoTuple(), ["error", null]);
     * ```
     */
-   intoTuple(this: Result<T, Exclude<E, null>>): [null, T] | [E, null] {
+   intoTuple(this: Result<T, E>): [null, T] | [E, null] {
       return this[T] ? [null, this[Val] as T] : [this[Val] as E, null];
    }
 
