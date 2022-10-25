@@ -146,6 +146,24 @@ const numbers: number[] | false = maybeNumbers().into(false);
 printOut(name.into());
 ```
 
+### intoTuple
+
+Convert a `Result<T, E>` into a tuple of `[null, T]` if the result is `Ok`,
+or `[E, null]` otherwise.
+
+```ts
+function getUsername(): Result<string, Error>;
+
+const query = getUsername();
+const [err, res] = query.intoTuple();
+
+if (err) {
+   console.error(`Query Error: ${err}`);
+} else {
+   console.log(`Welcome: ${res.toLowerCase()}`);
+}
+```
+
 ### from
 
 Convert to an `Option`/`Result` which is `Some<T>`/`Ok<T>` unless the value is
