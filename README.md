@@ -195,7 +195,7 @@ str.unwrapOr("No such index"); // Could be ""
 
 ### qty
 
-Convert to an `Option`/`Result` which is which is `Some<number>`/`Ok<number>`
+Convert to an `Option`/`Result` which is `Some<number>`/`Ok<number>`
 when the provided `val` is a finite integer greater than or equal to 0.
 
 ```ts
