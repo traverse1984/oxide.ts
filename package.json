@@ -14,7 +14,7 @@
    "scripts": {
       "test": "nyc mocha -r ts-node/register 'tests/**/*'",
       "bench": "for file in bench/tests/*.bench.ts; do ts-node $file; done",
-      "build": "tsc"
+      "prepack": "npm run test && rm -r dist && tsc"
    },
    "keywords": [
       "rust",
