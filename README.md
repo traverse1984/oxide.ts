@@ -9,6 +9,11 @@ for TypeScript. Zero dependencies, full test coverage and complete in-editor doc
 $ npm install oxide.ts --save
 ```
 
+## New features in 1.1.0
+
+-  Added [intoTuple](#intotuple) to `Result`
+-  Added `flatten` to `Option` and `Result`
+
 ## Usage
 
 ### Core Features
