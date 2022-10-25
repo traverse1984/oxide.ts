@@ -51,6 +51,23 @@ export class ResultType<T, E> {
       return this[T] ? (this[Val] as T) : err;
    }
 
+   
+   /**
+    * Returns a tuple of `[null, T]` if the result is `Ok`, or `[E, null]`
+    * otherwise.
+    *
+    * ```
+    * const x: Result<number, string> = Ok(1);
+    * assert.deepEqual(x.intoTuple(), [null, 1]);
+    *
+    * const x: Result<number, string> = Err("error")
+    * assert.deepEqual(x.intoTuple(), ["error", null]);
+    * ```
+    */
+   intoTuple(this: Result<T, E>): [null, T] | [E, null] {
+      return this[T] ? [null, this[Val] as T] : [this[Val] as E, null];
+   }
+
    /**
     * Compares the Result to `cmp`, returns true if both are `Ok` or both
     * are `Err` and acts as a type guard.
