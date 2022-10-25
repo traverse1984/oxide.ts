@@ -51,32 +51,17 @@ export class ResultType<T, E> {
       return this[T] ? (this[Val] as T) : err;
    }
 
+   
    /**
-    * Returns the tuple `[null, T]`, or `[E, null]` if the result is `Err`, where `E` a is a non-null value.
+    * Returns a tuple of `[null, T]` if the result is `Ok`, or `[E, null]`
+    * otherwise.
     *
     * ```
-    * const o = Ok(1);
-    * const e = Err(1);
+    * const x: Result<number, string> = Ok(1);
+    * assert.deepEqual(x.intoTuple(), [null, 1]);
     *
-    * assert.deepEqual(o.intoTuple(), [null, 1]);
-    * assert.deepEqual(e.intoTuple(), [Err(1), null]);
-    * ```
-    *
-    * Allows for a destructuring pattern such as:
-    *
-    * ```
-    * function divide(divisor, dividend): Result<number, string> {
-    *    return dividend !== 0 ? Ok(divisor / dividend) : Err("You can't do that.");
-    * }
-    *
-    * const x:  = divide(1, 0);
-    * const [err, res] = x.intoTuple();
-    *
-    * if (err !== null) {
-    *    const y: [string, null] = [err, res];
-    * } else {
-    *    const y: [null, number] = [err, res];
-    * }
+    * const x: Result<number, string> = Err("error")
+    * assert.deepEqual(x.intoTuple(), ["error", null]);
     * ```
     */
    intoTuple(this: Result<T, Exclude<E, null>>): [null, T] | [E, null] {
