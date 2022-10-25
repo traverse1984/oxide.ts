@@ -116,6 +116,26 @@ class OptionType<T> {
    }
 
    /**
+    * Flatten a nested `Option<Option<T>>` to an `Option<T>`.
+    *
+    * ```
+    * type NestedOption = Option<Option<number>>;
+    *
+    * const x: NestedOption = Some(Some(1));
+    * assert.equal(x.flatten().unwrap(), 1);
+    *
+    * const x: NestedOption = Some(None);
+    * assert.equal(x.flatten().isNone(), true);
+    *
+    * const x: NestedOption = None;
+    * assert.equal(x.flatten().isNone(), true);
+    * ```
+    */
+   flatten<U>(this: Option<Option<U>>): Option<U> {
+      return this[T] ? this[Val] : None;
+   }
+
+   /**
     * Returns the contained `Some` value and throws `Error(msg)` if `None`.
     *
     * To avoid throwing, consider `Is`, `unwrapOr`, `unwrapOrElse` or

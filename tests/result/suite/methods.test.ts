@@ -43,6 +43,12 @@ export default function methods() {
       expect(Err(1).filter(lessThan5).isNone()).to.be.true;
    });
 
+   it("flatten", () => {
+      expect(Ok(Ok(1)).flatten().unwrap()).to.equal(1);
+      expect(Ok(Err(1)).flatten().unwrapErr()).to.equal(1);
+      expect(Err(1).flatten().unwrapErr()).to.equal(1);
+   });
+
    it("expect", () => {
       expect(Ok(1).expect("test")).to.equal(1);
       expect(() => Err(1).expect("test")).to.throw("test");

@@ -51,7 +51,6 @@ export class ResultType<T, E> {
       return this[T] ? (this[Val] as T) : err;
    }
 
-   
    /**
     * Returns a tuple of `[null, T]` if the result is `Ok`, or `[E, null]`
     * otherwise.
@@ -135,6 +134,26 @@ export class ResultType<T, E> {
     */
    filter(this: Result<T, E>, f: (val: T) => boolean): Option<T> {
       return this[T] && f(this[Val] as T) ? Some(this[Val] as T) : None;
+   }
+
+   /**
+    * Flatten a nested `Result<Result<T, E>, F>` to a `Result<T, E | F>`.
+    *
+    * ```
+    * type NestedResult = Result<Result<string, number>, boolean>;
+    *
+    * const x: NestedResult = Ok(Ok(1));
+    * assert.equal(x.flatten().unwrap(), 1);
+    *
+    * const x: NestedResult = Ok(Err(1));
+    * assert.equal(x.flatten().unwrapErr(), 1);
+    *
+    * const x: NestedResult = Err(false);
+    * assert.equal(x.flatten().unwrapErr(), false);
+    * ```
+    */
+   flatten<U, F>(this: Result<Result<U, F>, E>): Result<U, E | F> {
+      return this[T] ? (this[Val] as Result<U, F>) : (this as Err<E>);
    }
 
    /**

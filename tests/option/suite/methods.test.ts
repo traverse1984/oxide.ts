@@ -37,6 +37,12 @@ export default function methods() {
       expect(None.filter(lessThan5).isNone()).to.be.true;
    });
 
+   it("flatten", () => {
+      expect(Some(Some(1)).flatten().unwrap()).to.equal(1);
+      expect(Some(None).flatten().isNone()).to.be.true;
+      expect(None.flatten().isNone()).to.be.true;
+   });
+
    it("expect", () => {
       expect(Some(1).expect("test")).to.equal(1);
       expect(() => None.expect("test")).to.throw("test");
