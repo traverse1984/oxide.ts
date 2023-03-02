@@ -5,7 +5,7 @@
    "main": "dist",
    "types": "dist",
    "exports": {
-      ".": "./dist/index.js",
+      "./dist": "./dist/index.js",
       "./core": "./dist/core.js"
    },
    "files": [
