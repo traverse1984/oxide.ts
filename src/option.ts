@@ -1,9 +1,14 @@
 import { T, Val, EmptyArray, IterType, FalseyValues, isTruthy } from "./common";
 import { Result, Ok, Err } from "./result";
 
-export type Some<T> = OptionType<T> & { [T]: true };
-export type None = OptionType<never> & { [T]: false };
-export type Option<T> = OptionType<T>;
+export interface Some<T> extends OptionType<T> {
+   [T]: true;
+}
+export interface None extends OptionType<never> {
+   [T]: false;
+}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface Option<T> extends OptionType<T> {}
 
 type From<T> = Exclude<T, Error | FalseyValues>;
 

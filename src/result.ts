@@ -1,9 +1,12 @@
 import { T, Val, EmptyArray, IterType, FalseyValues, isTruthy } from "./common";
 import { Option, Some, None } from "./option";
 
-export type Ok<T> = ResultType<T, never>;
-export type Err<E> = ResultType<never, E>;
-export type Result<T, E> = ResultType<T, E>;
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface Ok<T> extends ResultType<T, never> {}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface Err<E> extends ResultType<never, E> {}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface Result<T, E> extends ResultType<T, E> {}
 
 type From<T> = Exclude<T, Error | FalseyValues>;
 
@@ -587,7 +590,7 @@ function from<T>(
    | (Extract<FalseyValues, T> extends never ? never : null)
 > {
    return isTruthy(val)
-      ? new ResultType(val as any, !(val instanceof Error))
+      ? (new ResultType(val as any, !(val instanceof Error)) as any)
       : Err(null);
 }
 
@@ -775,7 +778,7 @@ function any<R extends Result<any, any>[]>(
    const err = [];
    for (const result of results) {
       if (result.isOk()) {
-         return result;
+         return result as any;
       } else {
          err.push(result.unwrapUnchecked());
       }
