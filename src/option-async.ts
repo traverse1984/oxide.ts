@@ -1,10 +1,16 @@
 import { T, Val, EmptyArray, IterType, FalseyValues, isTruthy } from "./common";
 import { Result, Ok, Err } from "./result";
-import { _some, _value } from "./symbols";
-
-export type Some<T> = OptionType<T> & { [_some]: true };
-export type None = OptionType<never> & { [_some]: false };
-export type Option<T> = OptionType<T>;
+import { Option, Some, None } from "./option";
+import {
+   _promise,
+   _safe,
+   _some,
+   _value,
+   Safe,
+   Unsafe,
+   SafeVariants,
+   UnsafeVariants,
+} from "./symbols";
 
 type From<T> = Exclude<T, Error | FalseyValues>;
 
@@ -12,13 +18,22 @@ type OptionTypes<O> = {
    [K in keyof O]: O[K] extends Option<infer T> ? T : never;
 };
 
-class OptionType<T> {
-   readonly [_some]: boolean;
-   readonly [_value]: T;
+class OptionAsyncRejection extends Error {
+   originalError: unknown;
 
-   constructor(val: T, some: boolean) {
-      this[_some] = some;
-      this[_value] = val;
+   constructor(message: string, originalError: unknown) {
+      super(message);
+      this.originalError = originalError;
+   }
+}
+
+export class OptionAsync<T> {
+   readonly [_promise]: Promise<Option<T>>;
+   readonly [_safe]: boolean;
+
+   constructor(val: Promise<Option<T>>, safe = true) {
+      this[_promise] = val;
+      this[_safe] = safe;
    }
 
    [Symbol.iterator](this: Option<T>): IterType<T> {
@@ -46,53 +61,6 @@ class OptionType<T> {
    into<U extends FalseyValues>(this: Option<T>, none: U): T | U;
    into(this: Option<T>, none?: FalseyValues): T | FalseyValues {
       return this[_some] ? this[_value] : none;
-   }
-
-   /**
-    * Compares the Option to `cmp`, returns true if both are `Some` or both
-    * are `None` and acts as a type guard.
-    *
-    * ```
-    * const s: Option<number> = Some(1);
-    * const n: Option<number> = None;
-    *
-    * assert.equal(s.isLike(Some(10)), true);
-    * assert.equal(n.isLike(None), true);
-    * assert.equal(s.isLike(n), false);
-    * ```
-    */
-   isLike(this: Option<T>, cmp: unknown): cmp is Option<unknown> {
-      return cmp instanceof OptionType && this[_some] === cmp[_some];
-   }
-
-   /**
-    * Returns true if the Option is `Some` and acts as a type guard.
-    *
-    * ```
-    * const x = Some(10);
-    * assert.equal(x.Is(), true);
-    *
-    * const x: Option<number> = None;
-    * assert.equal(x.Is(), false);
-    * ```
-    */
-   isSome(this: Option<T>): this is Some<T> {
-      return this[_some];
-   }
-
-   /**
-    * Returns true if the Option is `None` and acts as a type guard.
-    *
-    * ```
-    * const x = Some(10);
-    * assert.equal(x.isNone(), false);
-    *
-    * const x: Option<number> = None;
-    * assert.equal(x.isNone(), true);
-    * ```
-    */
-   isNone(this: Option<T>): this is None {
-      return !this[_some];
    }
 
    /**
@@ -150,12 +118,15 @@ class OptionType<T> {
     * const y = x.expect("Is empty"); // throws
     * ```
     */
-   expect(this: Option<T>, msg: string): T {
-      if (this[_some]) {
-         return this[_value];
-      } else {
+   async expect(this: OptionAsync<T>, msg: string): Promise<T> {
+      let option: Option<T>;
+      try {
+         option = await this[_promise];
+      } catch (err) {
          throw new Error(msg);
       }
+
+      return option.expect(msg);
    }
 
    /**
@@ -173,7 +144,7 @@ class OptionType<T> {
     * const y = x.unwrap(); // throws
     * ```
     */
-   unwrap(this: Option<T>): T {
+   unwrap(this: OptionAsync<T>): Promise<T> {
       return this.expect("Failed to unwrap Option (found None)");
    }
 
@@ -318,8 +289,34 @@ class OptionType<T> {
     * assert.equal(xmap.unwrap(), "number 10");
     * ```
     */
-   map<U>(this: Option<T>, f: (val: T) => U): Option<U> {
-      return this[_some] ? new OptionType(f(this[_value]), true) : None;
+   map<U>(
+      this: Safe<OptionAsync<T>>,
+      f: (val: T) => SafeVariants<U>
+   ): Safe<OptionAsync<T>>;
+   map<U>(
+      this: Unsafe<OptionAsync<T>>,
+      f: (val: T) => UnsafeVariants<U>
+   ): Unsafe<OptionAsync<U>>;
+   map<U>(
+      this: OptionAsync<T>,
+      f: (val: T) => U | PromiseLike<U>
+   ): OptionAsync<U> {
+      return new OptionAsync(
+         this[_promise]
+            .then(async (option) =>
+               option[_some] ? Some(await f(option[_value])) : None
+            )
+            .catch((err) => this._error(err)),
+         this[_safe]
+      );
+   }
+
+   private _error(this: OptionAsync<T>, err: unknown): Option<never> {
+      if (this[_safe]) {
+         return None;
+      } else {
+         throw err;
+      }
    }
 
    /**
@@ -339,8 +336,25 @@ class OptionType<T> {
     * assert.equal(xmap.unwrap(), 1);
     * ```
     */
-   mapOr<U>(this: Option<T>, def: U, f: (val: T) => U): U {
-      return this[_some] ? f(this[_value]) : def;
+   async mapOr<U>(
+      this: OptionAsync<T>,
+      def: U,
+      f: (val: T) => U | PromiseLike<U>
+   ): Promise<U> {
+      const result = await this._resolve();
+      if (result[_some]) {
+         return f(result[_value]);
+      }
+
+      return def;
+   }
+
+   private async _resolve(this: OptionAsync<T>): Promise<Option<T>> {
+      try {
+         return await this[_promise];
+      } catch (err) {
+         return this._error(err);
+      }
    }
 
    /**
@@ -356,8 +370,13 @@ class OptionType<T> {
     * assert.equal(xmap.unwrap(), 2);
     * ```
     */
-   mapOrElse<U>(this: Option<T>, def: () => U, f: (val: T) => U): U {
-      return this[_some] ? f(this[_value]) : def();
+   async mapOrElse<U>(
+      this: OptionAsync<T>,
+      def: () => U | PromiseLike<U>,
+      f: (val: T) => U | PromiseLike<U>
+   ): Promise<U> {
+      const option = await this._resolve();
+      return option[_some] ? f(option[_value] as T) : def();
    }
 
    /**
@@ -399,262 +418,4 @@ class OptionType<T> {
    okOrElse<E>(this: Option<T>, f: () => E): Result<T, E> {
       return this[_some] ? Ok(this[_value]) : Err(f());
    }
-}
-
-/**
- * An Option represents either something, or nothing. If we hold a value
- * of type `Option<T>`, we know it is either `Some<T>` or `None`.
- *
- * As a function, `Option` is an alias for `Option.from`.
- *
- * ```
- * const users = ["Fry", "Bender"];
- * function fetch_user(username: string): Option<string> {
- *    return users.includes(username) ? Some(username) : None;
- * }
- *
- * function greet(username: string): string {
- *    return fetch_user(username)
- *       .map((user) => `Good news everyone, ${user} is here!`)
- *       .unwrapOr("Wha?");
- * }
- *
- * assert.equal(greet("Bender"), "Good news everyone, Bender is here!");
- * assert.equal(greet("SuperKing"), "Wha?");
- * ```
- */
-export function Option<T>(val: T): Option<From<T>> {
-   return from(val);
-}
-
-Option.is = is;
-Option.from = from;
-Option.nonNull = nonNull;
-Option.qty = qty;
-Option.safe = safe;
-Option.all = all;
-Option.any = any;
-
-/**
- * Creates a `Some<T>` value, which can be used where an `Option<T>` is
- * required. See Option for more examples.
- *
- * ```
- * const x = Some(10);
- * assert.equal(x.isSome(), true);
- * assert.equal(x.unwrap(), 10);
- * ```
- */
-export function Some<T>(val: T): Some<T> {
-   return new OptionType(val, true) as Some<T>;
-}
-
-/**
- * The `None` value, which can be used where an `Option<T>` is required.
- * See Option for more examples.
- *
- * ```
- * const x = None;
- * assert.equal(x.isNone(), true);
- * const y = x.unwrap(); // throws
- * ```
- */
-export const None = Object.freeze(
-   new OptionType<never>(undefined as never, false)
-);
-
-/**
- * Tests whether the provided `val` is an Option, and acts as a type guard.
- *
- * ```
- * assert.equal(Option.is(Some(1), true);
- * assert.equal(Option.is(None, true));
- * assert.equal(Option.is(Ok(1), false));
- * ```
- */
-function is(val: unknown): val is Option<unknown> {
-   return val instanceof OptionType;
-}
-
-/**
- * Creates a new `Option<T>` which is `Some` unless the provided `val` is
- * falsey, an instance of `Error` or an invalid `Date`. This function is
- * aliased by `Option`.
- *
- * The `T` type is narrowed to exclude falsey orError values.
- *
- * ```
- * assert.equal(Option.from(1).unwrap(), 1);
- * assert.equal(from(0).isNone(), true);
- *
- * const err = Option.from(new Error("msg"));
- * assert.equal(err.isNone(), true);
- * ```
- */
-function from<T>(val: T): Option<From<T>> {
-   return isTruthy(val) && !(val instanceof Error) ? (Some(val) as any) : None;
-}
-
-/**
- * Creates a new `Option<T>` which is `Some` unless the provided `val` is
- * `undefined`, `null` or `NaN`.
- *
- * ```
- * assert.equal(Option.nonNull(1).unwrap(), 1);
- * assert.equal(Option.nonNull(0).unwrap(), 0);
- * assert.equal(Option.nonNull(null).isNone(), true);
- * ```
- */
-function nonNull<T>(val: T): Option<NonNullable<T>> {
-   return val === undefined || val === null || val !== val
-      ? None
-      : Some(val as NonNullable<T>);
-}
-
-/**
- * Creates a new Option<number> which is `Some` when the provided `val` is a
- * finite integer greater than or equal to 0.
- *
- * ```
- * const x = Option.qty("test".indexOf("s"));
- * assert.equal(x.unwrap(), 2);
- *
- * const x = Option.qty("test".indexOf("z"));
- * assert.equal(x.isNone(), true);
- * ```
- */
-function qty<T extends number>(val: T): Option<number> {
-   return val >= 0 && Number.isInteger(val) ? Some(val) : None;
-}
-
-/**
- * Capture the outcome of a function or Promise as an `Option<T>`, preventing
- * throwing (function) or rejection (Promise).
- *
- * ### Usage for functions
- *
- * Calls `fn` with the provided `args` and returns an `Option<T>`. The Option
- * is `Some` if the provided function returned, or `None` if it threw.
- *
- * **Note:** Any function which returns a Promise (or PromiseLike) value is
- * rejected by the type signature. `Option<Promise<T>>` is not a useful type,
- * and using it in this way is likely to be a mistake.
- *
- * ```
- * function mightThrow(throws: boolean) {
- *    if (throws) {
- *       throw new Error("Throw");
- *    }
- *    return "Hello World";
- * }
- *
- * const x: Option<string> = Option.safe(mightThrow, true);
- * assert.equal(x.isNone(), true);
- *
- * const x = Option.safe(() => mightThrow(false));
- * assert.equal(x.unwrap(), "Hello World");
- * ```
- *
- * ### Usage for Promises
- *
- * Accepts `promise` and returns a new Promise which always resolves to
- * `Option<T>`. The Result is `Some` if the original promise resolved, or
- * `None` if it rejected.
- *
- * ```
- * async function mightThrow(throws: boolean) {
- *    if (throws) {
- *       throw new Error("Throw")
- *    }
- *    return "Hello World";
- * }
- *
- * const x = await Option.safe(mightThrow(true));
- * assert.equal(x.isNone(), true);
- *
- * const x = await Option.safe(mightThrow(false));
- * assert.equal(x.unwrap(), "Hello World");
- * ```
- */
-function safe<T, A extends any[]>(
-   fn: (...args: A) => T extends PromiseLike<any> ? never : T,
-   ...args: A
-): Option<T>;
-function safe<T>(promise: Promise<T>): Promise<Option<T>>;
-function safe<T, A extends any[]>(
-   fn: ((...args: A) => T) | Promise<T>,
-   ...args: A
-): Option<T> | Promise<Option<T>> {
-   if (fn instanceof Promise) {
-      return fn.then(
-         (val) => Some(val),
-         () => None
-      );
-   }
-
-   try {
-      return Some(fn(...args));
-   } catch {
-      return None;
-   }
-}
-
-/**
- * Converts a number of `Option`s into a single Option. If any of the provided
- * Options are `None` then the new Option is also None. Otherwise the new
- * Option is `Some` and contains an array of all the unwrapped values.
- *
- * ```
- * function num(val: number): Option<number> {
- *    return val > 10 ? Some(val) : None;
- * }
- *
- * const xyz = Option.all(num(20), num(30), num(40));
- * const [x, y, z] = xyz.unwrap();
- * assert.equal(x, 20);
- * assert.equal(y, 30);
- * assert.equal(z, 40);
- *
- * const x = Option.all(num(20), num(5), num(40));
- * assert.equal(x.isNone(), true);
- * ```
- */
-function all<O extends Option<any>[]>(...options: O): Option<OptionTypes<O>> {
-   const some = [];
-   for (const option of options) {
-      if (option.isSome()) {
-         some.push(option.unwrapUnchecked());
-      } else {
-         return None;
-      }
-   }
-
-   return Some(some) as Some<OptionTypes<O>>;
-}
-
-/**
- * Converts a number of `Options`s into a single Option. The first `Some` found
- * (if any) is returned, otherwise the new Option is `None`.
- *
- * ```
- * function num(val: number): Option<number> {
- *    return val > 10 ? Some(val) : None;
- * }
- *
- * const x = Option.any(num(5), num(20), num(2));
- * assert.equal(x.unwrap(), 20);
- *
- * const x = Option.any(num(2), num(5), num(8));
- * assert.equal(x.isNone(), true);
- * ```
- */
-function any<O extends Option<any>[]>(
-   ...options: O
-): Option<OptionTypes<O>[number]> {
-   for (const option of options) {
-      if (option.isSome()) {
-         return option as Option<OptionTypes<O>[number]>;
-      }
-   }
-   return None;
 }

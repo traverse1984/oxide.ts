@@ -1,0 +1,3 @@
+-  Removed `isLike` from Result
+-  Result `expect` now has additional ergonomics when working with errors
+-  Result `intoTuple` now returns undefined instead of null

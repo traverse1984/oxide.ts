@@ -1,9 +1,10 @@
 import { T, Val, EmptyArray, IterType, FalseyValues, isTruthy } from "./common";
 import { Option, Some, None } from "./option";
+import { _safe, _ok, _value } from "./symbols";
 
-export type Ok<T> = ResultType<T, never>;
-export type Err<E> = ResultType<never, E>;
-export type Result<T, E> = ResultType<T, E>;
+export type Ok<T> = ResultSync<T, never>;
+export type Err<E> = ResultSync<never, E>;
+export type Result<T, E> = ResultSync<T, E>;
 
 type From<T> = Exclude<T, Error | FalseyValues>;
 
@@ -15,18 +16,19 @@ type ResultErrors<R> = {
    [K in keyof R]: R[K] extends Result<any, infer U> ? U : never;
 };
 
-export class ResultType<T, E> {
-   readonly [T]: boolean;
-   readonly [Val]: T | E;
+export class ResultSync<T, E> {
+   readonly [_ok]: boolean;
+   readonly [_value]: T | E;
+   readonly [_safe]!: boolean;
 
    constructor(val: T | E, ok: boolean) {
-      this[Val] = val;
-      this[T] = ok;
+      this[_value] = val;
+      this[_ok] = ok;
    }
 
    [Symbol.iterator](this: Result<T, E>): IterType<T> {
-      return this[T]
-         ? (this[Val] as any)[Symbol.iterator]()
+      return this[_ok]
+         ? (this[_value] as any)[Symbol.iterator]()
          : EmptyArray[Symbol.iterator]();
    }
 
@@ -48,7 +50,7 @@ export class ResultType<T, E> {
    into(this: Result<T, E>): T | undefined;
    into<U extends FalseyValues>(this: Result<T, E>, err: U): T | U;
    into(this: Result<T, E>, err?: FalseyValues): T | FalseyValues {
-      return this[T] ? (this[Val] as T) : err;
+      return this[_ok] ? (this[_value] as T) : err;
    }
 
    /**
@@ -63,25 +65,10 @@ export class ResultType<T, E> {
     * assert.deepEqual(x.intoTuple(), ["error", null]);
     * ```
     */
-   intoTuple(this: Result<T, E>): [null, T] | [E, null] {
-      return this[T] ? [null, this[Val] as T] : [this[Val] as E, null];
-   }
-
-   /**
-    * Compares the Result to `cmp`, returns true if both are `Ok` or both
-    * are `Err` and acts as a type guard.
-    *
-    * ```
-    * const o = Ok(1);
-    * const e = Err(1);
-    *
-    * assert.equal(o.isLike(Ok(1))), true);
-    * assert.equal(e.isLike(Err(1)), true);
-    * assert.equal(o.isLike(e), false);
-    * ```
-    */
-   isLike(this: Result<T, E>, cmp: unknown): cmp is Result<unknown, unknown> {
-      return cmp instanceof ResultType && this[T] === cmp[T];
+   intoTuple(this: Result<T, E>): [undefined, T] | [E, undefined] {
+      return this[_ok]
+         ? [undefined, this[_value] as T]
+         : [this[_value] as E, undefined];
    }
 
    /**
@@ -96,7 +83,7 @@ export class ResultType<T, E> {
     * ```
     */
    isOk(this: Result<T, E>): this is Ok<T> {
-      return this[T];
+      return this[_ok];
    }
 
    /**
@@ -111,7 +98,7 @@ export class ResultType<T, E> {
     * ```
     */
    isErr(this: Result<T, E>): this is Err<E> {
-      return !this[T];
+      return !this[_ok];
    }
 
    /**
@@ -133,7 +120,7 @@ export class ResultType<T, E> {
     * ```
     */
    filter(this: Result<T, E>, f: (val: T) => boolean): Option<T> {
-      return this[T] && f(this[Val] as T) ? Some(this[Val] as T) : None;
+      return this[_ok] && f(this[_value] as T) ? Some(this[_value] as T) : None;
    }
 
    /**
@@ -153,7 +140,7 @@ export class ResultType<T, E> {
     * ```
     */
    flatten<U, F>(this: Result<Result<U, F>, E>): Result<U, E | F> {
-      return this[T] ? (this[Val] as Result<U, F>) : (this as Err<E>);
+      return this[_ok] ? (this[_value] as Result<U, F>) : (this as Err<E>);
    }
 
    /**
@@ -170,9 +157,13 @@ export class ResultType<T, E> {
     * const y = x.expect("Was Err"); // throws
     * ```
     */
-   expect(this: Result<T, E>, msg: string): T {
-      if (this[T]) {
-         return this[Val] as T;
+   expect(this: Result<T, E>, msg: string): T;
+   expect<E extends Error>(this: Result<T, E>, msg?: string): T;
+   expect(this: Result<T, E>, msg?: string): T {
+      if (this[_ok]) {
+         return this[_value] as T;
+      } else if (msg === undefined) {
+         throw this[_value];
       } else {
          throw new Error(msg);
       }
@@ -192,10 +183,10 @@ export class ResultType<T, E> {
     * ```
     */
    expectErr(this: Result<T, E>, msg: string): E {
-      if (this[T]) {
+      if (this[_ok]) {
          throw new Error(msg);
       } else {
-         return this[Val] as E;
+         return this[_value] as E;
       }
    }
 
@@ -251,7 +242,7 @@ export class ResultType<T, E> {
     * ```
     */
    unwrapOr(this: Result<T, E>, def: T): T {
-      return this[T] ? (this[Val] as T) : def;
+      return this[_ok] ? (this[_value] as T) : def;
    }
 
    /**
@@ -266,7 +257,7 @@ export class ResultType<T, E> {
     * ```
     */
    unwrapOrElse(this: Result<T, E>, f: () => T): T {
-      return this[T] ? (this[Val] as T) : f();
+      return this[_ok] ? (this[_value] as T) : f();
    }
 
    /**
@@ -284,7 +275,7 @@ export class ResultType<T, E> {
     * ```
     */
    unwrapUnchecked(this: Result<T, E>): T | E {
-      return this[Val];
+      return this[_value];
    }
 
    /**
@@ -304,7 +295,7 @@ export class ResultType<T, E> {
     * ```
     */
    or(this: Result<T, E>, resb: Result<T, E>): Result<T, E> {
-      return this[T] ? (this as any) : resb;
+      return this[_ok] ? (this as any) : resb;
    }
 
    /**
@@ -326,7 +317,9 @@ export class ResultType<T, E> {
     * ```
     */
    orElse<F>(this: Result<T, E>, f: (err: E) => Result<T, F>): Result<T, F> {
-      return this[T] ? (this as unknown as Result<T, F>) : f(this[Val] as E);
+      return this[_ok]
+         ? (this as unknown as Result<T, F>)
+         : f(this[_value] as E);
    }
 
    /**
@@ -347,7 +340,7 @@ export class ResultType<T, E> {
     * ```
     */
    and<U>(this: Result<T, E>, resb: Result<U, E>): Result<U, E> {
-      return this[T] ? resb : (this as any);
+      return this[_ok] ? resb : (this as any);
    }
 
    /**
@@ -369,7 +362,7 @@ export class ResultType<T, E> {
     * ```
     */
    andThen<U>(this: Result<T, E>, f: (val: T) => Result<U, E>): Result<U, E> {
-      return this[T] ? f(this[Val] as T) : (this as any);
+      return this[_ok] ? f(this[_value] as T) : (this as any);
    }
 
    /**
@@ -383,9 +376,9 @@ export class ResultType<T, E> {
     * ```
     */
    map<U>(this: Result<T, E>, f: (val: T) => U): Result<U, E> {
-      return new ResultType(
-         this[T] ? f(this[Val] as T) : (this[Val] as E),
-         this[T]
+      return new ResultSync(
+         this[_ok] ? f(this[_value] as T) : (this[_value] as E),
+         this[_ok]
       ) as Result<U, E>;
    }
 
@@ -400,9 +393,9 @@ export class ResultType<T, E> {
     * ```
     */
    mapErr<F>(this: Result<T, E>, op: (err: E) => F): Result<T, F> {
-      return new ResultType(
-         this[T] ? (this[Val] as T) : op(this[Val] as E),
-         this[T]
+      return new ResultSync(
+         this[_ok] ? (this[_value] as T) : op(this[_value] as E),
+         this[_ok]
       ) as Result<T, F>;
    }
 
@@ -424,7 +417,7 @@ export class ResultType<T, E> {
     * ```
     */
    mapOr<U>(this: Result<T, E>, def: U, f: (val: T) => U): U {
-      return this[T] ? f(this[Val] as T) : def;
+      return this[_ok] ? f(this[_value] as T) : def;
    }
 
    /**
@@ -442,7 +435,7 @@ export class ResultType<T, E> {
     * ```
     */
    mapOrElse<U>(this: Result<T, E>, def: (err: E) => U, f: (val: T) => U): U {
-      return this[T] ? f(this[Val] as T) : def(this[Val] as E);
+      return this[_ok] ? f(this[_value] as T) : def(this[_value] as E);
    }
 
    /**
@@ -462,7 +455,7 @@ export class ResultType<T, E> {
     * ```
     */
    ok(this: Result<T, E>): Option<T> {
-      return this[T] ? Some(this[Val] as T) : None;
+      return this[_ok] ? Some(this[_value] as T) : None;
    }
 }
 
@@ -476,7 +469,7 @@ export class ResultType<T, E> {
  * ```
  */
 function is(val: unknown): val is Result<unknown, unknown> {
-   return val instanceof ResultType;
+   return val instanceof ResultSync;
 }
 
 /**
@@ -535,7 +528,7 @@ Result.any = any;
  * ```
  */
 export function Ok<T>(val: T): Ok<T> {
-   return new ResultType<T, never>(val, true);
+   return new ResultSync<T, never>(val, true);
 }
 
 /**
@@ -553,7 +546,7 @@ export function Ok<T>(val: T): Ok<T> {
  * ```
  */
 export function Err<E>(val: E): Err<E> {
-   return new ResultType<never, E>(val, false);
+   return new ResultSync<never, E>(val, false);
 }
 
 /**
@@ -587,7 +580,7 @@ function from<T>(
    | (Extract<FalseyValues, T> extends never ? never : null)
 > {
    return isTruthy(val)
-      ? new ResultType(val as any, !(val instanceof Error))
+      ? new ResultSync(val as any, !(val instanceof Error))
       : Err(null);
 }
 
